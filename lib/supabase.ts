@@ -4,12 +4,15 @@ import { supabase } from "./supabaseClient";
 // Types: Languages
 // ============================================
 
+export type WorkStatus = 'not_started' | 'in_progress' | 'completed';
+
 export interface Language {
   id: string;
   country: string;
   language: string;
   responsible_person: string | null;
   priority: "low" | "medium" | "high" | null;
+  work_status: WorkStatus;
   last_meeting_at: string | null;
   created_at: string;
   updated_at: string;
@@ -20,6 +23,7 @@ export interface CreateLanguageInput {
   language: string;
   responsible_person?: string | null;
   priority?: "low" | "medium" | "high" | null;
+  work_status?: WorkStatus;
 }
 
 export interface UpdateLanguageInput {
@@ -27,6 +31,7 @@ export interface UpdateLanguageInput {
   language?: string;
   responsible_person?: string | null;
   priority?: "low" | "medium" | "high" | null;
+  work_status?: WorkStatus;
 }
 
 // ============================================
@@ -103,6 +108,7 @@ export async function getAllLanguages(): Promise<Language[]> {
 
 /**
  * Fetch languages that haven't had a meeting in the specified number of days
+ * Only includes languages with work_status = 'in_progress'
  */
 export async function getStaleLanguages(days: number = 3): Promise<Language[]> {
   try {
@@ -112,6 +118,7 @@ export async function getStaleLanguages(days: number = 3): Promise<Language[]> {
     const { data, error } = await supabase
       .from("languages")
       .select("*")
+      .eq("work_status", "in_progress")
       .or(`last_meeting_at.is.null,last_meeting_at.lt.${threeDaysAgo.toISOString()}`)
       .order("last_meeting_at", { ascending: true, nullsFirst: true });
 
@@ -129,6 +136,7 @@ export async function getStaleLanguages(days: number = 3): Promise<Language[]> {
 
 /**
  * Fetch languages that have no meeting or last meeting was 7+ days ago (for urgent follow-ups)
+ * Only includes languages with work_status = 'in_progress'
  */
 export async function getLanguagesNoMeeting(days: number = 7): Promise<Language[]> {
   try {
@@ -138,6 +146,7 @@ export async function getLanguagesNoMeeting(days: number = 7): Promise<Language[
     const { data, error } = await supabase
       .from("languages")
       .select("*")
+      .eq("work_status", "in_progress")
       .or(`last_meeting_at.is.null,last_meeting_at.lt.${daysAgo.toISOString()}`)
       .order("last_meeting_at", { ascending: true, nullsFirst: true });
 
@@ -168,6 +177,7 @@ export async function createLanguage(
           language: input.language,
           responsible_person: input.responsible_person ?? null,
           priority: input.priority ?? null,
+          work_status: input.work_status ?? 'not_started',
         },
       ])
       .select()

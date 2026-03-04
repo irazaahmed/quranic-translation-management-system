@@ -25,35 +25,35 @@ export default async function WeeklyReportPage() {
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         {/* Breadcrumb */}
-        <nav className="mb-4 flex items-center gap-2 text-sm">
-          <Link href="/" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors duration-200">
+        <nav className="mb-3 sm:mb-4 flex items-center gap-2 text-sm overflow-x-auto">
+          <Link href="/" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors duration-200 whitespace-nowrap">
             Dashboard
           </Link>
           <span className="text-gray-400 dark:text-gray-600 transition-colors duration-200">/</span>
-          <span className="text-gray-900 dark:text-gray-100 font-medium transition-colors duration-200">Weekly Report</span>
+          <span className="text-gray-900 dark:text-gray-100 font-medium transition-colors duration-200 whitespace-nowrap">Weekly Report</span>
         </nav>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200 truncate">
               Weekly Meeting Report
             </h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
               Summary of all meetings from the past 7 days
             </p>
           </div>
-          <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1 transition-colors duration-200">
+          <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1 transition-colors duration-200 flex-shrink-0">
             <Link
               href="/reports/weekly"
-              className="rounded-md bg-emerald-100 dark:bg-emerald-900/20 px-4 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 transition-colors duration-200"
+              className="rounded-md bg-emerald-100 dark:bg-emerald-900/20 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-emerald-700 dark:text-emerald-400 transition-colors duration-200 whitespace-nowrap"
             >
               Weekly
             </Link>
             <Link
               href="/reports/monthly"
-              className="rounded-md px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+              className="rounded-md px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 whitespace-nowrap"
             >
               Monthly
             </Link>

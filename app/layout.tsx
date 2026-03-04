@@ -18,6 +18,13 @@ export const metadata: Metadata = {
   description: "Manage and track meeting notes for Quranic translations across multiple languages",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -17,22 +17,36 @@ export default async function MeetingsPage() {
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         {/* Breadcrumb */}
-        <nav className="mb-4 flex items-center gap-2 text-sm">
-          <Link href="/" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200">
+        <nav className="mb-3 sm:mb-4 flex items-center gap-2 text-sm overflow-x-auto">
+          <Link href="/" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200 whitespace-nowrap">
             Dashboard
           </Link>
           <span className="text-gray-400 dark:text-gray-500">/</span>
-          <span className="text-gray-900 dark:text-white font-medium transition-colors duration-200">All Meetings</span>
+          <span className="text-gray-900 dark:text-white font-medium transition-colors duration-200 whitespace-nowrap">All Meetings</span>
         </nav>
 
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200">
-          All Meetings
-        </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-          Search and browse all meeting records
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200 truncate">
+              All Meetings
+            </h1>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+              Search and browse all meeting records
+            </p>
+          </div>
+          <Link
+            href="/meetings/new"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 sm:px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap flex-shrink-0"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span className="hidden sm:inline">New Meeting</span>
+            <span className="sm:hidden">New</span>
+          </Link>
+        </div>
       </div>
 
       {/* Error Banner */}

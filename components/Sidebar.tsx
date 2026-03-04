@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -128,16 +128,28 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Mobile menu button */}
-      <button
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="fixed top-4 left-4 z-50 rounded-lg p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden transition-all duration-200"
-        aria-label="Toggle menu"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
+      {/* Expose mobile menu state via custom event for Header */}
+      <SidebarTrigger isOpen={isMobileOpen} setIsOpen={setIsMobileOpen} />
     </>
   );
+}
+
+// Separate component to handle the mobile menu trigger
+function SidebarTrigger({ isOpen, setIsOpen }: { isOpen: boolean; setIsOpen: (open: boolean) => void }) {
+  // Dispatch custom event when sidebar state changes
+  useEffect(() => {
+    const event = new CustomEvent('sidebar-toggle', { detail: { isOpen } });
+    window.dispatchEvent(event);
+  }, [isOpen]);
+
+  // Listen for toggle requests from Header
+  useEffect(() => {
+    const handleToggleRequest = () => {
+      setIsOpen(!isOpen);
+    };
+    window.addEventListener('sidebar-toggle-request', handleToggleRequest);
+    return () => window.removeEventListener('sidebar-toggle-request', handleToggleRequest);
+  }, [isOpen, setIsOpen]);
+
+  return null;
 }

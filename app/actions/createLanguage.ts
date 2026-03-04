@@ -17,6 +17,7 @@ export async function createLanguageAction(
   const language = formData.get("language") as string;
   const responsible_person = formData.get("responsible_person") as string;
   const priority = formData.get("priority") as "low" | "medium" | "high";
+  const work_status = formData.get("work_status") as "not_started" | "in_progress" | "completed";
 
   // Validation
   if (!country || !country.trim()) {
@@ -33,6 +34,7 @@ export async function createLanguageAction(
       language: language.trim(),
       responsible_person: responsible_person.trim() || null,
       priority: priority || null,
+      work_status: work_status || 'not_started',
     });
 
     revalidatePath("/languages");

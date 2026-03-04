@@ -16,6 +16,12 @@ const priorityOptions = [
   { value: "high", label: "High" },
 ];
 
+const workStatusOptions = [
+  { value: "not_started", label: "Not Started Yet" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "completed", label: "Completed" },
+];
+
 const initialState: FormState = {};
 
 export default function EditLanguageForm({ language }: EditLanguageFormProps) {
@@ -102,6 +108,28 @@ export default function EditLanguageForm({ language }: EditLanguageFormProps) {
               className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
             >
               {priorityOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Work Status */}
+          <div>
+            <label
+              htmlFor="work_status"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200"
+            >
+              Work Status
+            </label>
+            <select
+              id="work_status"
+              name="work_status"
+              defaultValue={language.work_status}
+              className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+            >
+              {workStatusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS languages (
   language TEXT NOT NULL,
   responsible_person TEXT,
   priority TEXT CHECK (priority IN ('low', 'medium', 'high')),
+  work_status TEXT NOT NULL DEFAULT 'not_started' CHECK (work_status IN ('not_started', 'in_progress', 'completed')),
   last_meeting_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

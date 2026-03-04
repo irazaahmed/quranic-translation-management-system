@@ -17,22 +17,25 @@ export default async function LanguagesPage() {
   return (
     <DashboardLayout>
       {/* Page Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200">All Languages</h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-            Manage and track translation meetings across all languages
-          </p>
+      <div className="mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200 truncate">All Languages</h1>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+              Manage and track translation meetings across all languages
+            </p>
+          </div>
+          <Link
+            href="/languages/new"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 sm:px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap flex-shrink-0"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span className="hidden sm:inline">Add Language</span>
+            <span className="sm:hidden">Add</span>
+          </Link>
         </div>
-        <Link
-          href="/languages/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Language
-        </Link>
       </div>
 
       {/* Error Banner */}

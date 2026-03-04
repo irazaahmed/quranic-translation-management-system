@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <Sidebar />
       <div className="flex flex-1 flex-col lg:pl-64">
         <Header />
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
         <Footer />
       </div>
     </div>

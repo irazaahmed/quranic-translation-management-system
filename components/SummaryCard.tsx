@@ -6,7 +6,7 @@ interface SummaryCardProps {
     value: string;
     label: string;
   };
-  color?: "emerald" | "blue" | "amber" | "purple" | "rose";
+  color?: "emerald" | "blue" | "amber" | "purple" | "rose" | "gray" | "green";
 }
 
 const colorVariants = {
@@ -35,6 +35,16 @@ const colorVariants = {
     text: "text-rose-600 dark:text-rose-400",
     border: "border-rose-100 dark:border-rose-900/30",
   },
+  gray: {
+    bg: "bg-gray-50 dark:bg-gray-800",
+    text: "text-gray-600 dark:text-gray-400",
+    border: "border-gray-100 dark:border-gray-700",
+  },
+  green: {
+    bg: "bg-green-50 dark:bg-green-900/20",
+    text: "text-green-600 dark:text-green-400",
+    border: "border-green-100 dark:border-green-900/30",
+  },
 };
 
 export default function SummaryCard({
@@ -47,19 +57,19 @@ export default function SummaryCard({
   const variant = colorVariants[color];
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm transition-colors duration-200">
+    <div className="rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4 lg:p-6 shadow-sm transition-colors duration-200">
       <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 transition-colors duration-200">{title}</p>
-          <p className="mt-2 text-3xl font-semibold text-gray-900 dark:text-white transition-colors duration-200">{value}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 transition-colors duration-200">{title}</p>
+          <p className="mt-1 text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-white transition-colors duration-200">{value}</p>
           {trend && (
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200 line-clamp-2">
               <span className="font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">{trend.value}</span>{" "}
               {trend.label}
             </p>
           )}
         </div>
-        <div className={`rounded-lg ${variant.bg} p-3 ${variant.text} transition-colors duration-200`}>
+        <div className={`rounded-md sm:rounded-lg ${variant.bg} p-1.5 sm:p-2 lg:p-3 ${variant.text} transition-colors duration-200 flex-shrink-0 ml-2 sm:ml-3`}>
           {icon}
         </div>
       </div>
