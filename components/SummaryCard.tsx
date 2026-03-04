@@ -69,7 +69,7 @@ export default function SummaryCard({
             </p>
           )}
         </div>
-        <div className={`rounded-md sm:rounded-lg ${variant.bg} p-1.5 sm:p-2 lg:p-3 ${variant.text} transition-colors duration-200 flex-shrink-0 ml-2 sm:ml-3`}>
+        <div className={`rounded-md sm:rounded-lg ${variant.bg} p-1.5 sm:p-2 lg:p-3 ${variant.text} transition-colors duration-200 shrink-0 ml-2 sm:ml-3`}>
           {icon}
         </div>
       </div>
