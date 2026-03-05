@@ -33,7 +33,9 @@ export async function createMeetingAction(
       action_items: nextAction.trim() || null,
     });
 
+    revalidatePath("/");
     revalidatePath("/languages");
+    revalidatePath("/meetings");
     revalidatePath(`/languages/${languageId}`);
   } catch (error) {
     console.error("Failed to create meeting:", error);

@@ -3,6 +3,9 @@ import { getAllLanguages } from "@/lib/supabase";
 import Link from "next/link";
 import LanguagesList from "./LanguagesList";
 
+// Force dynamic rendering to prevent stale data
+export const dynamic = "force-dynamic";
+
 export default async function LanguagesPage() {
   let languages: Awaited<ReturnType<typeof getAllLanguages>> = [];
   let error: string | null = null;

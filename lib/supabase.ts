@@ -85,13 +85,14 @@ export interface UpdateMeetingInput {
 
 /**
  * Fetch all languages from the database
+ * Sorted alphabetically by language name (A-Z)
  */
 export async function getAllLanguages(): Promise<Language[]> {
   try {
     const { data, error } = await supabase
       .from("languages")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("language", { ascending: true });
 
     if (error) {
       console.error("Supabase error:", error);
@@ -164,11 +165,26 @@ export async function getLanguagesNoMeeting(days: number = 7): Promise<Language[
 
 /**
  * Create a new language
+ * Checks for duplicate language+country combination before inserting
  */
 export async function createLanguage(
   input: CreateLanguageInput
 ): Promise<Language | null> {
   try {
+    // Check for duplicate language+country combination
+    const { data: existing, error: checkError } = await supabase
+      .from("languages")
+      .select("id")
+      .ilike("language", input.language)
+      .ilike("country", input.country)
+      .maybeSingle();
+
+    if (checkError) throw checkError;
+
+    if (existing) {
+      throw new Error("Language already exists");
+    }
+
     const { data, error } = await supabase
       .from("languages")
       .insert([
@@ -490,28 +506,100 @@ export async function searchMeetings(query: string): Promise<MeetingWithLanguage
 }
 
 /**
- * Get recent meetings with language data
+ * Get recent meetings with language data using a JOIN
  */
 export async function getRecentMeetings(limit: number = 20): Promise<MeetingWithLanguage[]> {
   try {
     const { data: meetingsData, error } = await supabase
       .from("meetings")
-      .select("*")
+      .select(`
+        *,
+        languages:language_id (
+          id,
+          country,
+          language,
+          responsible_person,
+          priority,
+          work_status,
+          last_meeting_at,
+          created_at,
+          updated_at
+        )
+      `)
       .order("meeting_date", { ascending: false })
       .limit(limit);
 
     if (error) throw error;
 
-    const meetingsWithLanguage: MeetingWithLanguage[] = await Promise.all(
-      (meetingsData || []).map(async (meeting) => ({
-        meeting,
-        language: await getLanguageById(meeting.language_id),
-      }))
-    );
-
-    return meetingsWithLanguage;
+    return (meetingsData || []).map((row: any) => ({
+      meeting: {
+        id: row.id,
+        language_id: row.language_id,
+        meeting_date: row.meeting_date,
+        meeting_type: row.meeting_type,
+        participants: row.participants,
+        discussion_points: row.discussion_points,
+        translation_progress: row.translation_progress,
+        progress_percentage: row.progress_percentage,
+        action_items: row.action_items,
+        next_meeting_date: row.next_meeting_date,
+        meeting_notes: row.meeting_notes,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      },
+      language: row.languages as Language,
+    }));
   } catch (error) {
     console.error("Error fetching recent meetings:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get all meetings with language data using a JOIN
+ */
+export async function getAllMeetingsWithLanguage(): Promise<MeetingWithLanguage[]> {
+  try {
+    const { data: meetingsData, error } = await supabase
+      .from("meetings")
+      .select(`
+        *,
+        languages:language_id (
+          id,
+          country,
+          language,
+          responsible_person,
+          priority,
+          work_status,
+          last_meeting_at,
+          created_at,
+          updated_at
+        )
+      `)
+      .order("meeting_date", { ascending: false });
+
+    if (error) throw error;
+
+    return (meetingsData || []).map((row: any) => ({
+      meeting: {
+        id: row.id,
+        language_id: row.language_id,
+        meeting_date: row.meeting_date,
+        meeting_type: row.meeting_type,
+        participants: row.participants,
+        discussion_points: row.discussion_points,
+        translation_progress: row.translation_progress,
+        progress_percentage: row.progress_percentage,
+        action_items: row.action_items,
+        next_meeting_date: row.next_meeting_date,
+        meeting_notes: row.meeting_notes,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      },
+      language: row.languages as Language,
+    }));
+  } catch (error) {
+    console.error("Error fetching all meetings with language:", error);
     throw error;
   }
 }
@@ -660,6 +748,228 @@ export async function getMonthlyReport(): Promise<MonthlyReportData> {
     };
   } catch (error) {
     console.error("Error fetching monthly report:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get daily report data - meetings for a specific date grouped by language
+ */
+export interface DailyReportData {
+  selectedDate: Date;
+  totalMeetings: number;
+  totalLanguages: number;
+  languagesWithMeetings: Array<{
+    language: Language;
+    meetings: Meeting[];
+  }>;
+}
+
+export async function getDailyReport(selectedDate: Date = new Date()): Promise<DailyReportData> {
+  try {
+    // Normalize date to start and end of day
+    const startDate = new Date(selectedDate);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(selectedDate);
+    endDate.setHours(23, 59, 59, 999);
+
+    // Fetch meetings for the specific date
+    const { data: meetingsData, error: meetingsError } = await supabase
+      .from("meetings")
+      .select("*")
+      .gte("meeting_date", startDate.toISOString())
+      .lte("meeting_date", endDate.toISOString())
+      .order("meeting_date", { ascending: false });
+
+    if (meetingsError) throw meetingsError;
+
+    const meetings = meetingsData || [];
+
+    // Group meetings by language
+    const meetingsByLanguage = new Map<string, Meeting[]>();
+
+    meetings.forEach((meeting) => {
+      const existing = meetingsByLanguage.get(meeting.language_id) || [];
+      existing.push(meeting);
+      meetingsByLanguage.set(meeting.language_id, existing);
+    });
+
+    // Fetch language details
+    const languagesWithMeetings: DailyReportData["languagesWithMeetings"] = [];
+
+    for (const [languageId, langMeetings] of meetingsByLanguage.entries()) {
+      const language = await getLanguageById(languageId);
+      if (language) {
+        languagesWithMeetings.push({
+          language,
+          meetings: langMeetings.sort((a, b) =>
+            new Date(b.meeting_date).getTime() - new Date(a.meeting_date).getTime()
+          ),
+        });
+      }
+    }
+
+    // Sort languages alphabetically
+    languagesWithMeetings.sort((a, b) =>
+      a.language.language.localeCompare(b.language.language)
+    );
+
+    return {
+      selectedDate,
+      totalMeetings: meetings.length,
+      totalLanguages: languagesWithMeetings.length,
+      languagesWithMeetings,
+    };
+  } catch (error) {
+    console.error("Error fetching daily report:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get meetings within a date range grouped by language
+ */
+export interface DateRangeReportData {
+  startDate: Date;
+  endDate: Date;
+  totalMeetings: number;
+  totalLanguages: number;
+  languagesWithMeetings: Array<{
+    language: Language;
+    meetings: Meeting[];
+  }>;
+}
+
+export async function getMeetingsByDateRange(
+  startDate: Date,
+  endDate: Date
+): Promise<DateRangeReportData> {
+  try {
+    // Normalize start date to beginning of day
+    const normalizedStart = new Date(startDate);
+    normalizedStart.setHours(0, 0, 0, 0);
+    
+    // Normalize end date to end of day
+    const normalizedEnd = new Date(endDate);
+    normalizedEnd.setHours(23, 59, 59, 999);
+
+    // Fetch meetings within the date range
+    const { data: meetingsData, error: meetingsError } = await supabase
+      .from("meetings")
+      .select("*")
+      .gte("meeting_date", normalizedStart.toISOString())
+      .lte("meeting_date", normalizedEnd.toISOString())
+      .order("meeting_date", { ascending: false });
+
+    if (meetingsError) throw meetingsError;
+
+    const meetings = meetingsData || [];
+
+    // Group meetings by language
+    const meetingsByLanguage = new Map<string, Meeting[]>();
+
+    meetings.forEach((meeting) => {
+      const existing = meetingsByLanguage.get(meeting.language_id) || [];
+      existing.push(meeting);
+      meetingsByLanguage.set(meeting.language_id, existing);
+    });
+
+    // Fetch language details
+    const languagesWithMeetings: DateRangeReportData["languagesWithMeetings"] = [];
+
+    for (const [languageId, langMeetings] of meetingsByLanguage.entries()) {
+      const language = await getLanguageById(languageId);
+      if (language) {
+        languagesWithMeetings.push({
+          language,
+          meetings: langMeetings.sort((a, b) =>
+            new Date(b.meeting_date).getTime() - new Date(a.meeting_date).getTime()
+          ),
+        });
+      }
+    }
+
+    // Sort languages alphabetically
+    languagesWithMeetings.sort((a, b) =>
+      a.language.language.localeCompare(b.language.language)
+    );
+
+    return {
+      startDate: normalizedStart,
+      endDate: normalizedEnd,
+      totalMeetings: meetings.length,
+      totalLanguages: languagesWithMeetings.length,
+      languagesWithMeetings,
+    };
+  } catch (error) {
+    console.error("Error fetching meetings by date range:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get all meetings with language data filtered by date range
+ */
+export async function getMeetingsByDateRangeWithLanguage(
+  startDate: Date | null,
+  endDate: Date | null
+): Promise<MeetingWithLanguage[]> {
+  try {
+    let query = supabase
+      .from("meetings")
+      .select(`
+        *,
+        languages:language_id (
+          id,
+          country,
+          language,
+          responsible_person,
+          priority,
+          work_status,
+          last_meeting_at,
+          created_at,
+          updated_at
+        )
+      `);
+
+    // Apply date filters if provided
+    if (startDate) {
+      const normalizedStart = new Date(startDate);
+      normalizedStart.setHours(0, 0, 0, 0);
+      query = query.gte("meeting_date", normalizedStart.toISOString());
+    }
+
+    if (endDate) {
+      const normalizedEnd = new Date(endDate);
+      normalizedEnd.setHours(23, 59, 59, 999);
+      query = query.lte("meeting_date", normalizedEnd.toISOString());
+    }
+
+    const { data: meetingsData, error } = await query.order("meeting_date", { ascending: false });
+
+    if (error) throw error;
+
+    return (meetingsData || []).map((row: any) => ({
+      meeting: {
+        id: row.id,
+        language_id: row.language_id,
+        meeting_date: row.meeting_date,
+        meeting_type: row.meeting_type,
+        participants: row.participants,
+        discussion_points: row.discussion_points,
+        translation_progress: row.translation_progress,
+        progress_percentage: row.progress_percentage,
+        action_items: row.action_items,
+        next_meeting_date: row.next_meeting_date,
+        meeting_notes: row.meeting_notes,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      },
+      language: row.languages as Language,
+    }));
+  } catch (error) {
+    console.error("Error fetching meetings by date range with language:", error);
     throw error;
   }
 }

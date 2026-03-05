@@ -1,12 +1,15 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import SummaryCard from "@/components/SummaryCard";
-import { getAllLanguages, getAllMeetings, getStaleLanguages, getLanguageById, getLanguagesNoMeeting } from "@/lib/supabase";
+import { getAllLanguages, getAllMeetings, getStaleLanguages, getLanguageById, getLanguagesNoMeeting, getRecentMeetings } from "@/lib/supabase";
 import RecentMeetings from "./dashboard/RecentMeetings";
 import LanguagesNeedingAttention from "./dashboard/LanguagesNeedingAttention";
 import UrgentFollowUps from "./dashboard/UrgentFollowUps";
 import HighPriorityLanguages from "./dashboard/HighPriorityLanguages";
 import ReportsDropdown from "./dashboard/ReportsDropdown";
 import Link from "next/link";
+
+// Force dynamic rendering to prevent stale data
+export const dynamic = "force-dynamic";
 
 function calculateStats(languages: any[]) {
   const now = new Date();
@@ -53,7 +56,7 @@ function calculateStats(languages: any[]) {
 
 export default async function Dashboard() {
   let languages: any[] = [];
-  let meetings: any[] = [];
+  let meetingsWithLanguage: Awaited<ReturnType<typeof getRecentMeetings>> = [];
   let staleLanguages: any[] = [];
   let urgentLanguages: any[] = [];
   let highPriorityLanguages: any[] = [];
@@ -62,15 +65,15 @@ export default async function Dashboard() {
 
   try {
     // Fetch all data in parallel
-    const [languagesData, meetingsData, staleData, urgentData] = await Promise.all([
+    const [languagesData, recentMeetingsData, staleData, urgentData] = await Promise.all([
       getAllLanguages(),
-      getAllMeetings(),
+      getRecentMeetings(5),
       getStaleLanguages(3),
       getLanguagesNoMeeting(7),
     ]);
 
     languages = languagesData;
-    meetings = meetingsData;
+    meetingsWithLanguage = recentMeetingsData;
     staleLanguages = staleData;
     urgentLanguages = urgentData;
     highPriorityLanguages = languages.filter((lang) => lang.priority === "high");
@@ -89,14 +92,6 @@ export default async function Dashboard() {
     completed: 0,
     notStarted: 0,
   };
-
-  // Enrich meetings with language data
-  const meetingsWithLanguage = await Promise.all(
-    meetings.slice(0, 5).map(async (meeting) => ({
-      meeting,
-      language: await getLanguageById(meeting.language_id),
-    }))
-  );
 
   return (
     <DashboardLayout>

@@ -43,7 +43,7 @@ export default function Header() {
             </svg>
           </button>
           <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0 transition-colors duration-200">
-            <span className="hidden xs:inline">Quranic Translation</span> Management System
+            <span className="hidden sm:inline">Quranic Translation</span> Management System
           </h1>
         </div>
         <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">

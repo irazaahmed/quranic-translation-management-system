@@ -37,9 +37,14 @@ export async function createLanguageAction(
       work_status: work_status || 'not_started',
     });
 
+    revalidatePath("/");
     revalidatePath("/languages");
+    revalidatePath("/meetings");
   } catch (error) {
     console.error("Failed to create language:", error);
+    if (error instanceof Error && error.message === "Language already exists") {
+      return { error: "Language already exists" };
+    }
     return { error: "Failed to create language. Please try again." };
   }
 
