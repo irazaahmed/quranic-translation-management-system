@@ -1,19 +1,12 @@
-"use client";
-
-import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { getDailyReport, getMeetingsByDateRange } from "@/lib/supabase";
 import DailyReportContent from "./DailyReportContent";
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import DatePickerController from "./DatePickerController";
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function formatDateForInput(date: Date): string {
   const year = date.getFullYear();
@@ -22,34 +15,17 @@ function formatDateForInput(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-function DailyReportContentWrapper({ selectedDate }: { selectedDate: Date }) {
-  const router = useRouter();
-
-  return (
-    <DailyReportContent
-      report={{
-        selectedDate,
-        totalMeetings: 0,
-        totalLanguages: 0,
-        languagesWithMeetings: [],
-      }}
-    />
-  );
-}
-
-function DatePicker({ 
-  selectedDate, 
-  startDate, 
-  endDate, 
-  hasActiveFilter 
-}: { 
-  selectedDate: Date; 
-  startDate: string | null; 
+function DatePicker({
+  selectedDate,
+  startDate,
+  endDate,
+  hasActiveFilter
+}: {
+  selectedDate: Date;
+  startDate: string | null;
   endDate: string | null;
   hasActiveFilter: boolean;
 }) {
-  const router = useRouter();
-
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
@@ -157,18 +133,7 @@ function DatePicker({
             <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">
               Or select a specific date
             </label>
-            <input
-              type="date"
-              id="date"
-              name="date"
-              defaultValue={formatDateForInput(selectedDate)}
-              onChange={(e) => {
-                if (e.target.value) {
-                  router.push(`/reports/daily?date=${e.target.value}`);
-                }
-              }}
-              className="w-full sm:w-auto rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
-            />
+            <DatePickerController selectedDate={selectedDate} />
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
             <Link
@@ -232,7 +197,7 @@ async function DailyReportInner({
     // Check if date range filter is active
     if (startParam !== undefined || endParam !== undefined) {
       hasActiveFilter = true;
-      
+
       // If both are empty strings, filter for today
       if (startParam === "" && endParam === "") {
         selectedDate = new Date();
@@ -242,7 +207,7 @@ async function DailyReportInner({
         const startDate = startParam && startParam !== "" ? new Date(startParam) : new Date("2000-01-01");
         const endDate = endParam && endParam !== "" ? new Date(endParam) : new Date("2099-12-31");
         const rangeReport = await getMeetingsByDateRange(startDate, endDate);
-        
+
         // Convert to DailyReportData format
         report = {
           selectedDate: new Date(),
@@ -290,9 +255,9 @@ async function DailyReportInner({
               {hasActiveFilter ? "Meeting Report (Date Range)" : "Daily Meeting Report"}
             </h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-              {hasActiveFilter 
-                ? "View meetings filtered by date range" 
-                : date 
+              {hasActiveFilter
+                ? "View meetings filtered by date range"
+                : date
                   ? `View meetings for ${selectedDate.toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
                   : "View meetings for a specific date or date range"}
             </p>
@@ -324,9 +289,9 @@ async function DailyReportInner({
       </div>
 
       {/* Date Picker */}
-      <DatePicker 
-        selectedDate={selectedDate} 
-        startDate={startParam ?? null} 
+      <DatePicker
+        selectedDate={selectedDate}
+        startDate={startParam ?? null}
         endDate={endParam ?? null}
         hasActiveFilter={hasActiveFilter}
       />

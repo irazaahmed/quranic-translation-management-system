@@ -39,6 +39,13 @@ export default function ReportsDropdown() {
       {open && (
         <div className="absolute right-0 mt-2 w-48 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-2 shadow-lg z-10">
           <Link
+            href="/reports/daily"
+            onClick={handleSelect}
+            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200"
+          >
+            Daily Report
+          </Link>
+          <Link
             href="/reports/weekly"
             onClick={handleSelect}
             className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200"

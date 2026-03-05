@@ -11,14 +11,20 @@ import Link from "next/link";
 // Force dynamic rendering to prevent stale data
 export const dynamic = "force-dynamic";
 
-function calculateStats(languages: any[]) {
+async function calculateStats(languages: any[]) {
   const now = new Date();
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+  // Fetch actual meetings count for this week
+  const recentMeetings = await getAllMeetings();
+  const meetingsThisWeek = recentMeetings?.filter(
+    (m) => new Date(m.meeting_date) >= sevenDaysAgo
+  ).length || 0;
+
   const stats = {
     totalLanguages: languages.length,
-    hasMeetingThisWeek: 0,
+    meetingsThisWeek,
     noMeeting3Days: 0,
     highPriority: 0,
     mediumPriority: 0,
@@ -28,10 +34,6 @@ function calculateStats(languages: any[]) {
 
   languages.forEach((lang) => {
     const lastMeeting = lang.last_meeting_at ? new Date(lang.last_meeting_at) : null;
-
-    if (lastMeeting && lastMeeting >= sevenDaysAgo) {
-      stats.hasMeetingThisWeek++;
-    }
 
     if (!lastMeeting || lastMeeting < threeDaysAgo) {
       stats.noMeeting3Days++;
@@ -60,7 +62,7 @@ export default async function Dashboard() {
   let staleLanguages: any[] = [];
   let urgentLanguages: any[] = [];
   let highPriorityLanguages: any[] = [];
-  let stats: ReturnType<typeof calculateStats> | null = null;
+  let stats: Awaited<ReturnType<typeof calculateStats>> | null = null;
   let error: string | null = null;
 
   try {
@@ -77,7 +79,7 @@ export default async function Dashboard() {
     staleLanguages = staleData;
     urgentLanguages = urgentData;
     highPriorityLanguages = languages.filter((lang) => lang.priority === "high");
-    stats = calculateStats(languages);
+    stats = await calculateStats(languages);
   } catch (err) {
     console.error("Failed to fetch dashboard data:", err);
     error = "Failed to load dashboard data";
@@ -85,7 +87,7 @@ export default async function Dashboard() {
 
   const displayStats = stats || {
     totalLanguages: 0,
-    hasMeetingThisWeek: 0,
+    meetingsThisWeek: 0,
     noMeeting3Days: 0,
     highPriority: 0,
     mediumPriority: 0,
@@ -167,7 +169,7 @@ export default async function Dashboard() {
       ) : (
         <>
           {/* Stats Grid */}
-          <div className="grid gap-3 sm:gap-4 grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <SummaryCard
               title="Total Languages"
               value={displayStats.totalLanguages}
@@ -217,8 +219,8 @@ export default async function Dashboard() {
             />
 
             <SummaryCard
-              title="Meeting This Week"
-              value={displayStats.hasMeetingThisWeek}
+              title="Meetings This Week"
+              value={displayStats.meetingsThisWeek}
               color="blue"
               icon={
                 <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,30 +228,6 @@ export default async function Dashboard() {
                 </svg>
               }
               trend={{ value: "last 7 days", label: "" }}
-            />
-
-            <SummaryCard
-              title="No Meeting 3+ Days"
-              value={displayStats.noMeeting3Days}
-              color="amber"
-              icon={
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              }
-              trend={{ value: "needs attention", label: "" }}
-            />
-
-            <SummaryCard
-              title="High Priority"
-              value={displayStats.highPriority}
-              color="purple"
-              icon={
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
-                </svg>
-              }
-              trend={{ value: "priority languages", label: "" }}
             />
           </div>
 

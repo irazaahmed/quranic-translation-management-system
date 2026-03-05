@@ -3,6 +3,9 @@ import { getMonthlyReport } from "@/lib/supabase";
 import MonthlyReportContent from "./MonthlyReportContent";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", {
     month: "short",
