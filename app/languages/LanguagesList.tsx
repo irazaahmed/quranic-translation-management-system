@@ -83,25 +83,25 @@ export default function LanguagesList({ initialLanguages }: LanguagesListProps) 
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800 transition-colors duration-200">
             <tr>
-              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
+              <th scope="col" className="px-3 lg:px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
                 Language
               </th>
-              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
+              <th scope="col" className="px-3 lg:px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
                 Country
               </th>
-              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
+              <th scope="col" className="px-3 lg:px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap max-w-[100px] lg:max-w-none truncate">
                 Responsible
               </th>
-              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
+              <th scope="col" className="px-3 lg:px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
                 Priority
               </th>
-              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
+              <th scope="col" className="px-3 lg:px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
                 Status
               </th>
-              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
+              <th scope="col" className="px-3 lg:px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
                 Last Meeting
               </th>
-              <th scope="col" className="px-4 lg:px-6 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
+              <th scope="col" className="px-3 lg:px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
                 Actions
               </th>
             </tr>
@@ -112,49 +112,49 @@ export default function LanguagesList({ initialLanguages }: LanguagesListProps) 
                 key={lang.id}
                 className="group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
               >
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                <td className="px-3 lg:px-4 py-3 whitespace-nowrap">
                   <Link href={`/languages/${lang.id}`}>
                     <div className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-200">
                       {lang.language}
                     </div>
                   </Link>
                 </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                <td className="px-3 lg:px-4 py-3 whitespace-nowrap">
                   <Link href={`/languages/${lang.id}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-200">
                       {lang.country}
                     </div>
                   </Link>
                 </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap max-w-[120px] lg:max-w-none">
+                <td className="px-3 lg:px-4 py-3 whitespace-nowrap max-w-[80px] lg:max-w-none">
                   <Link href={`/languages/${lang.id}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-200 truncate">
                       {lang.responsible_person || "—"}
                     </div>
                   </Link>
                 </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                <td className="px-3 lg:px-4 py-3 whitespace-nowrap">
                   <Link href={`/languages/${lang.id}`}>
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize transition-colors duration-200 ${getPriorityColor(lang.priority)}`}>
                       {lang.priority || "Not set"}
                     </span>
                   </Link>
                 </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                <td className="px-3 lg:px-4 py-3 whitespace-nowrap">
                   <Link href={`/languages/${lang.id}`}>
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize transition-colors duration-200 ${getWorkStatusBadge(lang.work_status).className}`}>
                       {getWorkStatusBadge(lang.work_status).label}
                     </span>
                   </Link>
                 </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                <td className="px-3 lg:px-4 py-3 whitespace-nowrap">
                   <Link href={`/languages/${lang.id}`}>
                     <div className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-200">
                       {formatDate(lang.last_meeting_at)}
                     </div>
                   </Link>
                 </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right">
+                <td className="px-3 lg:px-4 py-3 whitespace-nowrap text-right">
                   <LanguageActions
                     languageId={lang.id}
                     languageName={`${lang.language} (${lang.country})`}

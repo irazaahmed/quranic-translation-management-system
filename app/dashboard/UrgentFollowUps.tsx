@@ -26,7 +26,7 @@ function getDaysSince(dateString: string | null): number | null {
 
 export default function UrgentFollowUps({ languages }: UrgentFollowUpsProps) {
   return (
-    <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4 sm:p-6 transition-colors duration-200">
+    <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4 sm:p-5 transition-colors duration-200">
       <div className="mb-4 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 transition-colors duration-200 flex-shrink-0">
           <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +40,7 @@ export default function UrgentFollowUps({ languages }: UrgentFollowUpsProps) {
       </div>
 
       {languages.length === 0 ? (
-        <div className="rounded-lg border border-green-200 dark:border-green-900/50 bg-white dark:bg-green-900/10 p-4 text-center transition-colors duration-200">
+        <div className="rounded-lg border border-green-200 dark:border-green-900/50 bg-white dark:bg-green-900/10 p-3 sm:p-4 text-center transition-colors duration-200">
           <svg className="mx-auto h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -50,14 +50,14 @@ export default function UrgentFollowUps({ languages }: UrgentFollowUpsProps) {
           <p className="text-xs text-green-700 dark:text-green-400 transition-colors duration-200">No languages with 7+ days without meetings</p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-2 sm:space-y-3">
           {languages.slice(0, 5).map((lang) => {
             const daysSince = getDaysSince(lang.last_meeting_at);
             return (
               <li key={lang.id}>
                 <Link
                   href={`/languages/${lang.id}`}
-                  className="block rounded-lg border border-red-200 dark:border-red-900/50 bg-white dark:bg-gray-900 p-3 sm:p-4 transition-all duration-200 hover:bg-red-50 dark:hover:bg-gray-800"
+                  className="block rounded-lg border border-red-200 dark:border-red-900/50 bg-white dark:bg-gray-900 p-3 transition-all duration-200 hover:bg-red-50 dark:hover:bg-gray-800"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">

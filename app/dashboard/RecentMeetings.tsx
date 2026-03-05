@@ -26,8 +26,8 @@ function truncateText(text: string | null, maxLength: number): string {
 export default function RecentMeetings({ meetings }: RecentMeetingsProps) {
   if (meetings.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-6 transition-colors duration-200">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-200">Recent Meetings</h3>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-5 transition-colors duration-200">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white transition-colors duration-200">Recent Meetings</h3>
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
           No meetings recorded yet.
         </p>
@@ -36,20 +36,20 @@ export default function RecentMeetings({ meetings }: RecentMeetingsProps) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-6 transition-colors duration-200">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-5 transition-colors duration-200">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-200">Recent Meetings</h3>
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white transition-colors duration-200">Recent Meetings</h3>
         <Link href="/meetings" className="text-xs sm:text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors duration-200 whitespace-nowrap">
           <span className="hidden sm:inline">View all meetings</span>
           <span className="sm:hidden">View all</span>
         </Link>
       </div>
-      <ul className="space-y-3 sm:space-y-4">
+      <ul className="space-y-3">
         {meetings.slice(0, 5).map(({ meeting, language }) => (
           <li key={meeting.id}>
             <Link
               href={`/languages/${meeting.language_id}`}
-              className="block rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 sm:p-4 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="block rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">

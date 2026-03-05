@@ -17,7 +17,7 @@ function formatDate(dateString: string | null): string {
 
 export default function LanguagesNeedingAttention({ languages }: LanguagesNeedingAttentionProps) {
   return (
-    <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 sm:p-6 transition-colors duration-200">
+    <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 sm:p-5 transition-colors duration-200">
       <div className="mb-4 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40 transition-colors duration-200 flex-shrink-0">
           <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,7 +31,7 @@ export default function LanguagesNeedingAttention({ languages }: LanguagesNeedin
       </div>
 
       {languages.length === 0 ? (
-        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-white dark:bg-amber-900/10 p-4 text-center transition-colors duration-200">
+        <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-white dark:bg-amber-900/10 p-3 sm:p-4 text-center transition-colors duration-200">
           <svg className="mx-auto h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -39,7 +39,7 @@ export default function LanguagesNeedingAttention({ languages }: LanguagesNeedin
           <p className="text-xs text-amber-700 dark:text-amber-400 transition-colors duration-200">All languages have recent meetings</p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-2 sm:space-y-3">
           {languages.slice(0, 5).map((lang) => (
             <li key={lang.id}>
               <Link

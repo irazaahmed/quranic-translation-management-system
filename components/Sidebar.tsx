@@ -93,14 +93,14 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Fixed on desktop, slide-in on mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:h-screen flex flex-col ${
-          isMobileOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-transform duration-300 ease-in-out flex flex-col overflow-hidden ${
+          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Logo */}
-        <div className="flex h-16 items-center border-b border-gray-200 dark:border-gray-700 px-6 transition-colors duration-200">
+        <div className="flex h-16 items-center border-b border-gray-200 dark:border-gray-700 px-6 transition-colors duration-200 flex-shrink-0">
           <Link href="/" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600">
               <span className="text-white font-bold text-lg">QTM</span>
@@ -112,8 +112,8 @@ export default function Sidebar() {
           </Link>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex flex-col p-4 flex-1 gap-1">
+        {/* Navigation - scrollable */}
+        <nav className="flex flex-col p-4 flex-1 gap-1 overflow-y-auto">
           {/* Main Nav Items */}
           {mainNavItems.map((item) => {
             const isActive = pathname === item.href;

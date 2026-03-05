@@ -45,7 +45,7 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
       {/* Search Bar */}
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
@@ -58,7 +58,7 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
           placeholder="Search meetings..."
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
-          className="w-full rounded-lg sm:rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 py-2.5 sm:py-3 pl-10 sm:pl-12 pr-4 text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 py-2.5 pl-10 pr-4 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
         />
         {isPending && (
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4">
@@ -114,43 +114,43 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 sm:gap-6">
+        <div className="grid gap-3 sm:gap-4 lg:gap-6">
           {meetings.map(({ meeting, language }) => (
             <Link
               key={meeting.id}
               href={`/languages/${meeting.language_id}`}
-              className="block rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-6 transition-all duration-200 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md"
+              className="block rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4 transition-all duration-200 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   {/* Header */}
                   <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/20 transition-colors duration-200 flex-shrink-0">
+                    <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/20 transition-colors duration-200 flex-shrink-0">
                       <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white transition-colors duration-200 truncate">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white transition-colors duration-200 truncate">
                         {language?.language || "Unknown Language"}
                       </h4>
-                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200 truncate">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200 truncate">
                         {language?.country} • {formatDate(meeting.meeting_date)}
                       </p>
                     </div>
                   </div>
 
                   {/* Content */}
-                  <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3">
+                  <div className="mt-2 sm:mt-3 space-y-1.5 sm:space-y-2">
                     {/* Participants */}
                     {meeting.participants && (
                       <div className="flex items-start gap-2">
-                        <svg className="mt-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                         <div className="min-w-0 flex-1">
                           <span className="text-xs font-medium text-gray-500 dark:text-gray-400 transition-colors duration-200">Participants:</span>
-                          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 transition-colors duration-200 break-words">{meeting.participants}</p>
+                          <p className="text-xs text-gray-700 dark:text-gray-300 transition-colors duration-200 break-words">{meeting.participants}</p>
                         </div>
                       </div>
                     )}
@@ -158,13 +158,13 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
                     {/* Discussion Points */}
                     {meeting.discussion_points && (
                       <div className="flex items-start gap-2">
-                        <svg className="mt-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                         </svg>
                         <div className="min-w-0 flex-1">
                           <span className="text-xs font-medium text-gray-500 dark:text-gray-400 transition-colors duration-200">Discussion:</span>
-                          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 transition-colors duration-200 break-words">
-                            {truncateText(meeting.discussion_points, 150)}
+                          <p className="text-xs text-gray-700 dark:text-gray-300 transition-colors duration-200 break-words">
+                            {truncateText(meeting.discussion_points, 120)}
                           </p>
                         </div>
                       </div>
@@ -173,13 +173,13 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
                     {/* Next Action */}
                     {meeting.action_items && (
                       <div className="flex items-start gap-2">
-                        <svg className="mt-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                         <div className="min-w-0 flex-1">
                           <span className="text-xs font-medium text-gray-500 dark:text-gray-400 transition-colors duration-200">Next Action:</span>
-                          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 transition-colors duration-200 break-words">
-                            {truncateText(meeting.action_items, 150)}
+                          <p className="text-xs text-gray-700 dark:text-gray-300 transition-colors duration-200 break-words">
+                            {truncateText(meeting.action_items, 120)}
                           </p>
                         </div>
                       </div>
@@ -188,7 +188,7 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
                 </div>
 
                 {/* Arrow */}
-                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0 ml-2 sm:ml-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>

@@ -37,12 +37,12 @@ function DatePicker({
   startOfMonth.setDate(1);
 
   return (
-    <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-6 transition-colors duration-200">
+    <div className="mb-4 sm:mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4 lg:p-5 transition-colors duration-200">
       {/* Date Range Filter Form */}
       <form
         action="/reports/daily"
         method="GET"
-        className="flex flex-col lg:flex-row gap-4"
+        className="flex flex-col lg:flex-row gap-3 sm:gap-4"
       >
         <div className="flex-1">
           <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">
@@ -53,7 +53,7 @@ function DatePicker({
             id="startDate"
             name="startDate"
             defaultValue={startDate || undefined}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
           />
         </div>
         <div className="flex-1">
@@ -65,13 +65,13 @@ function DatePicker({
             id="endDate"
             name="endDate"
             defaultValue={endDate || undefined}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
           />
         </div>
         <div className="flex items-end gap-2 flex-shrink-0 flex-wrap">
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -81,7 +81,7 @@ function DatePicker({
           {hasActiveFilter && (
             <Link
               href="/reports/daily"
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-6 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 whitespace-nowrap"
             >
               Clear
             </Link>
@@ -90,7 +90,7 @@ function DatePicker({
       </form>
 
       {/* Quick Filter Buttons */}
-      <div className="mt-4 flex items-center gap-2 flex-wrap">
+      <div className="mt-3 flex items-center gap-2 flex-wrap">
         <span className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">Quick filters:</span>
         <Link
           href="/reports/daily"
@@ -127,8 +127,8 @@ function DatePicker({
       </div>
 
       {/* Single Date Picker */}
-      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="flex-1">
             <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">
               Or select a specific date
@@ -138,7 +138,7 @@ function DatePicker({
           <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
             <Link
               href={`/reports/daily?date=${formatDateForInput(yesterday)}`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-3 sm:px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 whitespace-nowrap"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -148,13 +148,13 @@ function DatePicker({
             </Link>
             <Link
               href="/reports/daily"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 sm:px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap"
             >
               Today
             </Link>
             <Link
               href={`/reports/daily?date=${formatDateForInput(tomorrow)}`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-3 sm:px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200 whitespace-nowrap"
             >
               <span className="hidden sm:inline">Tomorrow</span>
               <span className="sm:hidden">Tomorrow</span>
@@ -234,10 +234,10 @@ async function DailyReportInner({
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <div className="mb-6 sm:mb-8">
+      {/* Page Header - optimized for small laptops */}
+      <div className="mb-4 sm:mb-6 lg:mb-8">
         {/* Breadcrumb */}
-        <nav className="mb-3 sm:mb-4 flex items-center gap-2 text-sm overflow-x-auto">
+        <nav className="mb-2 sm:mb-3 flex items-center gap-2 text-sm overflow-x-auto">
           <Link href="/" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors duration-200 whitespace-nowrap">
             Dashboard
           </Link>
@@ -249,12 +249,12 @@ async function DailyReportInner({
           <span className="text-gray-900 dark:text-gray-100 font-medium transition-colors duration-200 whitespace-nowrap">Daily Report</span>
         </nav>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200 truncate">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200 truncate">
               {hasActiveFilter ? "Meeting Report (Date Range)" : "Daily Meeting Report"}
             </h1>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
               {hasActiveFilter
                 ? "View meetings filtered by date range"
                 : date
@@ -288,7 +288,7 @@ async function DailyReportInner({
         </div>
       </div>
 
-      {/* Date Picker */}
+      {/* Date Picker - optimized for small laptops */}
       <DatePicker
         selectedDate={selectedDate}
         startDate={startParam ?? null}

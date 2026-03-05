@@ -27,10 +27,10 @@ export default async function MonthlyReportPage() {
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <div className="mb-6 sm:mb-8">
+      {/* Page Header - optimized for small laptops */}
+      <div className="mb-4 sm:mb-6 lg:mb-8">
         {/* Breadcrumb */}
-        <nav className="mb-3 sm:mb-4 flex items-center gap-2 text-sm overflow-x-auto">
+        <nav className="mb-2 sm:mb-3 flex items-center gap-2 text-sm overflow-x-auto">
           <Link href="/" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors duration-200 whitespace-nowrap">
             Dashboard
           </Link>
@@ -42,12 +42,12 @@ export default async function MonthlyReportPage() {
           <span className="text-gray-900 dark:text-gray-100 font-medium transition-colors duration-200 whitespace-nowrap">Monthly Report</span>
         </nav>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200 truncate">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 transition-colors duration-200 truncate">
               Monthly Meeting Report
             </h1>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
               Summary of all meetings from the past 30 days
             </p>
           </div>

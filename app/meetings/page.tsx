@@ -46,10 +46,10 @@ export default async function MeetingsPage({
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <div className="mb-6 sm:mb-8">
+      {/* Page Header - optimized for small laptops */}
+      <div className="mb-4 sm:mb-6 lg:mb-8">
         {/* Breadcrumb */}
-        <nav className="mb-3 sm:mb-4 flex items-center gap-2 text-sm overflow-x-auto">
+        <nav className="mb-2 sm:mb-3 flex items-center gap-2 text-sm overflow-x-auto">
           <Link href="/" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200 whitespace-nowrap">
             Dashboard
           </Link>
@@ -57,34 +57,35 @@ export default async function MeetingsPage({
           <span className="text-gray-900 dark:text-white font-medium transition-colors duration-200 whitespace-nowrap">All Meetings</span>
         </nav>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200 truncate">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200 truncate">
               All Meetings
             </h1>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
               Search and browse all meeting records
             </p>
           </div>
           <Link
             href="/meetings/new"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 sm:px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap flex-shrink-0"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 sm:px-4 lg:px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap flex-shrink-0"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <span className="hidden sm:inline">New Meeting</span>
+            <span className="hidden lg:inline">New Meeting</span>
+            <span className="hidden sm:inline lg:hidden">Meeting</span>
             <span className="sm:hidden">New</span>
           </Link>
         </div>
       </div>
 
-      {/* Date Filter */}
-      <div className="mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-6 transition-colors duration-200">
+      {/* Date Filter - optimized for small laptops */}
+      <div className="mb-4 sm:mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4 lg:p-6 transition-colors duration-200">
         <form
           action="/meetings"
           method="GET"
-          className="flex flex-col lg:flex-row gap-4"
+          className="flex flex-col lg:flex-row gap-3 sm:gap-4"
         >
           <div className="flex-1">
             <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200 mb-2">

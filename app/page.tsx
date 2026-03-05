@@ -97,36 +97,38 @@ export default async function Dashboard() {
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <div className="mb-6 sm:mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Page Header - optimized for small laptops */}
+      <div className="mb-4 sm:mb-6 lg:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200 truncate">Dashboard</h1>
-            <p className="mt-1 sm:mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200 truncate">Dashboard</h1>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
               Overview of language meeting tracking status
             </p>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
+          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
             <ReportsDropdown />
             <Link
               href="/languages/new"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors duration-200 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 sm:px-4 lg:px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors duration-200 whitespace-nowrap"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span className="hidden sm:inline">Add Language</span>
-              <span className="sm:hidden">Language</span>
+              <span className="hidden lg:inline">Add Language</span>
+              <span className="hidden sm:inline lg:hidden">Language</span>
+              <span className="sm:hidden">Add</span>
             </Link>
             <Link
               href="/meetings/new"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 sm:px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 sm:px-4 lg:px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span className="hidden sm:inline">Quick Meeting</span>
-              <span className="sm:hidden">Meeting</span>
+              <span className="hidden lg:inline">Quick Meeting</span>
+              <span className="hidden sm:inline lg:hidden">Meeting</span>
+              <span className="sm:hidden">New</span>
             </Link>
           </div>
         </div>
@@ -231,9 +233,9 @@ export default async function Dashboard() {
             />
           </div>
 
-          {/* Main Dashboard Grid */}
-          <div className="mt-6 sm:mt-8 grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
-            {/* Recent Meetings - Left side (2 columns) */}
+          {/* Main Dashboard Grid - optimized for small laptops */}
+          <div className="mt-4 sm:mt-6 grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
+            {/* Recent Meetings - Left side (2 columns on lg, full on md) */}
             <div className="lg:col-span-2">
               <RecentMeetings meetings={meetingsWithLanguage} />
             </div>
@@ -245,12 +247,12 @@ export default async function Dashboard() {
           </div>
 
           {/* Urgent Follow-ups - Full width */}
-          <div className="mt-4 sm:mt-6">
+          <div className="mt-4 sm:mt-5">
             <UrgentFollowUps languages={urgentLanguages} />
           </div>
 
           {/* High Priority Languages - Full width below */}
-          <div className="mt-4 sm:mt-6">
+          <div className="mt-4 sm:mt-5">
             <HighPriorityLanguages languages={highPriorityLanguages} />
           </div>
         </>
