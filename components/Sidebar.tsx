@@ -135,7 +135,7 @@ export default function Sidebar() {
           })}
 
           {/* Reports Dropdown */}
-          <div>
+          <div className="relative">
             <button
               onClick={() => setIsReportsOpen(!isReportsOpen)}
               className={`w-full flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 ${
@@ -160,25 +160,27 @@ export default function Sidebar() {
 
             {/* Report Sub-items */}
             {isReportsOpen && (
-              <div className="mt-1 ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700 space-y-1">
-                {reportItems.map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={`flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400"
-                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                      }`}
-                    >
-                      {item.icon}
-                      {item.name}
-                    </Link>
-                  );
-                })}
+              <div className="relative overflow-hidden">
+                <div className="ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700 space-y-1">
+                  {reportItems.map((item) => {
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => setIsMobileOpen(false)}
+                        className={`flex items-center gap-3 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                          isActive
+                            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400"
+                            : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                        }`}
+                      >
+                        {item.icon}
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
