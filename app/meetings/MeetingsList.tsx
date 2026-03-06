@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { searchMeetings, MeetingWithLanguage } from "@/lib/supabase";
+import { useState, useTransition, useMemo } from "react";
+import { searchMeetings, MeetingWithLanguage, Project } from "@/lib/supabase";
 import Link from "next/link";
 
 interface MeetingsListProps {
   initialMeetings: MeetingWithLanguage[];
+  projects: Project[];
+  selectedProjectId: string;
 }
 
 function formatDate(dateString: string): string {
@@ -24,14 +26,22 @@ function truncateText(text: string | null, maxLength: number): string {
   return text.substring(0, maxLength) + "...";
 }
 
-export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
+export default function MeetingsList({ initialMeetings, projects, selectedProjectId }: MeetingsListProps) {
   const [meetings, setMeetings] = useState<MeetingWithLanguage[]>(initialMeetings);
   const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
 
+  // Filter meetings by project
+  const filteredMeetings = useMemo(() => {
+    if (selectedProjectId === "all") {
+      return meetings;
+    }
+    return meetings.filter((m) => m.language?.project_id === selectedProjectId);
+  }, [meetings, selectedProjectId]);
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    
+
     if (!query.trim()) {
       setMeetings(initialMeetings);
       return;
@@ -46,6 +56,49 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
 
   return (
     <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+      {/* Project Filter */}
+      {projects.length > 0 && (
+        <div className="flex items-center gap-3">
+          <label htmlFor="project_filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+            Filter by Project:
+          </label>
+          <select
+            id="project_filter"
+            value={selectedProjectId}
+            onChange={(e) => {
+              const newProjectId = e.target.value;
+              const url = new URL(window.location.href);
+              if (newProjectId === "all") {
+                url.searchParams.delete("projectId");
+              } else {
+                url.searchParams.set("projectId", newProjectId);
+              }
+              window.history.pushState({}, "", url);
+              // Trigger a re-render by updating state
+              setMeetings(initialMeetings.filter((m) => 
+                newProjectId === "all" ? true : m.language?.project_id === newProjectId
+              ));
+            }}
+            className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+          >
+            <option value="all">All Projects</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+          {selectedProjectId !== "all" && (
+            <Link
+              href="/meetings"
+              className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors duration-200"
+            >
+              Clear filter
+            </Link>
+          )}
+        </div>
+      )}
+
       {/* Search Bar */}
       <div className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
@@ -73,7 +126,7 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
       {/* Results Count */}
       <div className="flex items-center justify-between">
         <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-          {meetings.length} {meetings.length === 1 ? "meeting" : "meetings"} found
+          {filteredMeetings.length} {filteredMeetings.length === 1 ? "meeting" : "meetings"} found
         </p>
         {searchQuery && (
           <button
@@ -86,7 +139,7 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
       </div>
 
       {/* Meetings List */}
-      {meetings.length === 0 ? (
+      {filteredMeetings.length === 0 ? (
         <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-12 text-center transition-colors duration-200">
           <div>
             <svg className="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +168,7 @@ export default function MeetingsList({ initialMeetings }: MeetingsListProps) {
         </div>
       ) : (
         <div className="grid gap-3 sm:gap-4 lg:gap-6">
-          {meetings.map(({ meeting, language }) => (
+          {filteredMeetings.map(({ meeting, language }) => (
             <Link
               key={meeting.id}
               href={`/languages/${meeting.language_id}`}

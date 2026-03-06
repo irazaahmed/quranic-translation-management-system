@@ -1,5 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { getAllMeetingsWithLanguage, getMeetingsByDateRangeWithLanguage } from "@/lib/supabase";
+import { getAllMeetingsWithLanguage, getMeetingsByDateRangeWithLanguage, getAllProjects } from "@/lib/supabase";
 import MeetingsList from "./MeetingsList";
 import Link from "next/link";
 
@@ -16,23 +16,33 @@ function formatDateForInput(date: Date): string {
 export default async function MeetingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ startDate?: string; endDate?: string }>;
+  searchParams: Promise<{ startDate?: string; endDate?: string; projectId?: string }>;
 }) {
-  const { startDate: startParam, endDate: endParam } = await searchParams;
-  
+  const { startDate: startParam, endDate: endParam, projectId: projectParam } = await searchParams;
+
   let initialMeetings: Awaited<ReturnType<typeof getAllMeetingsWithLanguage>> = [];
+  let projects: Awaited<ReturnType<typeof getAllProjects>> = [];
   let error: string | null = null;
   let hasActiveFilter = false;
 
   try {
-    if (startParam || endParam) {
-      hasActiveFilter = true;
-      const startDate = startParam ? new Date(startParam) : new Date("2000-01-01");
-      const endDate = endParam ? new Date(endParam) : new Date("2099-12-31");
-      initialMeetings = await getMeetingsByDateRangeWithLanguage(startDate, endDate);
-    } else {
-      initialMeetings = await getAllMeetingsWithLanguage();
-    }
+    // Fetch projects in parallel
+    const [meetingsData, projectsData] = await Promise.all([
+      (async () => {
+        if (startParam || endParam) {
+          hasActiveFilter = true;
+          const startDate = startParam ? new Date(startParam) : new Date("2000-01-01");
+          const endDate = endParam ? new Date(endParam) : new Date("2099-12-31");
+          return await getMeetingsByDateRangeWithLanguage(startDate, endDate);
+        } else {
+          return await getAllMeetingsWithLanguage();
+        }
+      })(),
+      getAllProjects(),
+    ]);
+
+    initialMeetings = meetingsData;
+    projects = projectsData;
   } catch (err) {
     console.error("Failed to fetch meetings:", err);
     error = "Failed to load meetings";
@@ -182,7 +192,7 @@ export default async function MeetingsPage({
         </div>
       )}
 
-      <MeetingsList initialMeetings={initialMeetings} />
+      <MeetingsList initialMeetings={initialMeetings} projects={projects} selectedProjectId={projectParam || "all"} />
     </DashboardLayout>
   );
 }

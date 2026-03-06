@@ -16,7 +16,7 @@ export interface Language {
   last_meeting_at: string | null;
   created_at: string;
   updated_at: string;
-  project_id: string;
+  project_id: string | null;
 }
 
 export interface CreateLanguageInput {
@@ -325,16 +325,37 @@ export async function deleteLanguage(languageId: string): Promise<void> {
 /**
  * Get a single language by ID
  */
-export async function getLanguageById(id: string): Promise<Language | null> {
+export async function getLanguageById(id: string): Promise<LanguageWithProject | null> {
   try {
     const { data, error } = await supabase
       .from("languages")
-      .select("*")
+      .select(`
+        *,
+        projects:project_id (
+          id,
+          name,
+          description,
+          created_at
+        )
+      `)
       .eq("id", id)
       .single();
 
     if (error) throw error;
-    return data;
+
+    return {
+      id: data.id,
+      country: data.country,
+      language: data.language,
+      responsible_person: data.responsible_person,
+      priority: data.priority,
+      work_status: data.work_status,
+      last_meeting_at: data.last_meeting_at,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      project_id: data.project_id,
+      project: data.projects ? (data.projects as Project) : undefined,
+    };
   } catch (error) {
     console.error("Error fetching language:", error);
     throw error;
@@ -444,7 +465,7 @@ export async function getAllLanguagesWithProject(): Promise<LanguageWithProject[
       created_at: row.created_at,
       updated_at: row.updated_at,
       project_id: row.project_id,
-      project: row.projects as Project,
+      project: row.projects ? (row.projects as Project) : undefined,
     }));
   } catch (error) {
     console.error("Error fetching languages with project:", error);
@@ -841,6 +862,7 @@ export async function getAllMeetingsWithLanguage(): Promise<MeetingWithLanguage[
           priority,
           work_status,
           last_meeting_at,
+          project_id,
           created_at,
           updated_at
         )
@@ -1197,6 +1219,7 @@ export async function getMeetingsByDateRangeWithLanguage(
           priority,
           work_status,
           last_meeting_at,
+          project_id,
           created_at,
           updated_at
         )

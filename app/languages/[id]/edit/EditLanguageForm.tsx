@@ -3,10 +3,11 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { updateLanguageAction, FormState } from "@/app/actions/languageActions";
-import { Language } from "@/lib/supabase";
+import { Language, Project } from "@/lib/supabase";
 
 interface EditLanguageFormProps {
   language: Language;
+  projects: Project[];
 }
 
 const priorityOptions = [
@@ -24,7 +25,7 @@ const workStatusOptions = [
 
 const initialState: FormState = {};
 
-export default function EditLanguageForm({ language }: EditLanguageFormProps) {
+export default function EditLanguageForm({ language, projects }: EditLanguageFormProps) {
   const [state, formAction, isPending] = useActionState(
     updateLanguageAction,
     initialState
@@ -37,6 +38,39 @@ export default function EditLanguageForm({ language }: EditLanguageFormProps) {
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 transition-colors duration-200">
         <div className="grid gap-6 sm:grid-cols-2">
+          {/* Project Selection */}
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="project_id"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200"
+            >
+              Project <span className="text-red-500">*</span>
+            </label>
+            <select
+              id="project_id"
+              name="project_id"
+              required
+              defaultValue={language.project_id || ""}
+              className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+            >
+              <option value="">Select a project</option>
+              {projects.length === 0 ? (
+                <option value="" disabled>No projects available</option>
+              ) : (
+                projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))
+              )}
+            </select>
+            {projects.length === 0 && (
+              <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
+                ⚠️ No projects found. Please add a project first.
+              </p>
+            )}
+          </div>
+
           {/* Country */}
           <div>
             <label
@@ -161,7 +195,7 @@ export default function EditLanguageForm({ language }: EditLanguageFormProps) {
         </Link>
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || projects.length === 0}
           className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
         >
           {isPending && (

@@ -1,5 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { getLanguageById } from "@/lib/supabase";
+import { getLanguageById, getAllProjects } from "@/lib/supabase";
 import EditLanguageForm from "./EditLanguageForm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -10,9 +10,12 @@ interface EditLanguagePageProps {
 
 export default async function EditLanguagePage({ params }: EditLanguagePageProps) {
   const { id } = await params;
-  
-  const language = await getLanguageById(id);
-  
+
+  const [language, projects] = await Promise.all([
+    getLanguageById(id),
+    getAllProjects(),
+  ]);
+
   if (!language) {
     notFound();
   }
@@ -42,7 +45,7 @@ export default async function EditLanguagePage({ params }: EditLanguagePageProps
         </p>
       </div>
 
-      <EditLanguageForm language={language} />
+      <EditLanguageForm language={language} projects={projects} />
     </DashboardLayout>
   );
 }

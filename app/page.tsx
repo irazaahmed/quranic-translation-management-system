@@ -1,17 +1,16 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import SummaryCard from "@/components/SummaryCard";
 import { Language } from "@/lib/supabase";
-import { 
-  getCachedLanguages, 
-  getCachedRecentMeetings, 
-  getCachedStaleLanguages, 
+import {
+  getCachedLanguages,
+  getCachedRecentMeetings,
+  getCachedStaleLanguages,
   getCachedUrgentLanguages,
-  getCachedProjectStats 
+  getCachedProjectStats
 } from "@/lib/cachedData";
 import RecentMeetings from "./dashboard/RecentMeetings";
 import LanguagesNeedingAttention from "./dashboard/LanguagesNeedingAttention";
 import UrgentFollowUps from "./dashboard/UrgentFollowUps";
-import HighPriorityLanguages from "./dashboard/HighPriorityLanguages";
 import ReportsDropdown from "./dashboard/ReportsDropdown";
 import ProjectStatsCards from "./dashboard/ProjectStatsCards";
 import Link from "next/link";
@@ -62,7 +61,6 @@ export default async function Dashboard() {
   let meetingsWithLanguage: Awaited<ReturnType<typeof getCachedRecentMeetings>> = [];
   let staleLanguages: Language[] = [];
   let urgentLanguages: Language[] = [];
-  let highPriorityLanguages: Language[] = [];
   let projectStats: Awaited<ReturnType<typeof getCachedProjectStats>> = [];
   let stats: Awaited<ReturnType<typeof getDashboardStats>> | null = null;
   let error: string | null = null;
@@ -81,7 +79,6 @@ export default async function Dashboard() {
     meetingsWithLanguage = recentMeetingsData;
     staleLanguages = staleData;
     urgentLanguages = urgentData;
-    highPriorityLanguages = languages.filter((lang) => lang.priority === "high");
     projectStats = projectStatsData;
     
     // Calculate meetings this week from recent meetings data (already fetched)
@@ -260,11 +257,6 @@ export default async function Dashboard() {
           {/* Urgent Follow-ups - Full width */}
           <div className="mt-4 sm:mt-5">
             <UrgentFollowUps languages={urgentLanguages} />
-          </div>
-
-          {/* High Priority Languages - Full width below */}
-          <div className="mt-4 sm:mt-5">
-            <HighPriorityLanguages languages={highPriorityLanguages} />
           </div>
 
           {/* Project-wise Statistics */}
