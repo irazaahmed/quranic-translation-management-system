@@ -106,8 +106,8 @@ export default async function Dashboard() {
   return (
     <DashboardLayout>
       {/* Page Header - optimized for small laptops */}
-      <div className="mb-4 sm:mb-6 lg:mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+      <div className="mb-4 sm:mb-6 lg:mb-8 overflow-visible">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 overflow-visible">
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white transition-colors duration-200 truncate">Dashboard</h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
