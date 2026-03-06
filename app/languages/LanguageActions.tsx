@@ -76,7 +76,7 @@ export default function LanguageActions({ languageId, languageName, onDelete }: 
                   Delete Language
                 </h3>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-                  Are you sure you want to delete <span className="font-medium text-gray-900 dark:text-white">"{languageName}"</span>?
+                  Are you sure you want to delete <span className="font-medium text-gray-900 dark:text-white">&quot;{languageName}&quot;</span>?
                 </p>
                 <p className="mt-2 text-sm text-red-600 dark:text-red-400 transition-colors duration-200">
                   This action cannot be undone. All associated meetings will also be deleted.

@@ -1,26 +1,27 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import SummaryCard from "@/components/SummaryCard";
-import { getAllLanguages, getAllMeetings, getStaleLanguages, getLanguageById, getLanguagesNoMeeting, getRecentMeetings } from "@/lib/supabase";
+import { Language } from "@/lib/supabase";
+import { 
+  getCachedLanguages, 
+  getCachedRecentMeetings, 
+  getCachedStaleLanguages, 
+  getCachedUrgentLanguages,
+  getCachedProjectStats 
+} from "@/lib/cachedData";
 import RecentMeetings from "./dashboard/RecentMeetings";
 import LanguagesNeedingAttention from "./dashboard/LanguagesNeedingAttention";
 import UrgentFollowUps from "./dashboard/UrgentFollowUps";
 import HighPriorityLanguages from "./dashboard/HighPriorityLanguages";
 import ReportsDropdown from "./dashboard/ReportsDropdown";
+import ProjectStatsCards from "./dashboard/ProjectStatsCards";
 import Link from "next/link";
 
 // Force dynamic rendering to prevent stale data
 export const dynamic = "force-dynamic";
 
-async function calculateStats(languages: any[]) {
+async function getDashboardStats(languages: Language[], meetingsThisWeek: number) {
   const now = new Date();
   const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-  // Fetch actual meetings count for this week
-  const recentMeetings = await getAllMeetings();
-  const meetingsThisWeek = recentMeetings?.filter(
-    (m) => new Date(m.meeting_date) >= sevenDaysAgo
-  ).length || 0;
 
   const stats = {
     totalLanguages: languages.length,
@@ -57,21 +58,23 @@ async function calculateStats(languages: any[]) {
 }
 
 export default async function Dashboard() {
-  let languages: any[] = [];
-  let meetingsWithLanguage: Awaited<ReturnType<typeof getRecentMeetings>> = [];
-  let staleLanguages: any[] = [];
-  let urgentLanguages: any[] = [];
-  let highPriorityLanguages: any[] = [];
-  let stats: Awaited<ReturnType<typeof calculateStats>> | null = null;
+  let languages: Language[] = [];
+  let meetingsWithLanguage: Awaited<ReturnType<typeof getCachedRecentMeetings>> = [];
+  let staleLanguages: Language[] = [];
+  let urgentLanguages: Language[] = [];
+  let highPriorityLanguages: Language[] = [];
+  let projectStats: Awaited<ReturnType<typeof getCachedProjectStats>> = [];
+  let stats: Awaited<ReturnType<typeof getDashboardStats>> | null = null;
   let error: string | null = null;
 
   try {
-    // Fetch all data in parallel
-    const [languagesData, recentMeetingsData, staleData, urgentData] = await Promise.all([
-      getAllLanguages(),
-      getRecentMeetings(5),
-      getStaleLanguages(3),
-      getLanguagesNoMeeting(7),
+    // Fetch all data in parallel using cached functions
+    const [languagesData, recentMeetingsData, staleData, urgentData, projectStatsData] = await Promise.all([
+      getCachedLanguages(),
+      getCachedRecentMeetings(5),
+      getCachedStaleLanguages(3),
+      getCachedUrgentLanguages(7),
+      getCachedProjectStats(),
     ]);
 
     languages = languagesData;
@@ -79,7 +82,15 @@ export default async function Dashboard() {
     staleLanguages = staleData;
     urgentLanguages = urgentData;
     highPriorityLanguages = languages.filter((lang) => lang.priority === "high");
-    stats = await calculateStats(languages);
+    projectStats = projectStatsData;
+    
+    // Calculate meetings this week from recent meetings data (already fetched)
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const meetingsThisWeek = recentMeetingsData.filter(
+      (m) => new Date(m.meeting.meeting_date) >= sevenDaysAgo
+    ).length;
+    
+    stats = await getDashboardStats(languages, meetingsThisWeek);
   } catch (err) {
     console.error("Failed to fetch dashboard data:", err);
     error = "Failed to load dashboard data";
@@ -157,7 +168,7 @@ export default async function Dashboard() {
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
               Get started by adding your first language to track meetings.
             </p>
-            <a
+            <Link
               href="/languages/new"
               className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
             >
@@ -165,7 +176,7 @@ export default async function Dashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               Add First Language
-            </a>
+            </Link>
           </div>
         </div>
       ) : (
@@ -255,6 +266,11 @@ export default async function Dashboard() {
           <div className="mt-4 sm:mt-5">
             <HighPriorityLanguages languages={highPriorityLanguages} />
           </div>
+
+          {/* Project-wise Statistics */}
+          {projectStats.length > 0 && (
+            <ProjectStatsCards stats={projectStats} />
+          )}
         </>
       )}
     </DashboardLayout>

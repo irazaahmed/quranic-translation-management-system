@@ -18,6 +18,7 @@ export async function createLanguageAction(
   const responsible_person = formData.get("responsible_person") as string;
   const priority = formData.get("priority") as "low" | "medium" | "high";
   const work_status = formData.get("work_status") as "not_started" | "in_progress" | "completed";
+  const project_id = formData.get("project_id") as string;
 
   // Validation
   if (!country || !country.trim()) {
@@ -28,6 +29,10 @@ export async function createLanguageAction(
     return { error: "Language is required" };
   }
 
+  if (!project_id || !project_id.trim()) {
+    return { error: "Project is required" };
+  }
+
   try {
     await createLanguage({
       country: country.trim(),
@@ -35,6 +40,7 @@ export async function createLanguageAction(
       responsible_person: responsible_person.trim() || null,
       priority: priority || null,
       work_status: work_status || 'not_started',
+      project_id: project_id.trim(),
     });
 
     revalidatePath("/");
@@ -42,8 +48,11 @@ export async function createLanguageAction(
     revalidatePath("/meetings");
   } catch (error) {
     console.error("Failed to create language:", error);
-    if (error instanceof Error && error.message === "Language already exists") {
-      return { error: "Language already exists" };
+    if (error instanceof Error && error.message === "Language already exists for this project") {
+      return { error: "This language already exists for the selected project" };
+    }
+    if (error instanceof Error && error.message === "Project is required") {
+      return { error: "Project is required" };
     }
     return { error: "Failed to create language. Please try again." };
   }

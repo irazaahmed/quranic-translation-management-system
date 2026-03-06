@@ -1,17 +1,17 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { getAllLanguages } from "@/lib/supabase";
+import { getAllProjects, Project } from "@/lib/supabase";
 import QuickMeetingForm from "./QuickMeetingForm";
 import Link from "next/link";
 
 export default async function NewMeetingPage() {
-  let languages: Awaited<ReturnType<typeof getAllLanguages>> = [];
   let error: string | null = null;
+  let projectsPromise: Promise<Project[]> = Promise.resolve([]);
 
   try {
-    languages = await getAllLanguages();
+    projectsPromise = getAllProjects();
   } catch (err) {
-    console.error("Failed to fetch languages:", err);
-    error = "Failed to load languages";
+    console.error("Failed to fetch projects:", err);
+    error = "Failed to load projects";
   }
 
   return (
@@ -31,7 +31,7 @@ export default async function NewMeetingPage() {
           Quick Meeting Entry
         </h1>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-          Record a meeting for any language quickly
+          Record a meeting for any language
         </p>
       </div>
 
@@ -47,31 +47,7 @@ export default async function NewMeetingPage() {
         </div>
       )}
 
-      {/* Empty State - No Languages */}
-      {languages.length === 0 && !error ? (
-        <div className="flex min-h-[400px] items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center transition-colors duration-200">
-          <div>
-            <svg className="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <h3 className="mt-6 text-xl font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">No languages available</h3>
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
-              You need to add at least one language before creating a meeting.
-            </p>
-            <Link
-              href="/languages/new"
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add First Language
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <QuickMeetingForm languages={languages} />
-      )}
+      <QuickMeetingForm projectsPromise={projectsPromise} />
     </DashboardLayout>
   );
 }

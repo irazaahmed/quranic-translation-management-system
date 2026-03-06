@@ -1,5 +1,5 @@
 import DashboardLayout from "@/components/DashboardLayout";
-import { getAllLanguages } from "@/lib/supabase";
+import { getAllLanguagesWithProject, getAllProjects } from "@/lib/supabase";
 import Link from "next/link";
 import LanguagesList from "./LanguagesList";
 
@@ -7,11 +7,17 @@ import LanguagesList from "./LanguagesList";
 export const dynamic = "force-dynamic";
 
 export default async function LanguagesPage() {
-  let languages: Awaited<ReturnType<typeof getAllLanguages>> = [];
+  let languages: Awaited<ReturnType<typeof getAllLanguagesWithProject>> = [];
+  let projects: Awaited<ReturnType<typeof getAllProjects>> = [];
   let error: string | null = null;
 
   try {
-    languages = await getAllLanguages();
+    const [languagesData, projectsData] = await Promise.all([
+      getAllLanguagesWithProject(),
+      getAllProjects(),
+    ]);
+    languages = languagesData;
+    projects = projectsData;
   } catch (err) {
     console.error("Failed to fetch languages:", err);
     error = "Failed to load languages";
@@ -55,7 +61,7 @@ export default async function LanguagesPage() {
       )}
 
       {/* Languages List */}
-      <LanguagesList initialLanguages={languages} />
+      <LanguagesList initialLanguages={languages} projects={projects} />
     </DashboardLayout>
   );
 }

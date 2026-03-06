@@ -85,8 +85,30 @@ A comprehensive meeting management system for tracking Quranic translation progr
    ```
 
 4. **Set up Supabase database:**
-   
+
+   **IMPORTANT**: If you're upgrading from a single-project version, run the migration script first:
+   ```bash
+   database/migrations/001_add_projects_table.sql
+   ```
+   Or see `database/MIGRATION_GUIDE.md` for detailed instructions.
+
    Create the following tables in your Supabase project:
+
+   **projects table:**
+   ```sql
+   CREATE TABLE projects (
+     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+     name TEXT NOT NULL UNIQUE,
+     description TEXT,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+   );
+
+   -- Insert default projects
+   INSERT INTO projects (id, name, description) VALUES
+     ('00000000-0000-0000-0000-000000000001', 'Kanz ul Irfan', 'Kanz ul Irfan translation project'),
+     ('00000000-0000-0000-0000-000000000002', 'Taleem ul Quran', 'Taleem ul Quran translation project'),
+     ('00000000-0000-0000-0000-000000000003', 'Sirat ul Jinan', 'Sirat ul Jinan translation project');
+   ```
 
    **languages table:**
    ```sql
@@ -96,6 +118,8 @@ A comprehensive meeting management system for tracking Quranic translation progr
      language TEXT NOT NULL,
      responsible_person TEXT,
      priority TEXT CHECK (priority IN ('low', 'medium', 'high')),
+     work_status TEXT CHECK (work_status IN ('not_started', 'in_progress', 'completed')) DEFAULT 'not_started',
+     project_id UUID REFERENCES projects(id) ON DELETE SET NULL NOT NULL,
      last_meeting_at TIMESTAMP WITH TIME ZONE,
      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -125,6 +149,7 @@ A comprehensive meeting management system for tracking Quranic translation progr
    ```sql
    ALTER TABLE languages ENABLE ROW LEVEL SECURITY;
    ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
+   ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 
    -- Allow all operations for languages (adjust based on your auth needs)
    CREATE POLICY "Allow all operations on languages" ON languages
@@ -133,6 +158,16 @@ A comprehensive meeting management system for tracking Quranic translation progr
    -- Allow all operations for meetings
    CREATE POLICY "Allow all operations on meetings" ON meetings
      FOR ALL USING (true) WITH CHECK (true);
+
+   -- Allow all operations for projects
+   CREATE POLICY "Allow all operations on projects" ON projects
+     FOR ALL USING (true) WITH CHECK (true);
+   ```
+
+   **Indexes for performance:**
+   ```sql
+   CREATE INDEX idx_languages_project_id ON languages(project_id);
+   CREATE INDEX idx_languages_work_status ON languages(work_status);
    ```
 
 5. **Run the development server:**
@@ -303,6 +338,21 @@ npm run lint         # Run ESLint
 
 ## Database Schema
 
+### Projects Table
+| Column | Type | Description |
+|--------|------|-------------|
+| id | UUID | Primary key |
+| name | TEXT | Project name (unique) |
+| description | TEXT | Project description |
+| created_at | TIMESTAMP | Creation timestamp |
+
+**Note:** The `projects` table does NOT have an `updated_at` column.
+
+**Default Projects:**
+- Kanz ul Irfan
+- Taleem ul Quran
+- Sirat ul Jinan
+
 ### Languages Table
 | Column | Type | Description |
 |--------|------|-------------|
@@ -311,6 +361,8 @@ npm run lint         # Run ESLint
 | language | TEXT | Language name |
 | responsible_person | TEXT | Person responsible |
 | priority | TEXT | low/medium/high |
+| work_status | TEXT | not_started/in_progress/completed |
+| project_id | UUID | Foreign key to projects |
 | last_meeting_at | TIMESTAMP | Last meeting date |
 | created_at | TIMESTAMP | Creation timestamp |
 | updated_at | TIMESTAMP | Update timestamp |
@@ -331,6 +383,25 @@ npm run lint         # Run ESLint
 | meeting_notes | TEXT | Additional notes |
 | created_at | TIMESTAMP | Creation timestamp |
 | updated_at | TIMESTAMP | Update timestamp |
+
+## Multi-Project Support
+
+QTMS now supports multiple translation projects. Each language belongs to a specific project, allowing you to:
+
+- **Track multiple translation projects** (Kanz ul Irfan, Taleem ul Quran, Sirat ul Jinan)
+- **View project-wise statistics** on the dashboard
+- **Filter languages by project** in the languages list
+- **Select project first** when creating meetings, then see only relevant languages
+
+### Migration from Single-Project Version
+
+If you're upgrading from the single-project version, please run the migration script:
+
+```bash
+database/migrations/001_add_projects_table.sql
+```
+
+See `database/MIGRATION_GUIDE.md` for detailed instructions.
 
 ## Contributing
 

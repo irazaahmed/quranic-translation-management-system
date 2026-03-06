@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Language } from "@/lib/supabase";
+import { LanguageWithProject, Project } from "@/lib/supabase";
 import LanguageActions from "./LanguageActions";
 
 function formatDate(dateString: string | null): string {
@@ -41,15 +41,25 @@ function getWorkStatusBadge(status: string): { className: string; label: string 
 }
 
 interface LanguagesListProps {
-  initialLanguages: Language[];
+  initialLanguages: LanguageWithProject[];
+  projects: Project[];
 }
 
-export default function LanguagesList({ initialLanguages }: LanguagesListProps) {
+export default function LanguagesList({ initialLanguages, projects }: LanguagesListProps) {
   const [languages, setLanguages] = useState(initialLanguages);
+  const [selectedProject, setSelectedProject] = useState<string>("all");
 
   const handleDelete = (deletedId: string) => {
     setLanguages(languages.filter((lang) => lang.id !== deletedId));
   };
+
+  // Filter languages by project
+  const filteredLanguages = useMemo(() => {
+    if (selectedProject === "all") {
+      return languages;
+    }
+    return languages.filter((lang) => lang.project?.id === selectedProject);
+  }, [languages, selectedProject]);
 
   if (languages.length === 0) {
     return (
@@ -78,11 +88,51 @@ export default function LanguagesList({ initialLanguages }: LanguagesListProps) 
 
   return (
     <>
+      {/* Project Filter */}
+      {projects.length > 0 && (
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center gap-3">
+            <label htmlFor="project_filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+              Filter by Project:
+            </label>
+            <select
+              id="project_filter"
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+            >
+              <option value="all">All Projects</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+            {selectedProject !== "all" && (
+              <button
+                onClick={() => setSelectedProject("all")}
+                className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors duration-200"
+              >
+                Clear filter
+              </button>
+            )}
+          </div>
+          {selectedProject !== "all" && (
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              Showing {filteredLanguages.length} of {languages.length} languages
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Desktop/Tablet Table View with horizontal scroll - hidden on mobile */}
       <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800 transition-colors duration-200">
             <tr>
+              <th scope="col" className="px-3 lg:px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
+                Project
+              </th>
               <th scope="col" className="px-3 lg:px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors duration-200 whitespace-nowrap">
                 Language
               </th>
@@ -107,11 +157,16 @@ export default function LanguagesList({ initialLanguages }: LanguagesListProps) 
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900 transition-colors duration-200">
-            {languages.map((lang) => (
+            {filteredLanguages.map((lang) => (
               <tr
                 key={lang.id}
                 className="group hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
               >
+                <td className="px-3 lg:px-4 py-3 whitespace-nowrap">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {lang.project?.name || "—"}
+                  </span>
+                </td>
                 <td className="px-3 lg:px-4 py-3 whitespace-nowrap">
                   <Link href={`/languages/${lang.id}`}>
                     <div className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-200">
@@ -169,13 +224,17 @@ export default function LanguagesList({ initialLanguages }: LanguagesListProps) 
 
       {/* Mobile Card View - visible on screens below 640px */}
       <div className="sm:hidden grid gap-3">
-        {languages.map((lang) => (
+        {filteredLanguages.map((lang) => (
           <div
             key={lang.id}
             className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 transition-all duration-200 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
+                {/* Project Name */}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  {lang.project?.name}
+                </p>
                 {/* Language Name & Country */}
                 <div className="mb-3">
                   <Link href={`/languages/${lang.id}`}>
@@ -236,6 +295,21 @@ export default function LanguagesList({ initialLanguages }: LanguagesListProps) 
           </div>
         ))}
       </div>
+
+      {/* Empty state for filtered results */}
+      {filteredLanguages.length === 0 && languages.length > 0 && (
+        <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-12 text-center transition-colors duration-200">
+          <div>
+            <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+            </svg>
+            <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-200">No languages for this project</h3>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
+              Try selecting a different project or add a language to this project.
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
