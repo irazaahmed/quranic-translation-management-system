@@ -23,7 +23,7 @@ export default function ReportsDropdown() {
   };
 
   return (
-    <div className="relative z-50" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
         className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-white dark:bg-gray-900 dark:border-emerald-700 px-5 py-2.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200"
@@ -39,7 +39,7 @@ export default function ReportsDropdown() {
         </svg>
       </button>
       {open && (
-        <div className="absolute left-0 right-auto mt-2 w-48 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-2 shadow-xl z-50">
+        <div className="absolute left-0 mt-2 w-48 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-2 shadow-lg">
           <Link
             href="/reports/daily"
             onClick={handleSelect}
