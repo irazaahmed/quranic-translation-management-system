@@ -102,9 +102,11 @@ export default function Sidebar() {
         {/* Logo */}
         <div className="flex h-16 items-center border-b border-gray-200 dark:border-gray-700 px-6 transition-colors duration-200 flex-shrink-0">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600">
-              <span className="text-white font-bold text-lg">QTM</span>
-            </div>
+            <img
+              src="/MyLogoYellow.jpeg"
+              alt="Logo"
+              className="h-8 w-8 object-cover rounded-full flex-shrink-0"
+            />
             <div className="flex flex-col">
               <span className="text-sm font-bold text-gray-900 dark:text-white transition-colors duration-200">QTM</span>
               <span className="text-xs text-gray-500 dark:text-gray-400 hidden xl:block transition-colors duration-200">Quranic Translation</span>

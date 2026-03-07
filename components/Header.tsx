@@ -69,9 +69,16 @@ export default function Header() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0 transition-colors duration-200">
-            <span className="hidden sm:inline">Quranic Translation</span> Management System
-          </h1>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img
+              src="/MyLogoYellow.jpeg"
+              alt="Logo"
+              className="h-6 w-6 sm:h-8 sm:w-8 object-cover rounded-full flex-shrink-0"
+            />
+            <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0 transition-colors duration-200">
+              <span className="hidden sm:inline">Quranic Translation</span> Management System
+            </h1>
+          </div>
         </div>
         <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
           <span className="hidden lg:block text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">{currentDate}</span>
