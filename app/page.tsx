@@ -6,7 +6,8 @@ import {
   getCachedRecentMeetings,
   getCachedStaleLanguages,
   getCachedUrgentLanguages,
-  getCachedProjectStats
+  getCachedProjectStats,
+  getCachedMeetingsCountThisWeek,
 } from "@/lib/cachedData";
 import RecentMeetings from "./dashboard/RecentMeetings";
 import LanguagesNeedingAttention from "./dashboard/LanguagesNeedingAttention";
@@ -67,12 +68,13 @@ export default async function Dashboard() {
 
   try {
     // Fetch all data in parallel using cached functions
-    const [languagesData, recentMeetingsData, staleData, urgentData, projectStatsData] = await Promise.all([
+    const [languagesData, recentMeetingsData, staleData, urgentData, projectStatsData, meetingsCount] = await Promise.all([
       getCachedLanguages(),
       getCachedRecentMeetings(5),
       getCachedStaleLanguages(3),
       getCachedUrgentLanguages(7),
       getCachedProjectStats(),
+      getCachedMeetingsCountThisWeek(),
     ]);
 
     languages = languagesData;
@@ -80,13 +82,10 @@ export default async function Dashboard() {
     staleLanguages = staleData;
     urgentLanguages = urgentData;
     projectStats = projectStatsData;
-    
-    // Calculate meetings this week from recent meetings data (already fetched)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const meetingsThisWeek = recentMeetingsData.filter(
-      (m) => new Date(m.meeting.meeting_date) >= sevenDaysAgo
-    ).length;
-    
+
+    // Use the accurate count from dedicated query
+    const meetingsThisWeek = meetingsCount;
+
     stats = await getDashboardStats(languages, meetingsThisWeek);
   } catch (err) {
     console.error("Failed to fetch dashboard data:", err);
