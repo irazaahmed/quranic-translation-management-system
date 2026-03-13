@@ -21,12 +21,12 @@ export const dynamic = "force-dynamic";
 
 async function getDashboardStats(languages: Language[], meetingsThisWeek: number) {
   const now = new Date();
-  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
   const stats = {
     totalLanguages: languages.length,
     meetingsThisWeek,
-    noMeeting3Days: 0,
+    noMeeting7Days: 0,
     highPriority: 0,
     mediumPriority: 0,
     completed: 0,
@@ -36,8 +36,8 @@ async function getDashboardStats(languages: Language[], meetingsThisWeek: number
   languages.forEach((lang) => {
     const lastMeeting = lang.last_meeting_at ? new Date(lang.last_meeting_at) : null;
 
-    if (!lastMeeting || lastMeeting < threeDaysAgo) {
-      stats.noMeeting3Days++;
+    if (!lastMeeting || lastMeeting < sevenDaysAgo) {
+      stats.noMeeting7Days++;
     }
 
     if (lang.priority === "high") {
@@ -71,8 +71,8 @@ export default async function Dashboard() {
     const [languagesData, recentMeetingsData, staleData, urgentData, projectStatsData, meetingsCount] = await Promise.all([
       getCachedLanguages(),
       getCachedRecentMeetings(5),
-      getCachedStaleLanguages(3),
-      getCachedUrgentLanguages(7),
+      getCachedStaleLanguages(7),
+      getCachedUrgentLanguages(14),
       getCachedProjectStats(),
       getCachedMeetingsCountThisWeek(),
     ]);
@@ -95,7 +95,7 @@ export default async function Dashboard() {
   const displayStats = stats || {
     totalLanguages: 0,
     meetingsThisWeek: 0,
-    noMeeting3Days: 0,
+    noMeeting7Days: 0,
     highPriority: 0,
     mediumPriority: 0,
     completed: 0,

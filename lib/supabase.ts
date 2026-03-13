@@ -151,10 +151,10 @@ export async function getAllLanguages(): Promise<Language[]> {
  * Only includes languages with work_status = 'in_progress'
  * Selects only required fields
  */
-export async function getStaleLanguages(days: number = 3): Promise<Language[]> {
+export async function getStaleLanguages(days: number = 7): Promise<Language[]> {
   try {
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - days);
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - days);
 
     const { data, error } = await supabase
       .from("languages")
@@ -171,7 +171,7 @@ export async function getStaleLanguages(days: number = 3): Promise<Language[]> {
         updated_at
       `)
       .eq("work_status", "in_progress")
-      .or(`last_meeting_at.is.null,last_meeting_at.lt.${threeDaysAgo.toISOString()}`)
+      .or(`last_meeting_at.is.null,last_meeting_at.lt.${daysAgo.toISOString()}`)
       .order("last_meeting_at", { ascending: true, nullsFirst: true });
 
     if (error) {
@@ -484,14 +484,14 @@ export interface ProjectStats {
   completed: number;
   notStarted: number;
   meetingsThisWeek: number;
-  noMeeting3Days: number;
+  noMeeting7Days: number;
 }
 
 export async function getProjectStats(): Promise<ProjectStats[]> {
   try {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+    const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
     // Single query with JOINs to fetch all data at once
     const { data, error } = await supabase
@@ -541,8 +541,8 @@ export async function getProjectStats(): Promise<ProjectStats[]> {
         completed: languages.filter(l => l.work_status === 'completed').length,
         notStarted: languages.filter(l => l.work_status === 'not_started').length,
         meetingsThisWeek,
-        noMeeting3Days: languages.filter(l =>
-          !l.last_meeting_at || new Date(l.last_meeting_at) < threeDaysAgo
+        noMeeting7Days: languages.filter(l =>
+          !l.last_meeting_at || new Date(l.last_meeting_at) < fourteenDaysAgo
         ).length,
       };
 

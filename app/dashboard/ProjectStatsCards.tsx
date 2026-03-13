@@ -51,7 +51,7 @@ export default function ProjectStatsCards({ stats }: ProjectStatsCardsProps) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500 dark:text-gray-400">Needs Attention</span>
-                <span className="text-sm font-medium text-amber-600 dark:text-amber-400">{stat.noMeeting3Days}</span>
+                <span className="text-sm font-medium text-amber-600 dark:text-amber-400">{stat.noMeeting7Days}</span>
               </div>
             </div>
 
