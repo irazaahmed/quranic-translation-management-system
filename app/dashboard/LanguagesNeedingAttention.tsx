@@ -25,7 +25,7 @@ export default function LanguagesNeedingAttention({ languages }: LanguagesNeedin
           </svg>
         </div>
         <div>
-          <h3 className="text-sm sm:text-base font-semibold text-amber-900 dark:text-amber-300 transition-colors duration-200">Follow-up Required (7+ Days)</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-amber-900 dark:text-amber-300 transition-colors duration-200">Follow-up Required (14+ Days)</h3>
           <p className="text-xs text-amber-700 dark:text-amber-400 transition-colors duration-200">Languages that need a follow-up meeting</p>
         </div>
       </div>

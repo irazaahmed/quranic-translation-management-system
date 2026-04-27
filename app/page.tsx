@@ -71,8 +71,8 @@ export default async function Dashboard() {
     const [languagesData, recentMeetingsData, staleData, urgentData, projectStatsData, meetingsCount] = await Promise.all([
       getCachedLanguages(),
       getCachedRecentMeetings(5),
-      getCachedStaleLanguages(7),
-      getCachedUrgentLanguages(14),
+      getCachedStaleLanguages(14),
+      getCachedUrgentLanguages(30),
       getCachedProjectStats(),
       getCachedMeetingsCountThisWeek(),
     ]);

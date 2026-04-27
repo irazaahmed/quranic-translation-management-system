@@ -34,7 +34,7 @@ export default function UrgentFollowUps({ languages }: UrgentFollowUpsProps) {
           </svg>
         </div>
         <div>
-          <h3 className="text-sm sm:text-base font-semibold text-red-900 dark:text-red-300 transition-colors duration-200">Immediate Follow-up Required (14+ Days)</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-red-900 dark:text-red-300 transition-colors duration-200">Immediate Follow-up Required (30+ Days)</h3>
           <p className="text-xs text-red-700 dark:text-red-400 transition-colors duration-200">Languages requiring urgent review</p>
         </div>
       </div>
@@ -47,7 +47,7 @@ export default function UrgentFollowUps({ languages }: UrgentFollowUpsProps) {
           <p className="mt-2 text-sm font-medium text-green-900 dark:text-green-300 transition-colors duration-200">
             All languages are actively being followed up.
           </p>
-          <p className="text-xs text-green-700 dark:text-green-400 transition-colors duration-200">No languages with 14+ days without meetings</p>
+          <p className="text-xs text-green-700 dark:text-green-400 transition-colors duration-200">No languages with 30+ days without meetings</p>
         </div>
       ) : (
         <ul className="space-y-2 sm:space-y-3">
