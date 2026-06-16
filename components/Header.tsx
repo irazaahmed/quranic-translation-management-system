@@ -65,7 +65,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-20 h-16 border-b border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-3 sm:px-4 lg:px-6 transition-colors duration-200">
+    <header className="sticky top-0 z-20 h-16 border-b border-gray-200/70 dark:border-gray-700/70 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl px-3 sm:px-4 lg:px-6 transition-colors duration-200">
       <div className="flex h-full items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
           {/* Mobile menu button - visible only on mobile */}

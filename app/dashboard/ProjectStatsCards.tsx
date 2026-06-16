@@ -17,11 +17,13 @@ export default function ProjectStatsCards({ stats }: ProjectStatsCardsProps) {
         Project-wise Statistics
       </h2>
       <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map((stat) => (
+        {stats.map((stat, i) => (
           <div
             key={stat.project.id}
-            className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 transition-colors duration-200 hover:shadow-lg"
+            className={`card-hover animate-fade-in-up stagger-${(i % 6) + 1} relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5`}
           >
+            {/* Colored top accent */}
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500" />
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
                 {stat.project.name}

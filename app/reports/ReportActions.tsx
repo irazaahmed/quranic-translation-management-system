@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/components/Toast";
 
 interface ReportMeeting {
   id: string;
@@ -50,6 +51,7 @@ export default function ReportActions({
   fileBase,
 }: ReportActionsProps) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
+  const toast = useToast();
 
   const buildText = (): string => {
     let text = `${title}\n${periodLabel}\n`;
@@ -73,9 +75,11 @@ export default function ReportActions({
     try {
       await navigator.clipboard.writeText(buildText());
       setCopyStatus("copied");
+      toast({ type: "success", message: "Report copied to clipboard" });
       setTimeout(() => setCopyStatus("idle"), 2000);
     } catch {
       setCopyStatus("error");
+      toast({ type: "error", message: "Couldn't copy report" });
       setTimeout(() => setCopyStatus("idle"), 2000);
     }
   };
@@ -110,6 +114,7 @@ export default function ReportActions({
     a.download = `${fileBase}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    toast({ type: "success", message: "CSV downloaded" });
   };
 
   const handlePrint = () => window.print();

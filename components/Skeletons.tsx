@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 
 function Shimmer({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded bg-gray-200 dark:bg-gray-700 ${className}`} />;
+  return <div className={`shimmer rounded bg-gray-200 dark:bg-gray-700 ${className}`} />;
 }
 
 /** Generic table-style skeleton used while a list page loads. */

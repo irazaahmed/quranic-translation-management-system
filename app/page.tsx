@@ -17,6 +17,7 @@ import ReportsDropdown from "./dashboard/ReportsDropdown";
 import ProjectStatsCards from "./dashboard/ProjectStatsCards";
 import AnalyticsCharts from "./dashboard/AnalyticsCharts";
 import UpcomingMeetings from "./dashboard/UpcomingMeetings";
+import DashboardHero from "./dashboard/DashboardHero";
 import { StaffOnly } from "@/components/AuthProvider";
 import Link from "next/link";
 
@@ -196,6 +197,13 @@ export default async function Dashboard() {
         </div>
       ) : (
         <>
+          {/* Hero banner */}
+          <DashboardHero
+            needsAttention={staleLanguages.length}
+            upcoming={upcomingMeetings.length}
+            meetingsThisWeek={displayStats.meetingsThisWeek}
+          />
+
           {/* Stats Grid */}
           <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <SummaryCard
@@ -278,7 +286,7 @@ export default async function Dashboard() {
           </div>
 
           {/* Upcoming Meetings + Urgent Follow-ups */}
-          <div className="mt-4 sm:mt-6 grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+          <div id="upcoming" className="scroll-mt-20 mt-4 sm:mt-6 grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
             <UpcomingMeetings meetings={upcomingMeetings} />
             <UrgentFollowUps languages={urgentLanguages} />
           </div>

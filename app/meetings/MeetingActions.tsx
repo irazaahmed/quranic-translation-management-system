@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { deleteMeetingAction } from "@/app/actions/meetingActions";
 import { usePermissions } from "@/components/AuthProvider";
+import { useToast } from "@/components/Toast";
 import Link from "next/link";
 
 interface MeetingActionsProps {
@@ -12,6 +13,7 @@ interface MeetingActionsProps {
 
 export default function MeetingActions({ meetingId, languageId }: MeetingActionsProps) {
   const { canWrite } = usePermissions();
+  const toast = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,9 @@ export default function MeetingActions({ meetingId, languageId }: MeetingActions
     if (result.error) {
       setError(result.error);
       setIsDeleting(false);
+      toast({ type: "error", message: result.error });
     } else {
+      toast({ type: "success", message: "Meeting deleted" });
       // Reload the page after successful deletion
       window.location.reload();
     }

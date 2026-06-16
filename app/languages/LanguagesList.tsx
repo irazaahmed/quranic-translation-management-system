@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LanguageWithProject, Project } from "@/lib/supabase";
 import LanguageActions from "./LanguageActions";
 import { usePermissions } from "@/components/AuthProvider";
+import Avatar from "@/components/Avatar";
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return "Never";
@@ -279,11 +280,12 @@ export default function LanguagesList({ initialLanguages, projects }: LanguagesL
                     </div>
                   </Link>
                 </td>
-                <td className="px-3 lg:px-4 py-3 whitespace-nowrap max-w-[80px] lg:max-w-none">
-                  <Link href={`/languages/${lang.id}`}>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-200 truncate">
+                <td className="px-3 lg:px-4 py-3 whitespace-nowrap max-w-[120px] lg:max-w-none">
+                  <Link href={`/languages/${lang.id}`} className="flex items-center gap-2">
+                    <Avatar name={lang.responsible_person} />
+                    <span className="text-sm text-gray-600 dark:text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-200 truncate">
                       {lang.responsible_person || "—"}
-                    </div>
+                    </span>
                   </Link>
                 </td>
                 <td className="px-3 lg:px-4 py-3 whitespace-nowrap">
@@ -325,7 +327,7 @@ export default function LanguagesList({ initialLanguages, projects }: LanguagesL
         {filteredLanguages.map((lang) => (
           <div
             key={lang.id}
-            className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 transition-all duration-200 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md"
+            className="card-hover rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 hover:border-emerald-300 dark:hover:border-emerald-700"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">

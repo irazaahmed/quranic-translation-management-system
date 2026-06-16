@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { deleteLanguageAction } from "@/app/actions/languageActions";
 import { usePermissions } from "@/components/AuthProvider";
+import { useToast } from "@/components/Toast";
 import Link from "next/link";
 
 interface LanguageActionsProps {
@@ -13,6 +14,7 @@ interface LanguageActionsProps {
 
 export default function LanguageActions({ languageId, languageName, onDelete }: LanguageActionsProps) {
   const { canWrite } = usePermissions();
+  const toast = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,13 +25,15 @@ export default function LanguageActions({ languageId, languageName, onDelete }: 
   const handleDelete = async () => {
     setIsDeleting(true);
     setError(null);
-    
+
     const result = await deleteLanguageAction(languageId);
-    
+
     if (result.error) {
       setError(result.error);
       setIsDeleting(false);
+      toast({ type: "error", message: result.error });
     } else {
+      toast({ type: "success", message: `${languageName} deleted` });
       onDelete();
     }
   };

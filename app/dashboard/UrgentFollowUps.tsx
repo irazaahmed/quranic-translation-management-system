@@ -28,7 +28,13 @@ export default function UrgentFollowUps({ languages }: UrgentFollowUpsProps) {
   return (
     <div className="rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4 sm:p-5 transition-colors duration-200">
       <div className="mb-4 flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 transition-colors duration-200 flex-shrink-0">
+        <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/40 transition-colors duration-200 flex-shrink-0">
+          {languages.length > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
+            </span>
+          )}
           <svg className="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>

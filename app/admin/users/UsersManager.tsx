@@ -10,6 +10,7 @@ import {
   type UserActionState,
 } from "@/app/actions/userActions";
 import type { Role } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 
 const initialState: UserActionState = {};
 
@@ -35,6 +36,7 @@ export default function UsersManager({
   currentUserId: string;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const [createState, createFormAction, isCreating] = useActionState(
     createUserAction,
     initialState
@@ -52,6 +54,10 @@ export default function UsersManager({
         text: res.error || res.success || "",
         error: !!res.error,
       });
+      toast({
+        type: res.error ? "error" : "success",
+        message: res.error || `${user.email} is now ${role}`,
+      });
       router.refresh();
     });
   };
@@ -65,6 +71,10 @@ export default function UsersManager({
         text: res.error || res.success || "",
         error: !!res.error,
       });
+      toast({
+        type: res.error ? "error" : "success",
+        message: res.error || `${user.email} deleted`,
+      });
       router.refresh();
     });
   };
@@ -73,9 +83,10 @@ export default function UsersManager({
   useEffect(() => {
     if (createState.success) {
       setShowCreate(false);
+      toast({ type: "success", message: createState.success });
       router.refresh();
     }
-  }, [createState.success, router]);
+  }, [createState.success, router, toast]);
 
   return (
     <div className="space-y-6">
