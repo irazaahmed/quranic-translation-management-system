@@ -32,7 +32,7 @@ export default function DashboardHero({
     );
   }, []);
 
-  const name = profile?.full_name?.split(" ")[0] || profile?.email?.split("@")[0];
+  const name = profile?.full_name?.trim() || profile?.email?.split("@")[0];
 
   return (
     <div className="animate-fade-in-up relative mb-4 sm:mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 p-5 sm:p-7 text-white shadow-lg">
