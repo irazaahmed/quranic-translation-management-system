@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { DailyReportData } from "@/lib/supabase";
+import ReportActions from "../ReportActions";
 
 interface DailyReportContentProps {
   report: DailyReportData | { 
@@ -43,55 +43,6 @@ function formatDateRange(start: Date, end: Date): string {
 }
 
 export default function DailyReportContent({ report }: DailyReportContentProps) {
-  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
-
-  const generateReportText = (): string => {
-    let text = "Meeting Summary\n";
-    text += `${formatReportDate(report.selectedDate)}\n`;
-    text += `Total Meetings: ${report.totalMeetings}\n`;
-    text += `Total Languages: ${report.totalLanguages}\n\n`;
-
-    report.languagesWithMeetings.forEach(({ language, meetings }) => {
-      text += `${language.language} (${language.country})\n`;
-      text += "─".repeat(40) + "\n";
-
-      meetings.forEach((meeting) => {
-        text += `Meeting Date: ${formatDate(meeting.meeting_date)}\n`;
-
-        if (meeting.participants) {
-          text += `Participants: ${meeting.participants}\n`;
-        }
-
-        if (meeting.discussion_points) {
-          text += `Discussion: ${meeting.discussion_points}\n`;
-        }
-
-        if (meeting.action_items) {
-          text += `Next Action: ${meeting.action_items}\n`;
-        }
-
-        text += "\n";
-      });
-
-      text += "\n";
-    });
-
-    return text;
-  };
-
-  const handleCopy = async () => {
-    try {
-      const reportText = generateReportText();
-      await navigator.clipboard.writeText(reportText);
-      setCopyStatus("copied");
-      setTimeout(() => setCopyStatus("idle"), 2000);
-    } catch (err) {
-      console.error("Failed to copy report:", err);
-      setCopyStatus("error");
-      setTimeout(() => setCopyStatus("idle"), 2000);
-    }
-  };
-
   if (report.totalMeetings === 0) {
     return (
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-12 text-center transition-colors duration-200">
@@ -136,31 +87,14 @@ export default function DailyReportContent({ report }: DailyReportContentProps) 
             </div>
           </div>
 
-          <button
-            onClick={handleCopy}
-            disabled={copyStatus === "copied"}
-            className={`inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all duration-200 ${
-              copyStatus === "copied"
-                ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                : "bg-emerald-600 text-white hover:bg-emerald-700"
-            }`}
-          >
-            {copyStatus === "copied" ? (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Copied!
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Copy Report
-              </>
-            )}
-          </button>
+          <ReportActions
+            title="Daily Meeting Summary"
+            periodLabel={formatReportDate(report.selectedDate)}
+            totalMeetings={report.totalMeetings}
+            totalLanguages={report.totalLanguages}
+            languagesWithMeetings={report.languagesWithMeetings as any}
+            fileBase="daily-report"
+          />
         </div>
       </div>
 

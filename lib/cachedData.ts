@@ -85,6 +85,53 @@ export const getCachedRecentMeetings = cache(async (limit: number = 20): Promise
 });
 
 /**
+ * Fetch upcoming meetings (next_meeting_date >= today) - CACHED
+ */
+export const getCachedUpcomingMeetings = cache(async (limit: number = 8): Promise<MeetingWithLanguage[]> => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from("meetings")
+    .select(`
+      id,
+      language_id,
+      meeting_date,
+      next_meeting_date,
+      participants,
+      action_items,
+      created_at,
+      languages:language_id (
+        id, country, language, responsible_person, priority, work_status
+      )
+    `)
+    .gte("next_meeting_date", today.toISOString().slice(0, 10))
+    .order("next_meeting_date", { ascending: true })
+    .limit(limit);
+
+  if (error) throw error;
+
+  return (data || []).map((row: any) => ({
+    meeting: {
+      id: row.id,
+      language_id: row.language_id,
+      meeting_date: row.meeting_date,
+      meeting_type: null,
+      participants: row.participants,
+      discussion_points: null,
+      translation_progress: null,
+      progress_percentage: null,
+      action_items: row.action_items,
+      next_meeting_date: row.next_meeting_date,
+      meeting_notes: null,
+      created_at: row.created_at,
+      updated_at: "",
+    },
+    language: row.languages as Language,
+  }));
+});
+
+/**
  * Fetch stale languages - CACHED
  * Cached for the duration of a single request
  */
@@ -201,8 +248,9 @@ export const getCachedProjectStats = cache(async (): Promise<ProjectStats[]> => 
       completed: languages.filter(l => l.work_status === 'completed').length,
       notStarted: languages.filter(l => l.work_status === 'not_started').length,
       meetingsThisWeek,
-      noMeeting7Days: languages.filter(l =>
-        !l.last_meeting_at || new Date(l.last_meeting_at) < fourteenDaysAgo
+      needsAttention: languages.filter(l =>
+        l.work_status === 'in_progress' &&
+        (!l.last_meeting_at || new Date(l.last_meeting_at) < fourteenDaysAgo)
       ).length,
     });
   }

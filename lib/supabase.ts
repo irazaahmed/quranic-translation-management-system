@@ -186,46 +186,6 @@ export async function getStaleLanguages(days: number = 7): Promise<Language[]> {
   }
 }
 
-/**
- * Fetch languages that have no meeting or last meeting was 7+ days ago - OPTIMIZED
- * Only includes languages with work_status = 'in_progress'
- * Selects only required fields
- */
-export async function getLanguagesNoMeeting(days: number = 7): Promise<Language[]> {
-  try {
-    const daysAgo = new Date();
-    daysAgo.setDate(daysAgo.getDate() - days);
-
-    const { data, error } = await supabase
-      .from("languages")
-      .select(`
-        id,
-        country,
-        language,
-        responsible_person,
-        priority,
-        work_status,
-        last_meeting_at,
-        project_id,
-        created_at,
-        updated_at
-      `)
-      .eq("work_status", "in_progress")
-      .or(`last_meeting_at.is.null,last_meeting_at.lt.${daysAgo.toISOString()}`)
-      .order("last_meeting_at", { ascending: true, nullsFirst: true });
-
-    if (error) {
-      console.error("Supabase error:", error);
-      throw error;
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error("Error fetching languages with no meeting:", error);
-    throw error;
-  }
-}
-
 // NOTE: Write operations (createLanguage / updateLanguage / deleteLanguage /
 // createMeeting / updateMeeting / deleteMeeting) live in lib/mutations.ts
 // (server-only) so RLS can enforce roles via the authenticated client.
@@ -317,6 +277,44 @@ export async function getProjectById(id: string): Promise<Project | null> {
 }
 
 /**
+ * Search languages by name, country, or responsible person
+ */
+export async function searchLanguages(query: string): Promise<LanguageWithProject[]> {
+  try {
+    const { data, error } = await supabase
+      .from("languages")
+      .select(`
+        *,
+        projects:project_id ( id, name, description, created_at )
+      `)
+      .or(
+        `language.ilike.%${query}%,country.ilike.%${query}%,responsible_person.ilike.%${query}%`
+      )
+      .order("language", { ascending: true })
+      .limit(30);
+
+    if (error) throw error;
+
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      country: row.country,
+      language: row.language,
+      responsible_person: row.responsible_person,
+      priority: row.priority,
+      work_status: row.work_status,
+      last_meeting_at: row.last_meeting_at,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      project_id: row.project_id,
+      project: row.projects ? (row.projects as Project) : undefined,
+    }));
+  } catch (error) {
+    console.error("Error searching languages:", error);
+    throw error;
+  }
+}
+
+/**
  * Fetch languages for a specific project
  */
 export async function getLanguagesByProject(projectId: string): Promise<Language[]> {
@@ -392,7 +390,8 @@ export interface ProjectStats {
   completed: number;
   notStarted: number;
   meetingsThisWeek: number;
-  noMeeting7Days: number;
+  /** In-progress languages with no meeting in the last 14 days. */
+  needsAttention: number;
 }
 
 export async function getProjectStats(): Promise<ProjectStats[]> {
@@ -449,8 +448,9 @@ export async function getProjectStats(): Promise<ProjectStats[]> {
         completed: languages.filter(l => l.work_status === 'completed').length,
         notStarted: languages.filter(l => l.work_status === 'not_started').length,
         meetingsThisWeek,
-        noMeeting7Days: languages.filter(l =>
-          !l.last_meeting_at || new Date(l.last_meeting_at) < fourteenDaysAgo
+        needsAttention: languages.filter(l =>
+          l.work_status === 'in_progress' &&
+          (!l.last_meeting_at || new Date(l.last_meeting_at) < fourteenDaysAgo)
         ).length,
       };
 
@@ -673,6 +673,58 @@ export async function getRecentMeetings(limit: number = 20): Promise<MeetingWith
     }));
   } catch (error) {
     console.error("Error fetching recent meetings:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get upcoming meetings (next_meeting_date today or later), soonest first.
+ */
+export async function getUpcomingMeetings(limit: number = 10): Promise<MeetingWithLanguage[]> {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const { data, error } = await supabase
+      .from("meetings")
+      .select(`
+        id,
+        language_id,
+        meeting_date,
+        next_meeting_date,
+        participants,
+        action_items,
+        created_at,
+        languages:language_id (
+          id, country, language, responsible_person, priority, work_status
+        )
+      `)
+      .gte("next_meeting_date", today.toISOString().slice(0, 10))
+      .order("next_meeting_date", { ascending: true })
+      .limit(limit);
+
+    if (error) throw error;
+
+    return (data || []).map((row: any) => ({
+      meeting: {
+        id: row.id,
+        language_id: row.language_id,
+        meeting_date: row.meeting_date,
+        meeting_type: null,
+        participants: row.participants,
+        discussion_points: null,
+        translation_progress: null,
+        progress_percentage: null,
+        action_items: row.action_items,
+        next_meeting_date: row.next_meeting_date,
+        meeting_notes: null,
+        created_at: row.created_at,
+        updated_at: "",
+      },
+      language: row.languages as Language,
+    }));
+  } catch (error) {
+    console.error("Error fetching upcoming meetings:", error);
     throw error;
   }
 }

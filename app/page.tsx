@@ -8,12 +8,15 @@ import {
   getCachedUrgentLanguages,
   getCachedProjectStats,
   getCachedMeetingsCountThisWeek,
+  getCachedUpcomingMeetings,
 } from "@/lib/cachedData";
 import RecentMeetings from "./dashboard/RecentMeetings";
 import LanguagesNeedingAttention from "./dashboard/LanguagesNeedingAttention";
 import UrgentFollowUps from "./dashboard/UrgentFollowUps";
 import ReportsDropdown from "./dashboard/ReportsDropdown";
 import ProjectStatsCards from "./dashboard/ProjectStatsCards";
+import AnalyticsCharts from "./dashboard/AnalyticsCharts";
+import UpcomingMeetings from "./dashboard/UpcomingMeetings";
 import { StaffOnly } from "@/components/AuthProvider";
 import Link from "next/link";
 
@@ -30,6 +33,8 @@ async function getDashboardStats(languages: Language[], meetingsThisWeek: number
     noMeeting7Days: 0,
     highPriority: 0,
     mediumPriority: 0,
+    lowPriority: 0,
+    noPriority: 0,
     completed: 0,
     notStarted: 0,
   };
@@ -43,10 +48,14 @@ async function getDashboardStats(languages: Language[], meetingsThisWeek: number
 
     if (lang.priority === "high") {
       stats.highPriority++;
-    }
-    if (lang.priority === "medium") {
+    } else if (lang.priority === "medium") {
       stats.mediumPriority++;
+    } else if (lang.priority === "low") {
+      stats.lowPriority++;
+    } else {
+      stats.noPriority++;
     }
+
     if (lang.work_status === "completed") {
       stats.completed++;
     }
@@ -64,18 +73,20 @@ export default async function Dashboard() {
   let staleLanguages: Language[] = [];
   let urgentLanguages: Language[] = [];
   let projectStats: Awaited<ReturnType<typeof getCachedProjectStats>> = [];
+  let upcomingMeetings: Awaited<ReturnType<typeof getCachedUpcomingMeetings>> = [];
   let stats: Awaited<ReturnType<typeof getDashboardStats>> | null = null;
   let error: string | null = null;
 
   try {
     // Fetch all data in parallel using cached functions
-    const [languagesData, recentMeetingsData, staleData, urgentData, projectStatsData, meetingsCount] = await Promise.all([
+    const [languagesData, recentMeetingsData, staleData, urgentData, projectStatsData, meetingsCount, upcomingData] = await Promise.all([
       getCachedLanguages(),
       getCachedRecentMeetings(5),
       getCachedStaleLanguages(14),
       getCachedUrgentLanguages(30),
       getCachedProjectStats(),
       getCachedMeetingsCountThisWeek(),
+      getCachedUpcomingMeetings(8),
     ]);
 
     languages = languagesData;
@@ -83,6 +94,7 @@ export default async function Dashboard() {
     staleLanguages = staleData;
     urgentLanguages = urgentData;
     projectStats = projectStatsData;
+    upcomingMeetings = upcomingData;
 
     // Use the accurate count from dedicated query
     const meetingsThisWeek = meetingsCount;
@@ -99,6 +111,8 @@ export default async function Dashboard() {
     noMeeting7Days: 0,
     highPriority: 0,
     mediumPriority: 0,
+    lowPriority: 0,
+    noPriority: 0,
     completed: 0,
     notStarted: 0,
   };
@@ -258,10 +272,26 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          {/* Urgent Follow-ups - Full width */}
-          <div className="mt-4 sm:mt-5">
+          {/* Upcoming Meetings + Urgent Follow-ups */}
+          <div className="mt-4 sm:mt-6 grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
+            <UpcomingMeetings meetings={upcomingMeetings} />
             <UrgentFollowUps languages={urgentLanguages} />
           </div>
+
+          {/* Analytics charts */}
+          <AnalyticsCharts
+            workStatus={{
+              completed: displayStats.completed,
+              inProgress: displayStats.totalLanguages - displayStats.completed - displayStats.notStarted,
+              notStarted: displayStats.notStarted,
+            }}
+            priority={{
+              high: displayStats.highPriority,
+              medium: displayStats.mediumPriority,
+              low: displayStats.lowPriority,
+              none: displayStats.noPriority,
+            }}
+          />
 
           {/* Project-wise Statistics */}
           {projectStats.length > 0 && (

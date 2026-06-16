@@ -1,3 +1,4 @@
+import Link from "next/link";
 import LoginForm from "./LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,25 @@ export default async function LoginPage({
             Enter your credentials to manage data.
           </p>
           <LoginForm redirectTo={redirect ?? "/"} />
+
+          {/* Divider */}
+          <div className="my-5 flex items-center gap-3">
+            <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+            <span className="text-xs text-gray-400 dark:text-gray-500">or</span>
+            <span className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+          </div>
+
+          {/* Continue without login (view-only) */}
+          <Link
+            href="/"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            Continue without login
+          </Link>
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">

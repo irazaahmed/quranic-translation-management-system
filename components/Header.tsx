@@ -89,7 +89,34 @@ export default function Header() {
             </h1>
           </div>
         </div>
+        {/* Global search */}
+        <form action="/search" method="GET" className="hidden md:flex flex-1 max-w-xs lg:max-w-sm mx-3">
+          <div className="relative w-full">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="search"
+              name="q"
+              placeholder="Search…"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 pl-9 pr-3 py-1.5 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
+        </form>
+
         <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
+          {/* Mobile search icon */}
+          <Link
+            href="/search"
+            className="md:hidden rounded-lg p-1.5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+            aria-label="Search"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </Link>
           <span className="hidden lg:block text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">{currentDate}</span>
 
           {/* Theme Selector Dropdown */}

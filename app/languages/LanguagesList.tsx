@@ -50,18 +50,60 @@ export default function LanguagesList({ initialLanguages, projects }: LanguagesL
   const { canWrite } = usePermissions();
   const [languages, setLanguages] = useState(initialLanguages);
   const [selectedProject, setSelectedProject] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedPriority, setSelectedPriority] = useState<string>("all");
+  const [query, setQuery] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("language");
 
   const handleDelete = (deletedId: string) => {
     setLanguages(languages.filter((lang) => lang.id !== deletedId));
   };
 
-  // Filter languages by project
+  const hasActiveFilter =
+    selectedProject !== "all" ||
+    selectedStatus !== "all" ||
+    selectedPriority !== "all" ||
+    query.trim() !== "";
+
+  const resetFilters = () => {
+    setSelectedProject("all");
+    setSelectedStatus("all");
+    setSelectedPriority("all");
+    setQuery("");
+  };
+
+  // Apply filters + sorting
   const filteredLanguages = useMemo(() => {
-    if (selectedProject === "all") {
-      return languages;
-    }
-    return languages.filter((lang) => lang.project?.id === selectedProject);
-  }, [languages, selectedProject]);
+    const priorityRank: Record<string, number> = { high: 0, medium: 1, low: 2 };
+    const q = query.trim().toLowerCase();
+
+    return languages
+      .filter((lang) => selectedProject === "all" || lang.project?.id === selectedProject)
+      .filter((lang) => selectedStatus === "all" || lang.work_status === selectedStatus)
+      .filter((lang) => selectedPriority === "all" || lang.priority === selectedPriority)
+      .filter((lang) =>
+        q === "" ||
+        lang.language.toLowerCase().includes(q) ||
+        lang.country.toLowerCase().includes(q) ||
+        (lang.responsible_person || "").toLowerCase().includes(q)
+      )
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "country":
+            return a.country.localeCompare(b.country);
+          case "priority":
+            return (priorityRank[a.priority || ""] ?? 3) - (priorityRank[b.priority || ""] ?? 3);
+          case "last_meeting": {
+            const at = a.last_meeting_at ? new Date(a.last_meeting_at).getTime() : 0;
+            const bt = b.last_meeting_at ? new Date(b.last_meeting_at).getTime() : 0;
+            return bt - at;
+          }
+          case "language":
+          default:
+            return a.language.localeCompare(b.language);
+        }
+      });
+  }, [languages, selectedProject, selectedStatus, selectedPriority, query, sortBy]);
 
   if (languages.length === 0) {
     return (
@@ -92,42 +134,94 @@ export default function LanguagesList({ initialLanguages, projects }: LanguagesL
 
   return (
     <>
-      {/* Project Filter */}
-      {projects.length > 0 && (
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-center gap-3">
-            <label htmlFor="project_filter" className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-              Filter by Project:
-            </label>
+      {/* Filters + Sort */}
+      <div className="mb-4 sm:mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {/* Search */}
+          <div className="relative lg:col-span-2">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search language, country, person…"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-9 pr-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            />
+          </div>
+
+          {projects.length > 0 && (
             <select
-              id="project_filter"
+              aria-label="Filter by project"
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             >
               <option value="all">All Projects</option>
               {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
+                <option key={project.id} value={project.id}>{project.name}</option>
               ))}
             </select>
-            {selectedProject !== "all" && (
+          )}
+
+          <select
+            aria-label="Filter by status"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          >
+            <option value="all">All Statuses</option>
+            <option value="not_started">Not Started</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+
+          <select
+            aria-label="Filter by priority"
+            value={selectedPriority}
+            onChange={(e) => setSelectedPriority(e.target.value)}
+            className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          >
+            <option value="all">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <label htmlFor="sort_by" className="text-sm text-gray-500 dark:text-gray-400">Sort by:</label>
+            <select
+              id="sort_by"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none"
+            >
+              <option value="language">Language (A–Z)</option>
+              <option value="country">Country (A–Z)</option>
+              <option value="priority">Priority (High→Low)</option>
+              <option value="last_meeting">Last Meeting (Recent)</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Showing {filteredLanguages.length} of {languages.length}
+            </span>
+            {hasActiveFilter && (
               <button
-                onClick={() => setSelectedProject("all")}
+                onClick={resetFilters}
                 className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors duration-200"
               >
-                Clear filter
+                Clear filters
               </button>
             )}
           </div>
-          {selectedProject !== "all" && (
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              Showing {filteredLanguages.length} of {languages.length} languages
-            </p>
-          )}
         </div>
-      )}
+      </div>
 
       {/* Desktop/Tablet Table View with horizontal scroll - hidden on mobile */}
       <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm transition-colors duration-200">
