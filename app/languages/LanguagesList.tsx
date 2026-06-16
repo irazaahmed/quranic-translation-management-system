@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { LanguageWithProject, Project } from "@/lib/supabase";
 import LanguageActions from "./LanguageActions";
+import { usePermissions } from "@/components/AuthProvider";
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return "Never";
@@ -46,6 +47,7 @@ interface LanguagesListProps {
 }
 
 export default function LanguagesList({ initialLanguages, projects }: LanguagesListProps) {
+  const { canWrite } = usePermissions();
   const [languages, setLanguages] = useState(initialLanguages);
   const [selectedProject, setSelectedProject] = useState<string>("all");
 
@@ -72,15 +74,17 @@ export default function LanguagesList({ initialLanguages, projects }: LanguagesL
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
             Get started by adding your first language to track meetings.
           </p>
-          <Link
-            href="/languages/new"
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add First Language
-          </Link>
+          {canWrite && (
+            <Link
+              href="/languages/new"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add First Language
+            </Link>
+          )}
         </div>
       </div>
     );

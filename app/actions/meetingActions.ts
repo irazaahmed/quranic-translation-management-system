@@ -1,6 +1,7 @@
 "use server";
 
-import { updateMeeting, deleteMeeting as deleteMeetingDb } from "@/lib/supabase";
+import { updateMeeting, deleteMeeting as deleteMeetingDb } from "@/lib/mutations";
+import { requireStaff } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -26,6 +27,8 @@ export async function updateMeetingAction(
   }
 
   try {
+    await requireStaff();
+
     await updateMeeting(meetingId, {
       meeting_date: meetingDate.trim(),
       participants: participants.trim() || null,
@@ -37,6 +40,9 @@ export async function updateMeetingAction(
     revalidatePath(`/languages/${languageId}`);
   } catch (error) {
     console.error("Failed to update meeting:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to edit meetings." };
+    }
     return { error: "Failed to update meeting. Please try again." };
   }
 
@@ -45,12 +51,17 @@ export async function updateMeetingAction(
 
 export async function deleteMeetingAction(meetingId: string, languageId: string): Promise<{ error?: string }> {
   try {
+    await requireStaff();
+
     await deleteMeetingDb(meetingId);
     revalidatePath("/languages");
     revalidatePath(`/languages/${languageId}`);
     return {};
   } catch (error) {
     console.error("Failed to delete meeting:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to delete meetings." };
+    }
     return { error: "Failed to delete meeting. Please try again." };
   }
 }

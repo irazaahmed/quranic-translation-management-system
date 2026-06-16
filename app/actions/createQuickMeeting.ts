@@ -1,6 +1,7 @@
 "use server";
 
-import { createMeeting } from "@/lib/supabase";
+import { createMeeting } from "@/lib/mutations";
+import { requireStaff } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -29,6 +30,8 @@ export async function createQuickMeetingAction(
   }
 
   try {
+    await requireStaff();
+
     await createMeeting({
       language_id: languageId,
       meeting_date: new Date(meetingDate).toISOString(),
@@ -42,6 +45,9 @@ export async function createQuickMeetingAction(
     revalidatePath(`/languages/${languageId}`);
   } catch (error) {
     console.error("Failed to create meeting:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to add meetings." };
+    }
     return { error: "Failed to create meeting. Please try again." };
   }
 

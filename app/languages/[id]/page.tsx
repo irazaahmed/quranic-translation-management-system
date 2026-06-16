@@ -3,6 +3,7 @@ import { getLanguageById, getMeetingsByLanguage, LanguageWithProject } from "@/l
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import MeetingCard from "./MeetingCard";
+import { StaffOnly } from "@/components/AuthProvider";
 
 interface LanguageDetailPageProps {
   params: Promise<{ id: string }>;
@@ -84,16 +85,18 @@ export default async function LanguageDetailPage({ params }: LanguageDetailPageP
             </h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">{language.country}</p>
           </div>
-          <Link
-            href={`/languages/${id}/meetings/new`}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 sm:px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap flex-shrink-0"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span className="hidden sm:inline">Add Meeting</span>
-            <span className="sm:hidden">Add</span>
-          </Link>
+          <StaffOnly>
+            <Link
+              href={`/languages/${id}/meetings/new`}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 sm:px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200 whitespace-nowrap flex-shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="hidden sm:inline">Add Meeting</span>
+              <span className="sm:hidden">Add</span>
+            </Link>
+          </StaffOnly>
         </div>
       </div>
 
@@ -215,15 +218,17 @@ export default async function LanguageDetailPage({ params }: LanguageDetailPageP
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
               Start by adding the first meeting for this language.
             </p>
-            <Link
-              href={`/languages/${id}/meetings/new`}
-              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add First Meeting
-            </Link>
+            <StaffOnly>
+              <Link
+                href={`/languages/${id}/meetings/new`}
+                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add First Meeting
+              </Link>
+            </StaffOnly>
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700 transition-colors duration-200 p-6">

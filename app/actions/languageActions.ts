@@ -1,6 +1,7 @@
 "use server";
 
-import { updateLanguage, deleteLanguage as deleteLanguageDb } from "@/lib/supabase";
+import { updateLanguage, deleteLanguage as deleteLanguageDb } from "@/lib/mutations";
+import { requireStaff } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -30,6 +31,8 @@ export async function updateLanguageAction(
   }
 
   try {
+    await requireStaff();
+
     await updateLanguage(languageId, {
       country: country.trim(),
       language: language.trim(),
@@ -42,6 +45,9 @@ export async function updateLanguageAction(
     revalidatePath(`/languages/${languageId}`);
   } catch (error) {
     console.error("Failed to update language:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to edit languages." };
+    }
     return { error: "Failed to update language. Please try again." };
   }
 
@@ -50,11 +56,16 @@ export async function updateLanguageAction(
 
 export async function deleteLanguageAction(languageId: string): Promise<{ error?: string }> {
   try {
+    await requireStaff();
+
     await deleteLanguageDb(languageId);
     revalidatePath("/languages");
     return {};
   } catch (error) {
     console.error("Failed to delete language:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to delete languages." };
+    }
     return { error: "Failed to delete language. Please try again." };
   }
 }

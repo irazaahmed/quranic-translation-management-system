@@ -1,5 +1,6 @@
 import { Meeting } from "@/lib/supabase";
 import MeetingActions from "@/app/meetings/MeetingActions";
+import { StaffOnly } from "@/components/AuthProvider";
 
 interface MeetingCardProps {
   meeting: Meeting;
@@ -64,12 +65,14 @@ export default function MeetingCard({ meeting, formattedDate }: MeetingCardProps
       </div>
 
       {/* Action Buttons */}
-      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
-        <MeetingActions
-          meetingId={meeting.id}
-          languageId={meeting.language_id}
-        />
-      </div>
+      <StaffOnly>
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
+          <MeetingActions
+            meetingId={meeting.id}
+            languageId={meeting.language_id}
+          />
+        </div>
+      </StaffOnly>
     </div>
   );
 }

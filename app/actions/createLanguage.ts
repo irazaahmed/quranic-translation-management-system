@@ -1,6 +1,7 @@
 "use server";
 
-import { createLanguage } from "@/lib/supabase";
+import { createLanguage } from "@/lib/mutations";
+import { requireStaff } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -34,6 +35,8 @@ export async function createLanguageAction(
   }
 
   try {
+    await requireStaff();
+
     await createLanguage({
       country: country.trim(),
       language: language.trim(),
@@ -48,6 +51,9 @@ export async function createLanguageAction(
     revalidatePath("/meetings");
   } catch (error) {
     console.error("Failed to create language:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to add languages." };
+    }
     if (error instanceof Error && error.message === "Language already exists for this project") {
       return { error: "This language already exists for the selected project" };
     }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { StaffOnly } from "@/components/AuthProvider";
 
 interface NavItem {
   name: string;
@@ -189,18 +190,20 @@ export default function Sidebar() {
         </nav>
 
         {/* Add New Button */}
-        <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
-          <Link
-            href="/languages/new"
-            onClick={() => setIsMobileOpen(false)}
-            className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Language
-          </Link>
-        </div>
+        <StaffOnly>
+          <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <Link
+              href="/languages/new"
+              onClick={() => setIsMobileOpen(false)}
+              className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Language
+            </Link>
+          </div>
+        </StaffOnly>
       </aside>
 
       {/* Expose mobile menu state via custom event for Header */}

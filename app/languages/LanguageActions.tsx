@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { deleteLanguageAction } from "@/app/actions/languageActions";
+import { usePermissions } from "@/components/AuthProvider";
 import Link from "next/link";
 
 interface LanguageActionsProps {
@@ -11,9 +12,13 @@ interface LanguageActionsProps {
 }
 
 export default function LanguageActions({ languageId, languageName, onDelete }: LanguageActionsProps) {
+  const { canWrite } = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Viewers (and logged-out users) can't edit or delete.
+  if (!canWrite) return null;
 
   const handleDelete = async () => {
     setIsDeleting(true);

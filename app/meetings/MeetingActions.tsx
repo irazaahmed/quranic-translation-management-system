@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { deleteMeetingAction } from "@/app/actions/meetingActions";
+import { usePermissions } from "@/components/AuthProvider";
 import Link from "next/link";
 
 interface MeetingActionsProps {
@@ -10,9 +11,13 @@ interface MeetingActionsProps {
 }
 
 export default function MeetingActions({ meetingId, languageId }: MeetingActionsProps) {
+  const { canWrite } = usePermissions();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Viewers (and logged-out users) can't edit or delete.
+  if (!canWrite) return null;
 
   const handleDelete = async () => {
     setIsDeleting(true);
