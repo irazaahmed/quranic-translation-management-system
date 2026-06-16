@@ -113,8 +113,11 @@ CREATE POLICY "profiles_select_self_or_admin" ON public.profiles
 -- LANGUAGES ---------------------------------------------------
 ALTER TABLE public.languages ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all operations on languages" ON public.languages;
-DROP POLICY IF EXISTS "languages_public_read"  ON public.languages;
-DROP POLICY IF EXISTS "languages_staff_write"  ON public.languages;
+DROP POLICY IF EXISTS "languages_public_read"   ON public.languages;
+DROP POLICY IF EXISTS "languages_staff_write"   ON public.languages;
+DROP POLICY IF EXISTS "languages_staff_insert"  ON public.languages;
+DROP POLICY IF EXISTS "languages_staff_update"  ON public.languages;
+DROP POLICY IF EXISTS "languages_staff_delete"  ON public.languages;
 
 CREATE POLICY "languages_public_read" ON public.languages
   FOR SELECT USING (true);
@@ -128,6 +131,10 @@ CREATE POLICY "languages_staff_delete" ON public.languages
 -- MEETINGS ----------------------------------------------------
 ALTER TABLE public.meetings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all operations on meetings" ON public.meetings;
+DROP POLICY IF EXISTS "meetings_public_read"   ON public.meetings;
+DROP POLICY IF EXISTS "meetings_staff_insert"  ON public.meetings;
+DROP POLICY IF EXISTS "meetings_staff_update"  ON public.meetings;
+DROP POLICY IF EXISTS "meetings_staff_delete"  ON public.meetings;
 
 CREATE POLICY "meetings_public_read" ON public.meetings
   FOR SELECT USING (true);
@@ -141,6 +148,10 @@ CREATE POLICY "meetings_staff_delete" ON public.meetings
 -- PROJECTS ----------------------------------------------------
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all operations on projects" ON public.projects;
+DROP POLICY IF EXISTS "projects_public_read"   ON public.projects;
+DROP POLICY IF EXISTS "projects_staff_insert"  ON public.projects;
+DROP POLICY IF EXISTS "projects_staff_update"  ON public.projects;
+DROP POLICY IF EXISTS "projects_staff_delete"  ON public.projects;
 
 CREATE POLICY "projects_public_read" ON public.projects
   FOR SELECT USING (true);
