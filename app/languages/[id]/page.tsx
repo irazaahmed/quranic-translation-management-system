@@ -4,6 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import MeetingCard from "./MeetingCard";
 import { StaffOnly } from "@/components/AuthProvider";
+import StageProgressBars from "@/components/StageProgressBars";
+import { getCachedLanguageProgress } from "@/lib/progressData";
 
 interface LanguageDetailPageProps {
   params: Promise<{ id: string }>;
@@ -48,6 +50,7 @@ export default async function LanguageDetailPage({ params }: LanguageDetailPageP
 
   let language: LanguageWithProject | null = null;
   let meetings: Awaited<ReturnType<typeof getMeetingsByLanguage>> = [];
+  let progress: Awaited<ReturnType<typeof getCachedLanguageProgress>> = null;
   let error: string | null = null;
 
   try {
@@ -56,6 +59,7 @@ export default async function LanguageDetailPage({ params }: LanguageDetailPageP
       notFound();
     }
     meetings = await getMeetingsByLanguage(id);
+    progress = await getCachedLanguageProgress(id);
   } catch (err) {
     console.error("Failed to fetch language details:", err);
     error = "Failed to load language details";
@@ -199,6 +203,36 @@ export default async function LanguageDetailPage({ params }: LanguageDetailPageP
           </div>
         </div>
       </div>
+
+      {/* Para / Stage Progress */}
+      {progress && (
+        <div className="mt-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200">
+          <div className="flex flex-col gap-3 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Para Progress
+              </h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {progress.pipelinePercent}% overall · {progress.finishedParas}/30 paras fully complete
+              </p>
+            </div>
+            <StaffOnly>
+              <Link
+                href={`/progress/${id}`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Update progress
+              </Link>
+            </StaffOnly>
+          </div>
+          <div className="p-6">
+            <StageProgressBars stages={progress.stages} />
+          </div>
+        </div>
+      )}
 
       {/* Meeting History */}
       <div className="mt-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200">

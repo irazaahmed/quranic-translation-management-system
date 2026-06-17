@@ -44,6 +44,7 @@ export async function proxy(request: NextRequest) {
     /^\/languages\/[^/]+\/meetings\/new$/,
     /^\/meetings\/new$/,
     /^\/meetings\/[^/]+\/edit$/,
+    /^\/progress\/[^/]+$/,
   ];
   const isWriteRoute = writeRoutes.some((re) => re.test(pathname));
   const isAdminRoute = pathname.startsWith("/admin");
