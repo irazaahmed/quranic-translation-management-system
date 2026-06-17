@@ -29,9 +29,10 @@ export default function ProgressEditForm({ lang }: { lang: LanguageProgress }) {
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 sm:p-6">
         <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
           For each stage, enter how many of the {TOTAL_PARAS} paras have reached
-          it, and (optionally) the date it advanced. Each stage must be{" "}
-          <span className="font-medium">less than or equal to</span> the stage
-          above it.
+          it, and (optionally) the date it advanced.{" "}
+          <span className="font-medium">Translation</span> comes first, then{" "}
+          <span className="font-medium">Comparison</span> — no other stage can be
+          ahead of these two. The remaining stages can move in any order.
         </p>
 
         <div className="space-y-5">

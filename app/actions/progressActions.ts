@@ -33,12 +33,33 @@ export async function updateProgressAction(
     };
   });
 
-  // Enforce the forward-flow invariant: a later stage can't exceed an earlier
-  // one (you can't compare a para you haven't translated, etc.).
-  for (let i = 1; i < entries.length; i++) {
-    if (entries[i].current_para > entries[i - 1].current_para) {
+  // Ordering rule: Translation and Comparison are the "first-most" stages.
+  //  1. Comparison can't be ahead of Translation (translate before you compare).
+  //  2. No other stage can be ahead of Translation or Comparison.
+  // The remaining stages (Formation, Tafteesh, Designing, Final Proof Reading)
+  // have no order between themselves — they may move back and forth freely.
+  const paraByStage = Object.fromEntries(
+    entries.map((e) => [e.stage, e.current_para])
+  ) as Record<(typeof STAGE_KEYS)[number], number>;
+
+  const label = (s: string) =>
+    s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  if (paraByStage.comparison > paraByStage.translation) {
+    return {
+      error: `"Comparison" cannot be ahead of "Translation". A para must be translated before it can be compared.`,
+    };
+  }
+
+  // Translation & Comparison gate every other stage (the smaller of the two binds).
+  const gate = Math.min(paraByStage.translation, paraByStage.comparison);
+  const gatedStages = STAGE_KEYS.filter(
+    (s) => s !== "translation" && s !== "comparison"
+  );
+  for (const stage of gatedStages) {
+    if (paraByStage[stage] > gate) {
       return {
-        error: `"${STAGE_KEYS[i].replace(/_/g, " ")}" cannot be ahead of the previous stage. Each stage must be less than or equal to the one before it.`,
+        error: `"${label(stage)}" cannot be ahead of Translation or Comparison — those two stages must come first.`,
       };
     }
   }

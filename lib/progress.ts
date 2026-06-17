@@ -30,8 +30,10 @@ export interface StageMeta {
 
 /**
  * The 6 stages every para passes through, in pipeline order.
- * A later stage's para count can never exceed an earlier stage's — the work
- * flows strictly forward, which gives the board its natural "staircase" look.
+ * Translation and Comparison are the "first-most" stages: Comparison can't be
+ * ahead of Translation, and no other stage can be ahead of either of them.
+ * The remaining stages (Formation → Final Proof Reading) have no fixed order
+ * between themselves and may move back and forth freely.
  */
 export const STAGES: StageMeta[] = [
   { key: "translation",         label: "Translation",          order: 1, bar: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" },
