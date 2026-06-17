@@ -1,424 +1,126 @@
-# Quranic Translation Manager
+# 📖 Quranic Translation Management System (QTMS)
 
-A comprehensive meeting management system for tracking Quranic translation progress across multiple languages. Built with Next.js 16, TypeScript, Tailwind CSS v4, and Supabase.
+A modern web application that helps a translation team plan, track, and report the progress of **Quranic translation work across 25+ languages** and multiple translation projects — all from one clean, real‑time dashboard.
 
-![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?logo=next.js)
+🌐 **Live App:** https://quranic-translation-management-syst.vercel.app
+
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?logo=tailwind-css)
-![React](https://img.shields.io/badge/React-19.2.3-61DAFB?logo=react)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase)
-
-## Features
-
-### Dashboard
-- **Overview Statistics**: Total languages, meetings this week, languages needing attention, priority breakdown
-- **Recent Meetings**: View the 5 most recent meetings with language details
-- **Follow-up Required (3+ Days)**: Languages that need a follow-up meeting
-- **Immediate Follow-up Required (7+ Days)**: Languages requiring urgent review
-- **High Priority Languages**: Quick access to high-priority translation projects
-
-### Language Management
-- Add, edit, and delete languages
-- Set priority levels (Low, Medium, High)
-- Assign responsible persons
-- Track last meeting dates
-- Country and language name tracking
-
-### Meeting Management
-- **Quick Meeting Entry**: Record meetings for any language
-- **Language-Specific Meetings**: Add meetings directly from language detail pages
-- **Edit Meetings**: Update meeting details, participants, discussion points, and action items
-- **Delete Meetings**: Remove meetings with confirmation modal
-- **Meeting History**: View all meetings for each language
-
-### Reports
-- **Weekly Report**: Summary of all meetings from the past 7 days
-  - Copy report to clipboard
-  - Grouped by language
-  - Discussion points and action items
-- **Monthly Report**: Summary of all meetings from the past 30 days
-  - Same features as weekly report
-  - Extended date range
-
-### UI/UX Features
-- **Dark Mode**: Full light/dark theme support with smooth transitions
-- **Responsive Design**: Works on desktop, tablet, and mobile devices
-- **Breadcrumb Navigation**: Easy navigation throughout the app
-- **Real-time Updates**: Automatic page refresh after CRUD operations
-- **Loading States**: Visual feedback during async operations
-- **Error Handling**: User-friendly error messages
-
-## Tech Stack
-
-- **Framework**: Next.js 16.1.6 (App Router)
-- **Language**: TypeScript 5
-- **Styling**: Tailwind CSS v4
-- **Database**: Supabase (PostgreSQL)
-- **Theme**: next-themes for dark mode
-- **Deployment**: Vercel-ready
-
-## Prerequisites
-
-- Node.js 18+ and npm
-- Supabase account and project
-- Git (for version control)
-
-## Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone <your-repo-url>
-   cd quranic-translation-manager
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables:**
-   
-   Create a `.env.local` file in the root directory:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
-
-4. **Set up Supabase database:**
-
-   **IMPORTANT**: If you're upgrading from a single-project version, run the migration script first:
-   ```bash
-   database/migrations/001_add_projects_table.sql
-   ```
-   Or see `database/MIGRATION_GUIDE.md` for detailed instructions.
-
-   Create the following tables in your Supabase project:
-
-   **projects table:**
-   ```sql
-   CREATE TABLE projects (
-     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-     name TEXT NOT NULL UNIQUE,
-     description TEXT,
-     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-
-   -- Insert default projects
-   INSERT INTO projects (id, name, description) VALUES
-     ('00000000-0000-0000-0000-000000000001', 'Kanz ul Irfan', 'Kanz ul Irfan translation project'),
-     ('00000000-0000-0000-0000-000000000002', 'Taleem ul Quran', 'Taleem ul Quran translation project'),
-     ('00000000-0000-0000-0000-000000000003', 'Sirat ul Jinan', 'Sirat ul Jinan translation project');
-   ```
-
-   **languages table:**
-   ```sql
-   CREATE TABLE languages (
-     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-     country TEXT NOT NULL,
-     language TEXT NOT NULL,
-     responsible_person TEXT,
-     priority TEXT CHECK (priority IN ('low', 'medium', 'high')),
-     work_status TEXT CHECK (work_status IN ('not_started', 'in_progress', 'completed')) DEFAULT 'not_started',
-     project_id UUID REFERENCES projects(id) ON DELETE SET NULL NOT NULL,
-     last_meeting_at TIMESTAMP WITH TIME ZONE,
-     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-   ```
-
-   **meetings table:**
-   ```sql
-   CREATE TABLE meetings (
-     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-     language_id UUID REFERENCES languages(id) ON DELETE CASCADE,
-     meeting_date DATE NOT NULL,
-     meeting_type TEXT,
-     participants TEXT,
-     discussion_points TEXT,
-     translation_progress TEXT,
-     progress_percentage INTEGER,
-     action_items TEXT,
-     next_meeting_date DATE,
-     meeting_notes TEXT,
-     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-   ```
-
-   **Row Level Security (RLS):**
-   ```sql
-   ALTER TABLE languages ENABLE ROW LEVEL SECURITY;
-   ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
-   ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
-
-   -- Allow all operations for languages (adjust based on your auth needs)
-   CREATE POLICY "Allow all operations on languages" ON languages
-     FOR ALL USING (true) WITH CHECK (true);
-
-   -- Allow all operations for meetings
-   CREATE POLICY "Allow all operations on meetings" ON meetings
-     FOR ALL USING (true) WITH CHECK (true);
-
-   -- Allow all operations for projects
-   CREATE POLICY "Allow all operations on projects" ON projects
-     FOR ALL USING (true) WITH CHECK (true);
-   ```
-
-   **Indexes for performance:**
-   ```sql
-   CREATE INDEX idx_languages_project_id ON languages(project_id);
-   CREATE INDEX idx_languages_work_status ON languages(work_status);
-   ```
-
-5. **Run the development server:**
-   ```bash
-   npm run dev
-   ```
-
-6. **Open your browser:**
-   
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## Project Structure
-
-```
-quranic-translation-manager/
-├── app/
-│   ├── actions/              # Server Actions
-│   │   ├── languageActions.ts
-│   │   └── meetingActions.ts
-│   ├── dashboard/            # Dashboard components
-│   │   ├── HighPriorityLanguages.tsx
-│   │   ├── LanguagesNeedingAttention.tsx
-│   │   ├── RecentMeetings.tsx
-│   │   ├── ReportsDropdown.tsx
-│   │   └── UrgentFollowUps.tsx
-│   ├── languages/
-│   │   ├── [id]/
-│   │   │   ├── edit/
-│   │   │   │   ├── EditLanguageForm.tsx
-│   │   │   │   └── page.tsx
-│   │   │   ├── meetings/
-│   │   │   │   └── new/
-│   │   │   │       └── page.tsx
-│   │   │   ├── MeetingCard.tsx
-│   │   │   └── page.tsx
-│   │   ├── LanguageActions.tsx
-│   │   ├── LanguageList.tsx
-│   │   ├── new/
-│   │   │   └── page.tsx
-│   │   └── page.tsx
-│   ├── meetings/
-│   │   ├── [id]/
-│   │   │   └── edit/
-│   │   │       ├── EditMeetingForm.tsx
-│   │   │       └── page.tsx
-│   │   ├── MeetingActions.tsx
-│   │   └── new/
-│   │       ├── page.tsx
-│   │       └── QuickMeetingForm.tsx
-│   ├── reports/
-│   │   ├── monthly/
-│   │   │   ├── MonthlyReportContent.tsx
-│   │   │   └── page.tsx
-│   │   └── weekly/
-│   │       ├── WeeklyReportContent.tsx
-│   │       └── page.tsx
-│   ├── weekly-report/
-│   │   └── page.tsx
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/
-│   ├── DashboardLayout.tsx
-│   ├── Header.tsx
-│   ├── Sidebar.tsx
-│   ├── SummaryCard.tsx
-│   └── ThemeProvider.tsx
-├── lib/
-│   ├── supabase.ts          # Database functions
-│   └── supabaseClient.ts    # Supabase client setup
-├── public/
-├── .env.local
-├── .gitignore
-├── next.config.ts
-├── package.json
-├── tailwind.config.ts
-├── tsconfig.json
-└── README.md
-```
-
-## Available Scripts
-
-```bash
-# Development
-npm run dev          # Start development server
-
-# Production
-npm run build        # Build for production
-npm run start        # Start production server
-
-# Code Quality
-npm run lint         # Run ESLint
-```
-
-## Usage Guide
-
-### Adding a Language
-1. Navigate to **Languages** from the sidebar
-2. Click **Add Language**
-3. Fill in country, language name, responsible person, and priority
-4. Click **Save Language**
-
-### Recording a Meeting
-1. From Dashboard, click **Quick Meeting**
-2. Select a language from dropdown
-3. Enter meeting date, participants, discussion points, and action items
-4. Click **Save Meeting**
-
-**Or from a language page:**
-1. Go to **Languages** → Select a language
-2. Click **Add Meeting** or **Add First Meeting**
-3. Fill in meeting details
-4. Click **Save Meeting**
-
-### Editing a Meeting
-1. Navigate to a language detail page
-2. Find the meeting card
-3. Click **Edit** button
-4. Update the fields
-5. Click **Save Changes**
-
-### Deleting a Meeting
-1. Navigate to a language detail page
-2. Find the meeting card
-3. Click **Delete** button
-4. Confirm deletion in the modal
-
-### Generating Reports
-1. Click **Reports** dropdown in the dashboard header
-2. Select **Weekly Report** or **Monthly Report**
-3. Review the summary
-4. Click **Copy Report** to copy to clipboard
-
-## Deployment
-
-### Deploy to Vercel
-
-1. **Install Vercel CLI:**
-   ```bash
-   npm install -g vercel
-   ```
-
-2. **Login:**
-   ```bash
-   vercel login
-   ```
-
-3. **Deploy:**
-   ```bash
-   vercel
-   ```
-
-4. **Add environment variables in Vercel dashboard:**
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-5. **Production deploy:**
-   ```bash
-   vercel --prod
-   ```
-
-### GitHub + Vercel (Recommended)
-
-1. Push code to GitHub
-2. Import repository in Vercel dashboard
-3. Configure environment variables
-4. Vercel auto-deploys on every push
-
-## Database Schema
-
-### Projects Table
-| Column | Type | Description |
-|--------|------|-------------|
-| id | UUID | Primary key |
-| name | TEXT | Project name (unique) |
-| description | TEXT | Project description |
-| created_at | TIMESTAMP | Creation timestamp |
-
-**Note:** The `projects` table does NOT have an `updated_at` column.
-
-**Default Projects:**
-- Kanz ul Irfan
-- Taleem ul Quran
-- Sirat ul Jinan
-
-### Languages Table
-| Column | Type | Description |
-|--------|------|-------------|
-| id | UUID | Primary key |
-| country | TEXT | Country name |
-| language | TEXT | Language name |
-| responsible_person | TEXT | Person responsible |
-| priority | TEXT | low/medium/high |
-| work_status | TEXT | not_started/in_progress/completed |
-| project_id | UUID | Foreign key to projects |
-| last_meeting_at | TIMESTAMP | Last meeting date |
-| created_at | TIMESTAMP | Creation timestamp |
-| updated_at | TIMESTAMP | Update timestamp |
-
-### Meetings Table
-| Column | Type | Description |
-|--------|------|-------------|
-| id | UUID | Primary key |
-| language_id | UUID | Foreign key to languages |
-| meeting_date | DATE | Meeting date |
-| meeting_type | TEXT | Type of meeting |
-| participants | TEXT | Attendees |
-| discussion_points | TEXT | Discussion summary |
-| translation_progress | TEXT | Progress notes |
-| progress_percentage | INTEGER | Progress % |
-| action_items | TEXT | Next actions |
-| next_meeting_date | DATE | Next meeting date |
-| meeting_notes | TEXT | Additional notes |
-| created_at | TIMESTAMP | Creation timestamp |
-| updated_at | TIMESTAMP | Update timestamp |
-
-## Multi-Project Support
-
-QTMS now supports multiple translation projects. Each language belongs to a specific project, allowing you to:
-
-- **Track multiple translation projects** (Kanz ul Irfan, Taleem ul Quran, Sirat ul Jinan)
-- **View project-wise statistics** on the dashboard
-- **Filter languages by project** in the languages list
-- **Select project first** when creating meetings, then see only relevant languages
-
-### Migration from Single-Project Version
-
-If you're upgrading from the single-project version, please run the migration script:
-
-```bash
-database/migrations/001_add_projects_table.sql
-```
-
-See `database/MIGRATION_GUIDE.md` for detailed instructions.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-feature`
-3. Commit changes: `git commit -am 'Add new feature'`
-4. Push to branch: `git push origin feature/new-feature`
-5. Submit a pull request
-
-## License
-
-This project is proprietary software. All rights reserved.
-
-## Support
-
-For issues, questions, or contributions, please open an issue on GitHub.
+![Deployed on Vercel](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)
 
 ---
 
-**Built with ❤️ for Quranic translation management**
+## 🎯 What is this project?
+
+Translating the Holy Quran into dozens of languages is a long, collaborative effort. Each
+language has a responsible person, a project it belongs to, and a **weekly meeting** where
+progress is reviewed. Keeping all of that organised — who met this week, who was missed, what
+was discussed, and what comes next — quickly becomes hard to manage on paper or spreadsheets.
+
+**QTMS turns that whole process into a living, real‑time system:**
+
+- Every language and its translation status in one place
+- A **weekly meeting schedule** that automatically tells you which meetings happened and which
+  are overdue
+- A complete **record of every meeting** (participants, discussion points, action items)
+- **Reports** that can be copied, exported, or printed in seconds
+- **Role-based access** so the public can view progress while only authorised staff can edit
+
+---
+
+## ✨ Key Features
+
+### 🗂️ Multi-Project & Language Tracking
+- Manage multiple translation projects (**Kanz ul Irfan, Taleem ul Quran, Sirat ul Jinan**)
+- Track **25+ languages** with country, responsible person, priority (Low / Medium / High)
+  and work status (Not Started / In Progress / Completed)
+- Project-wise statistics so you can see how each project is progressing
+
+### 📅 Smart Weekly Meeting Schedule
+- Every language is assigned a **weekly meeting day** (Monday–Saturday)
+- A dedicated **Schedule** page groups languages by day and shows a clear status for each:
+  - 🟢 **Met this week** · 🔵 **Due today** · 🟡 **Due this week** · 🔴 **Overdue**
+- Follows the team's real cadence: a meeting every **7 days**, with an **overdue reminder
+  after 14 days** if one is missed
+- One-click **“Record Meeting”** straight from the schedule
+
+### 📝 Meeting Records
+- Capture meeting date, participants, discussion points, progress and action items
+- Set an **optional next meeting date** that automatically appears in **Upcoming Meetings**
+- Full meeting history for every language, with edit & delete
+
+### 📊 Live Dashboard
+- At-a-glance stats with **animated counters** and **donut/priority charts**
+- **Recent meetings**, **languages needing attention**, and **urgent follow-ups**
+- A personalised greeting banner with a **live ticking clock (date + time)**
+- **Upcoming meetings** widget driven by scheduled follow-ups
+
+### 🔎 Global Search
+- Search across languages, countries, people, and meeting notes from anywhere in the app
+
+### 📑 Reports & Export
+- **Daily, Weekly, and Monthly** reports plus custom date ranges
+- Grouped by language with discussion points and action items
+- **Copy to clipboard**, **export to CSV**, or **print as PDF**
+
+### 🔐 Roles & Access Control
+- **Public view-only mode** — anyone can open the app and view progress (“Continue without login”)
+- **Editors & Admins** can add, edit, and delete data
+- **Admins** can create users and assign roles (Admin / Editor / Viewer)
+- Security enforced at multiple layers (database, server, routing, and UI)
+
+### 🎨 Polished Experience
+- Beautiful **light & dark mode** with smooth transitions
+- Fully **responsive** — works on desktop, tablet, and mobile
+- Subtle **animations**, **toast notifications**, **glassmorphism**, and loading skeletons for a fast, modern feel
+
+---
+
+## 🛠️ Built With
+
+| Area | Technology |
+|------|------------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 |
+| UI | React 19 + Tailwind CSS v4 |
+| Database | Supabase (PostgreSQL) |
+| Auth | Supabase Auth with role-based permissions |
+| Hosting | Vercel (continuous deployment) |
+
+---
+
+## 🔒 Security at a Glance
+
+Access control is enforced in **four independent layers**, so the public can safely view data
+while write access stays locked to authorised staff:
+
+1. **Database** — Row Level Security policies (public read, staff-only write)
+2. **Server** — every write action re-checks the user's role on the server
+3. **Routing** — protected routes guard against direct URL access
+4. **UI** — edit/delete controls only render for users with the right permissions
+
+---
+
+## 🗺️ Project Journey
+
+QTMS was built and improved in clear phases:
+
+- **Phase 1 — Core system:** projects, languages, meetings, dashboard & reports
+- **Phase 2 — Authentication & roles:** public view, staff editing, admin user management
+- **Phase 3 — Search, exports, analytics & UI upgrade:** global search, CSV/PDF export, charts, animations
+- **Phase 4 — Weekly meeting schedule:** assigned days, automatic done/overdue reminders, upcoming meetings
+- **Latest:** a live, real-time clock (date + time) across the app
+
+---
+
+## 🤝 Credits
+
+Designed and developed by **Ahmed Raza** to support the noble effort of bringing the meaning of
+the Holy Quran to people in their own languages.
+
+---
+
+<p align="center"><b>Built with ❤️ for Quranic translation management</b></p>
