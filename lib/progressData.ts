@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import {
   buildStageMap,
   computePipelinePercent,
+  getStageKeysForLanguage,
   type LanguageProgress,
   type ProjectProgress,
   type StageProgressRow,
@@ -21,7 +22,9 @@ interface LanguageRow {
 }
 
 function toLanguageProgress(row: LanguageRow): LanguageProgress {
-  const stages = buildStageMap(row.stage_progress);
+  const stageKeys = getStageKeysForLanguage(row.language);
+  const stages = buildStageMap(row.stage_progress, stageKeys);
+  const lastKey = stageKeys[stageKeys.length - 1];
   return {
     languageId: row.id,
     language: row.language,
@@ -29,9 +32,10 @@ function toLanguageProgress(row: LanguageRow): LanguageProgress {
     responsiblePerson: row.responsible_person,
     projectId: row.project_id,
     projectName: row.projects?.name ?? null,
+    stageKeys,
     stages,
-    pipelinePercent: computePipelinePercent(stages),
-    finishedParas: stages.final_proof_reading.current_para,
+    pipelinePercent: computePipelinePercent(stages, stageKeys),
+    finishedParas: stages[lastKey].current_para,
   };
 }
 

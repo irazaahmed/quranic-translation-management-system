@@ -1,5 +1,5 @@
 import {
-  STAGES,
+  getStagesForLanguage,
   TOTAL_PARAS,
   stagePercent,
   type StageKey,
@@ -18,15 +18,19 @@ function formatSince(date: string | null): string | null {
  * labelled bars. Used on the progress board and the language detail page.
  */
 export default function StageProgressBars({
+  languageName,
   stages,
   showSince = true,
 }: {
+  /** Language name — selects which pipeline (e.g. Braille) to display. */
+  languageName: string;
   stages: Record<StageKey, StageProgressRow>;
   showSince?: boolean;
 }) {
+  const metas = getStagesForLanguage(languageName);
   return (
     <div className="space-y-3">
-      {STAGES.map((meta) => {
+      {metas.map((meta) => {
         const row = stages[meta.key];
         const para = row.current_para;
         const pct = stagePercent(para);

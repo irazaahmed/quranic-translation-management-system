@@ -3,17 +3,20 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { updateProgressAction, ProgressFormState } from "@/app/actions/progressActions";
-import { STAGES, TOTAL_PARAS, type LanguageProgress } from "@/lib/progress";
+import { getStagesForLanguage, TOTAL_PARAS, type LanguageProgress } from "@/lib/progress";
 
 const initialState: ProgressFormState = {};
 
 export default function ProgressEditForm({ lang }: { lang: LanguageProgress }) {
   const [state, formAction, isPending] = useActionState(updateProgressAction, initialState);
 
+  // The stage pipeline that applies to this language (Braille has its own).
+  const stages = getStagesForLanguage(lang.language);
+
   // Live-controlled para values so the bars/summary update as you type.
   const [paras, setParas] = useState<Record<string, number>>(() => {
     const init: Record<string, number> = {};
-    for (const s of STAGES) init[s.key] = lang.stages[s.key].current_para;
+    for (const s of stages) init[s.key] = lang.stages[s.key]?.current_para ?? 0;
     return init;
   });
 
@@ -36,7 +39,7 @@ export default function ProgressEditForm({ lang }: { lang: LanguageProgress }) {
         </p>
 
         <div className="space-y-5">
-          {STAGES.map((meta, idx) => {
+          {stages.map((meta, idx) => {
             const row = lang.stages[meta.key];
             const value = paras[meta.key] ?? 0;
             const pct = Math.round((value / TOTAL_PARAS) * 100);

@@ -55,7 +55,7 @@ function LanguageCard({ lang }: { lang: LanguageProgress }) {
       </div>
 
       {/* Stage bars */}
-      <StageProgressBars stages={lang.stages} />
+      <StageProgressBars languageName={lang.language} stages={lang.stages} />
 
       {/* Edit (staff only) */}
       <StaffOnly>
@@ -102,9 +102,9 @@ export default async function ProgressPage() {
           Progress Tracking
         </h1>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Para-by-para progress of every in-progress language across all six
-          stages — Translation → Comparison → Formation → Tafteesh → Designing →
-          Final Proof Reading.
+          Para-by-para progress of every in-progress language through its stages —
+          Translation → Comparison → Formation → Tafteesh → Designing → Final
+          Proof Reading. (Braille follows its own pipeline.)
         </p>
       </div>
 

@@ -229,7 +229,7 @@ export default async function LanguageDetailPage({ params }: LanguageDetailPageP
             </StaffOnly>
           </div>
           <div className="p-6">
-            <StageProgressBars stages={progress.stages} />
+            <StageProgressBars languageName={progress.language} stages={progress.stages} />
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@
 
 import { upsertStageProgress } from "@/lib/mutations";
 import { requireStaff } from "@/lib/auth";
-import { clampPara, STAGE_KEYS } from "@/lib/progress";
+import { clampPara, ALL_STAGE_KEYS } from "@/lib/progress";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -21,7 +21,13 @@ export async function updateProgressAction(
     return { error: "Missing language reference." };
   }
 
-  const entries = STAGE_KEYS.map((stage) => {
+  // Only persist the stages this language's pipeline actually submitted
+  // (Braille, for example, has its own set of stages).
+  const submittedStages = ALL_STAGE_KEYS.filter((stage) =>
+    formData.has(`para_${stage}`)
+  );
+
+  const entries = submittedStages.map((stage) => {
     const rawPara = Number(formData.get(`para_${stage}`));
     const since = (formData.get(`since_${stage}`) as string)?.trim();
     const notes = (formData.get(`notes_${stage}`) as string)?.trim();
@@ -33,33 +39,36 @@ export async function updateProgressAction(
     };
   });
 
+  if (entries.length === 0) {
+    return { error: "No progress data submitted." };
+  }
+
   // Ordering rule: Translation and Comparison are the "first-most" stages.
   //  1. Comparison can't be ahead of Translation (translate before you compare).
   //  2. No other stage can be ahead of Translation or Comparison.
-  // The remaining stages (Formation, Tafteesh, Designing, Final Proof Reading)
-  // have no order between themselves — they may move back and forth freely.
+  // Every remaining stage has no order between the others — they move freely.
   const paraByStage = Object.fromEntries(
     entries.map((e) => [e.stage, e.current_para])
-  ) as Record<(typeof STAGE_KEYS)[number], number>;
+  ) as Partial<Record<string, number>>;
 
   const label = (s: string) =>
     s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-  if (paraByStage.comparison > paraByStage.translation) {
+  const translation = paraByStage.translation ?? 0;
+  const comparison = paraByStage.comparison ?? 0;
+
+  if (comparison > translation) {
     return {
       error: `"Comparison" cannot be ahead of "Translation". A para must be translated before it can be compared.`,
     };
   }
 
   // Translation & Comparison gate every other stage (the smaller of the two binds).
-  const gate = Math.min(paraByStage.translation, paraByStage.comparison);
-  const gatedStages = STAGE_KEYS.filter(
-    (s) => s !== "translation" && s !== "comparison"
-  );
-  for (const stage of gatedStages) {
-    if (paraByStage[stage] > gate) {
+  const gate = Math.min(translation, comparison);
+  for (const e of entries) {
+    if (e.stage !== "translation" && e.stage !== "comparison" && e.current_para > gate) {
       return {
-        error: `"${label(stage)}" cannot be ahead of Translation or Comparison — those two stages must come first.`,
+        error: `"${label(e.stage)}" cannot be ahead of Translation or Comparison — those two stages must come first.`,
       };
     }
   }
