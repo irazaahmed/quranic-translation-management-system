@@ -5,9 +5,9 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePermissions } from "@/components/AuthProvider";
 import { logoutAction } from "@/app/actions/authActions";
+import LiveClock from "@/components/LiveClock";
 
 export default function Header() {
-  const [currentDate, setCurrentDate] = useState<string>("");
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -20,14 +20,6 @@ export default function Header() {
 
   useEffect(() => {
     setMounted(true);
-    const date = new Date();
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-    setCurrentDate(date.toLocaleDateString("en-US", options));
   }, []);
 
   const handleThemeChange = (newTheme: string) => {
@@ -117,7 +109,10 @@ export default function Header() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </Link>
-          <span className="hidden lg:block text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">{currentDate}</span>
+          <LiveClock
+            showIcon
+            className="hidden md:inline-flex text-xs sm:text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200"
+          />
 
           {/* Theme Selector Dropdown */}
           {mounted && (

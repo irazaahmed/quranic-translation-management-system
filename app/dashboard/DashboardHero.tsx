@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePermissions } from "@/components/AuthProvider";
+import LiveClock from "@/components/LiveClock";
 
 interface DashboardHeroProps {
   needsAttention: number;
@@ -17,19 +18,10 @@ export default function DashboardHero({
 }: DashboardHeroProps) {
   const { profile } = usePermissions();
   const [greeting, setGreeting] = useState("Welcome");
-  const [dateStr, setDateStr] = useState("");
 
   useEffect(() => {
     const h = new Date().getHours();
     setGreeting(h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening");
-    setDateStr(
-      new Date().toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    );
   }, []);
 
   const name = profile?.full_name?.trim() || profile?.email?.split("@")[0];
@@ -42,7 +34,7 @@ export default function DashboardHero({
 
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-sm text-white/80">{dateStr || " "}</p>
+          <LiveClock longDate showIcon className="text-sm text-white/80" />
           <h2 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold">
             {greeting}
             {name ? (
