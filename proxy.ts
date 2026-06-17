@@ -88,6 +88,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Landing gate: first-time visitors to the dashboard who are neither logged
+  // in nor have opted into view-only mode see the home/login page first.
+  if (pathname === "/" && !user) {
+    const optedIntoView = request.cookies.get("qtms_view");
+    if (!optedIntoView) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+  }
+
   return supabaseResponse;
 }
 
