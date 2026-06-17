@@ -26,6 +26,14 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Never allow horizontal scroll / off-screen overflow on small devices.
+   Vertical scroll and sticky headers keep working. */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 /* Smooth transitions for theme changes */
 * {
   transition-property: background-color, border-color, color;

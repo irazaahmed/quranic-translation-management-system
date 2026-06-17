@@ -58,26 +58,26 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-20 h-16 border-b border-gray-200/70 dark:border-gray-700/70 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl px-3 sm:px-4 lg:px-6 transition-colors duration-200">
-      <div className="flex h-full items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+      <div className="flex h-full items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:gap-4">
           {/* Mobile menu button - visible only on mobile */}
           <button
             onClick={toggleSidebar}
-            className="lg:hidden rounded-lg p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
+            className="lg:hidden flex-shrink-0 rounded-lg p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
             aria-label="Toggle menu"
           >
             <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <img
               src="/MyLogoYellow.jpeg"
               alt="Logo"
               className="h-6 w-6 sm:h-8 sm:w-8 object-cover rounded-full flex-shrink-0"
             />
-            <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0 transition-colors duration-200">
-              <span className="hidden sm:inline">Quranic Translation</span> Management System
+            <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white truncate min-w-0 transition-colors duration-200">
+              <span className="hidden sm:inline">Quranic Translation </span>Management System
             </h1>
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function Header() {
           </div>
         </form>
 
-        <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
+        <div className="flex flex-shrink-0 items-center gap-1 sm:gap-2 lg:gap-4">
           {/* Mobile search icon */}
           <Link
             href="/search"
