@@ -51,7 +51,7 @@ export const getCachedRecentMeetings = cache(async (limit: number = 20): Promise
       discussion_points,
       action_items,
       created_at,
-      languages:language_id (
+      languages:language_id!inner (
         id,
         country,
         language,
@@ -60,12 +60,15 @@ export const getCachedRecentMeetings = cache(async (limit: number = 20): Promise
         work_status
       )
     `)
+    // Only meetings for in-progress languages (hide not-started / completed).
+    .eq("languages.work_status", "in_progress")
     .order("meeting_date", { ascending: false })
     .limit(limit);
 
   if (error) throw error;
 
-  return (meetingsData || []).map((row: any) => ({
+  return (meetingsData || [])
+    .map((row: any) => ({
     meeting: {
       id: row.id,
       language_id: row.language_id,
@@ -102,17 +105,20 @@ export const getCachedUpcomingMeetings = cache(async (limit: number = 8): Promis
       participants,
       action_items,
       created_at,
-      languages:language_id (
+      languages:language_id!inner (
         id, country, language, responsible_person, priority, work_status
       )
     `)
     .gte("next_meeting_date", today.toISOString().slice(0, 10))
+    // Only meetings for in-progress languages (hide not-started / completed).
+    .eq("languages.work_status", "in_progress")
     .order("next_meeting_date", { ascending: true })
     .limit(limit);
 
   if (error) throw error;
 
-  return (data || []).map((row: any) => ({
+  return (data || [])
+    .map((row: any) => ({
     meeting: {
       id: row.id,
       language_id: row.language_id,
@@ -297,6 +303,7 @@ export const getCachedScheduleData = cache(async (): Promise<ScheduleEntry[]> =>
       projects:project_id ( name ),
       meetings ( meeting_date, next_meeting_date )
     `)
+    .eq("work_status", "in_progress")
     .order("language", { ascending: true });
 
   if (error) throw error;

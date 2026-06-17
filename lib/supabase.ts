@@ -765,7 +765,11 @@ export async function getAllMeetingsWithLanguage(): Promise<MeetingWithLanguage[
 
     if (error) throw error;
 
-    return (meetingsData || []).map((row: any) => ({
+    return (meetingsData || [])
+      // Only show meetings for languages whose work is in progress
+      // (hide not-started and completed languages).
+      .filter((row: any) => row.languages?.work_status === "in_progress")
+      .map((row: any) => ({
       meeting: {
         id: row.id,
         language_id: row.language_id,
@@ -1180,7 +1184,11 @@ export async function getMeetingsByDateRangeWithLanguage(
 
     if (error) throw error;
 
-    return (meetingsData || []).map((row: any) => ({
+    return (meetingsData || [])
+      // Only show meetings for languages whose work is in progress
+      // (hide not-started and completed languages).
+      .filter((row: any) => row.languages?.work_status === "in_progress")
+      .map((row: any) => ({
       meeting: {
         id: row.id,
         language_id: row.language_id,
