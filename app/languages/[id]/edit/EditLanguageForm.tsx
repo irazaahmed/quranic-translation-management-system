@@ -23,6 +23,16 @@ const workStatusOptions = [
   { value: "completed", label: "Completed" },
 ];
 
+const weekdayOptions = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 const initialState: FormState = {};
 
 export default function EditLanguageForm({ language, projects }: EditLanguageFormProps) {
@@ -169,6 +179,33 @@ export default function EditLanguageForm({ language, projects }: EditLanguageFor
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Weekly Meeting Day */}
+          <div className="sm:col-span-2">
+            <label
+              htmlFor="assigned_day"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200"
+            >
+              Weekly Meeting Day{" "}
+              <span className="font-normal text-gray-400 dark:text-gray-500">(optional)</span>
+            </label>
+            <select
+              id="assigned_day"
+              name="assigned_day"
+              defaultValue={language.assigned_day || ""}
+              className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+            >
+              <option value="">No fixed day (unscheduled)</option>
+              {weekdayOptions.map((day) => (
+                <option key={day} value={day}>
+                  {day}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+              Used by the Schedule page to track the weekly meeting cadence.
+            </p>
           </div>
         </div>
       </div>

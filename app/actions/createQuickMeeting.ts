@@ -19,6 +19,7 @@ export async function createQuickMeetingAction(
   const participants = formData.get("participants") as string;
   const discussionPoints = formData.get("discussion_points") as string;
   const nextAction = formData.get("next_action") as string;
+  const nextMeetingDate = formData.get("next_meeting_date") as string;
 
   // Validation
   if (!languageId || !languageId.trim()) {
@@ -38,10 +39,13 @@ export async function createQuickMeetingAction(
       participants: participants.trim() || null,
       discussion_points: discussionPoints.trim() || null,
       action_items: nextAction.trim() || null,
+      // Optional: only schedules a follow-up when a date was picked.
+      next_meeting_date: nextMeetingDate?.trim() ? nextMeetingDate.trim() : null,
     });
 
     revalidatePath("/");
     revalidatePath("/languages");
+    revalidatePath("/schedule");
     revalidatePath(`/languages/${languageId}`);
   } catch (error) {
     console.error("Failed to create meeting:", error);

@@ -56,6 +56,7 @@ export async function createLanguage(
           responsible_person: input.responsible_person ?? null,
           priority: input.priority ?? null,
           work_status: input.work_status ?? "not_started",
+          assigned_day: input.assigned_day ?? null,
           project_id: input.project_id ?? null,
         },
       ])
@@ -66,6 +67,28 @@ export async function createLanguage(
     return data;
   } catch (error) {
     console.error("Error creating language:", error);
+    throw error;
+  }
+}
+
+/**
+ * Set (or clear) a language's scheduled weekday. Used from the Schedule page.
+ */
+export async function setAssignedDay(
+  languageId: string,
+  assignedDay: string | null
+): Promise<void> {
+  try {
+    const supabase = await getWriteClient();
+
+    const { error } = await supabase
+      .from("languages")
+      .update({ assigned_day: assignedDay, updated_at: new Date().toISOString() })
+      .eq("id", languageId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error("Error setting assigned day:", error);
     throw error;
   }
 }

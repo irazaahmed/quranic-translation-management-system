@@ -20,8 +20,12 @@ const initialState: FormState = {};
 
 export default function QuickMeetingForm({
   projectsPromise,
+  defaultProjectId = "",
+  defaultLanguageId = "",
 }: {
   projectsPromise: Promise<ProjectOption[]>;
+  defaultProjectId?: string;
+  defaultLanguageId?: string;
 }) {
   const projects = use(projectsPromise);
   const [state, formAction, isPending] = useActionState(
@@ -29,9 +33,20 @@ export default function QuickMeetingForm({
     initialState
   );
 
-  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [selectedProject, setSelectedProject] = useState<string>(defaultProjectId);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(defaultLanguageId);
   const [languages, setLanguages] = useState<LanguageOption[]>([]);
   const [isLoadingLanguages, setIsLoadingLanguages] = useState(false);
+  const [meetingDate, setMeetingDate] = useState<string>("");
+  const [nextMeetingDate, setNextMeetingDate] = useState<string>("");
+
+  // Quick-fill the next meeting date to a number of days after the meeting date
+  // (default cadence is weekly = +7 days). Falls back to today if no date set.
+  const addDaysToNext = (days: number) => {
+    const base = meetingDate ? new Date(meetingDate) : new Date();
+    base.setDate(base.getDate() + days);
+    setNextMeetingDate(base.toISOString().slice(0, 10));
+  };
 
   // Load languages when project changes
   useEffect(() => {
@@ -91,7 +106,10 @@ export default function QuickMeetingForm({
                 id="project_id"
                 name="project_id"
                 value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
+                onChange={(e) => {
+                  setSelectedProject(e.target.value);
+                  setSelectedLanguage("");
+                }}
                 required
                 className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
               >
@@ -129,6 +147,8 @@ export default function QuickMeetingForm({
                   id="language_id"
                   name="language_id"
                   required
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
                   disabled={!selectedProject || languages.length === 0}
                   className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
@@ -155,6 +175,8 @@ export default function QuickMeetingForm({
                 id="meeting_date"
                 name="meeting_date"
                 required
+                value={meetingDate}
+                onChange={(e) => setMeetingDate(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
               />
             </div>
@@ -208,6 +230,53 @@ export default function QuickMeetingForm({
                 className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
                 placeholder="Enter action items and next steps..."
               />
+            </div>
+
+            {/* Next Meeting Date (optional — schedules an upcoming follow-up) */}
+            <div>
+              <label
+                htmlFor="next_meeting_date"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200"
+              >
+                Next Meeting Date{" "}
+                <span className="font-normal text-gray-400 dark:text-gray-500">(optional)</span>
+              </label>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <input
+                  type="date"
+                  id="next_meeting_date"
+                  name="next_meeting_date"
+                  value={nextMeetingDate}
+                  onChange={(e) => setNextMeetingDate(e.target.value)}
+                  className="block w-full sm:w-auto flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => addDaysToNext(7)}
+                  className="btn-press rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
+                >
+                  +7 days (next week)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => addDaysToNext(14)}
+                  className="btn-press rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  +14 days
+                </button>
+                {nextMeetingDate && (
+                  <button
+                    type="button"
+                    onClick={() => setNextMeetingDate("")}
+                    className="btn-press rounded-lg px-3 py-2 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+                Pick a date to add this to the Upcoming Meetings list. Leave empty to skip.
+              </p>
             </div>
           </div>
         </div>

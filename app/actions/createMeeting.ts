@@ -19,6 +19,7 @@ export async function createMeetingAction(
   const participants = formData.get("participants") as string;
   const discussionPoints = formData.get("discussion_points") as string;
   const nextAction = formData.get("next_action") as string;
+  const nextMeetingDate = formData.get("next_meeting_date") as string;
 
   // Validation
   if (!meetingDate) {
@@ -34,11 +35,13 @@ export async function createMeetingAction(
       participants: participants.trim() || null,
       discussion_points: discussionPoints.trim() || null,
       action_items: nextAction.trim() || null,
+      next_meeting_date: nextMeetingDate?.trim() ? nextMeetingDate.trim() : null,
     });
 
     revalidatePath("/");
     revalidatePath("/languages");
     revalidatePath("/meetings");
+    revalidatePath("/schedule");
     revalidatePath(`/languages/${languageId}`);
   } catch (error) {
     console.error("Failed to create meeting:", error);

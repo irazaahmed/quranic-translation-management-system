@@ -24,6 +24,7 @@ export const getCachedLanguages = cache(async (): Promise<Language[]> => {
       priority,
       work_status,
       last_meeting_at,
+      assigned_day,
       project_id,
       created_at,
       updated_at
@@ -149,6 +150,7 @@ export const getCachedStaleLanguages = cache(async (days: number = 7): Promise<L
       priority,
       work_status,
       last_meeting_at,
+      assigned_day,
       project_id,
       created_at,
       updated_at
@@ -179,6 +181,7 @@ export const getCachedUrgentLanguages = cache(async (days: number = 7): Promise<
       priority,
       work_status,
       last_meeting_at,
+      assigned_day,
       project_id,
       created_at,
       updated_at
@@ -256,6 +259,80 @@ export const getCachedProjectStats = cache(async (): Promise<ProjectStats[]> => 
   }
 
   return stats;
+});
+
+/**
+ * Schedule data: every language with its assigned weekday, project name,
+ * latest recorded meeting date and the next scheduled follow-up. Used by the
+ * /schedule page to show whether each weekly meeting happened or is pending.
+ */
+export interface ScheduleEntry {
+  id: string;
+  language: string;
+  country: string;
+  responsible_person: string | null;
+  work_status: string;
+  assigned_day: string | null;
+  project_id: string | null;
+  projectName: string | null;
+  /** ISO date of the most recent recorded meeting (or null). */
+  lastMeeting: string | null;
+  /** ISO date of the soonest upcoming follow-up (next_meeting_date >= today), or null. */
+  nextMeeting: string | null;
+}
+
+export const getCachedScheduleData = cache(async (): Promise<ScheduleEntry[]> => {
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  const { data, error } = await supabase
+    .from("languages")
+    .select(`
+      id,
+      language,
+      country,
+      responsible_person,
+      work_status,
+      assigned_day,
+      project_id,
+      projects:project_id ( name ),
+      meetings ( meeting_date, next_meeting_date )
+    `)
+    .order("language", { ascending: true });
+
+  if (error) throw error;
+
+  return (data || []).map((row: any) => {
+    const meetings: Array<{ meeting_date: string; next_meeting_date: string | null }> =
+      row.meetings || [];
+
+    let lastMeeting: string | null = null;
+    for (const m of meetings) {
+      if (m.meeting_date && (!lastMeeting || m.meeting_date > lastMeeting)) {
+        lastMeeting = m.meeting_date;
+      }
+    }
+
+    let nextMeeting: string | null = null;
+    for (const m of meetings) {
+      const nm = m.next_meeting_date;
+      if (nm && nm >= todayStr && (!nextMeeting || nm < nextMeeting)) {
+        nextMeeting = nm;
+      }
+    }
+
+    return {
+      id: row.id,
+      language: row.language,
+      country: row.country,
+      responsible_person: row.responsible_person,
+      work_status: row.work_status,
+      assigned_day: row.assigned_day ?? null,
+      project_id: row.project_id ?? null,
+      projectName: row.projects?.name ?? null,
+      lastMeeting,
+      nextMeeting,
+    };
+  });
 });
 
 /**

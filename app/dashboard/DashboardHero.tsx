@@ -60,10 +60,13 @@ export default function DashboardHero({
 
         {/* Quick highlight chips */}
         <div className="flex flex-shrink-0 gap-3">
-          <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm text-center">
+          <Link
+            href="/schedule"
+            className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm text-center transition-colors hover:bg-white/25"
+          >
             <div className="text-2xl font-bold tabular-nums">{meetingsThisWeek}</div>
             <div className="text-[11px] uppercase tracking-wide text-white/80">This week</div>
-          </div>
+          </Link>
           <Link
             href="#upcoming"
             className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm text-center transition-colors hover:bg-white/25"

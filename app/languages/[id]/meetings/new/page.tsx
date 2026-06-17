@@ -132,6 +132,26 @@ export default function NewMeetingPage({ params }: NewMeetingPageProps) {
                   placeholder="Enter action items and next steps..."
                 />
               </div>
+
+              {/* Next Meeting Date (optional) */}
+              <div>
+                <label
+                  htmlFor="next_meeting_date"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                >
+                  Next Meeting Date{" "}
+                  <span className="font-normal text-gray-400 dark:text-gray-500">(optional)</span>
+                </label>
+                <input
+                  type="date"
+                  id="next_meeting_date"
+                  name="next_meeting_date"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2.5 text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors duration-200"
+                />
+                <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+                  Pick a date to schedule the next meeting (appears in Upcoming Meetings). Leave empty to skip.
+                </p>
+              </div>
             </div>
           </div>
 

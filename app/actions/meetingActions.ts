@@ -20,6 +20,7 @@ export async function updateMeetingAction(
   const participants = formData.get("participants") as string;
   const discussionPoints = formData.get("discussion_points") as string;
   const actionItems = formData.get("action_items") as string;
+  const nextMeetingDate = formData.get("next_meeting_date") as string;
 
   // Validation
   if (!meetingDate || !meetingDate.trim()) {
@@ -34,9 +35,12 @@ export async function updateMeetingAction(
       participants: participants.trim() || null,
       discussion_points: discussionPoints.trim() || null,
       action_items: actionItems.trim() || null,
+      next_meeting_date: nextMeetingDate?.trim() ? nextMeetingDate.trim() : null,
     });
 
+    revalidatePath("/");
     revalidatePath("/languages");
+    revalidatePath("/schedule");
     revalidatePath(`/languages/${languageId}`);
   } catch (error) {
     console.error("Failed to update meeting:", error);

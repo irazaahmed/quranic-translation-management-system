@@ -3,9 +3,16 @@ import { getAllProjects, Project } from "@/lib/supabase";
 import QuickMeetingForm from "./QuickMeetingForm";
 import Link from "next/link";
 
-export default async function NewMeetingPage() {
+export default async function NewMeetingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ project?: string; language?: string }>;
+}) {
   let error: string | null = null;
   let projectsPromise: Promise<Project[]> = Promise.resolve([]);
+
+  const { project: defaultProjectId = "", language: defaultLanguageId = "" } =
+    await searchParams;
 
   try {
     projectsPromise = getAllProjects();
@@ -47,7 +54,11 @@ export default async function NewMeetingPage() {
         </div>
       )}
 
-      <QuickMeetingForm projectsPromise={projectsPromise} />
+      <QuickMeetingForm
+        projectsPromise={projectsPromise}
+        defaultProjectId={defaultProjectId}
+        defaultLanguageId={defaultLanguageId}
+      />
     </DashboardLayout>
   );
 }

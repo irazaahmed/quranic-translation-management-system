@@ -14,6 +14,8 @@ export interface Language {
   priority: "low" | "medium" | "high" | null;
   work_status: WorkStatus;
   last_meeting_at: string | null;
+  /** Scheduled weekday for the recurring weekly meeting (or null = unscheduled). */
+  assigned_day: string | null;
   created_at: string;
   updated_at: string;
   project_id: string | null;
@@ -25,6 +27,7 @@ export interface CreateLanguageInput {
   responsible_person?: string | null;
   priority?: "low" | "medium" | "high" | null;
   work_status?: WorkStatus;
+  assigned_day?: string | null;
   project_id?: string;
 }
 
@@ -34,6 +37,7 @@ export interface UpdateLanguageInput {
   responsible_person?: string | null;
   priority?: "low" | "medium" | "high" | null;
   work_status?: WorkStatus;
+  assigned_day?: string | null;
 }
 
 // ============================================
@@ -128,6 +132,7 @@ export async function getAllLanguages(): Promise<Language[]> {
         priority,
         work_status,
         last_meeting_at,
+        assigned_day,
         project_id,
         created_at,
         updated_at
@@ -166,6 +171,7 @@ export async function getStaleLanguages(days: number = 7): Promise<Language[]> {
         priority,
         work_status,
         last_meeting_at,
+        assigned_day,
         project_id,
         created_at,
         updated_at
@@ -219,6 +225,7 @@ export async function getLanguageById(id: string): Promise<LanguageWithProject |
       priority: data.priority,
       work_status: data.work_status,
       last_meeting_at: data.last_meeting_at,
+      assigned_day: data.assigned_day,
       created_at: data.created_at,
       updated_at: data.updated_at,
       project_id: data.project_id,
@@ -303,6 +310,7 @@ export async function searchLanguages(query: string): Promise<LanguageWithProjec
       priority: row.priority,
       work_status: row.work_status,
       last_meeting_at: row.last_meeting_at,
+      assigned_day: row.assigned_day,
       created_at: row.created_at,
       updated_at: row.updated_at,
       project_id: row.project_id,
@@ -368,6 +376,7 @@ export async function getAllLanguagesWithProject(): Promise<LanguageWithProject[
       priority: row.priority,
       work_status: row.work_status,
       last_meeting_at: row.last_meeting_at,
+      assigned_day: row.assigned_day,
       created_at: row.created_at,
       updated_at: row.updated_at,
       project_id: row.project_id,
@@ -809,6 +818,7 @@ export async function getLanguagesByIds(
       priority: row.priority,
       work_status: row.work_status,
       last_meeting_at: row.last_meeting_at,
+      assigned_day: row.assigned_day,
       created_at: row.created_at,
       updated_at: row.updated_at,
       project_id: row.project_id,

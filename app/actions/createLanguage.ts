@@ -19,6 +19,7 @@ export async function createLanguageAction(
   const responsible_person = formData.get("responsible_person") as string;
   const priority = formData.get("priority") as "low" | "medium" | "high";
   const work_status = formData.get("work_status") as "not_started" | "in_progress" | "completed";
+  const assigned_day = formData.get("assigned_day") as string;
   const project_id = formData.get("project_id") as string;
 
   // Validation
@@ -43,12 +44,14 @@ export async function createLanguageAction(
       responsible_person: responsible_person.trim() || null,
       priority: priority || null,
       work_status: work_status || 'not_started',
+      assigned_day: assigned_day?.trim() || null,
       project_id: project_id.trim(),
     });
 
     revalidatePath("/");
     revalidatePath("/languages");
     revalidatePath("/meetings");
+    revalidatePath("/schedule");
   } catch (error) {
     console.error("Failed to create language:", error);
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
