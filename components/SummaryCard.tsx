@@ -1,4 +1,5 @@
 import AnimatedNumber from "./AnimatedNumber";
+import Tilt from "./Tilt";
 
 interface SummaryCardProps {
   title: string;
@@ -55,28 +56,30 @@ export default function SummaryCard({
   const variant = colorVariants[color];
 
   return (
-    <div
-      className={`group card-hover animate-fade-in-up stagger-${index} rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4 shadow-sm`}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-          <p className="mt-0.5 text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
-            {typeof value === "number" ? <AnimatedNumber value={value} /> : value}
-          </p>
-          {trend && (
-            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
-              <span className="font-medium text-gray-700 dark:text-gray-300">{trend.value}</span>{" "}
-              {trend.label}
+    <Tilt className={`animate-pop-3d stagger-${index} rounded-lg sm:rounded-xl`}>
+      <div
+        className="group h-full rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4 shadow-sm transition-shadow duration-200 hover:shadow-xl"
+      >
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
+            <p className="mt-0.5 text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
+              {typeof value === "number" ? <AnimatedNumber value={value} /> : value}
             </p>
-          )}
-        </div>
-        <div
-          className={`rounded-lg bg-gradient-to-br ${variant.icon} p-2 sm:p-2.5 text-white shadow-sm shrink-0 ml-2 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3`}
-        >
-          {icon}
+            {trend && (
+              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                <span className="font-medium text-gray-700 dark:text-gray-300">{trend.value}</span>{" "}
+                {trend.label}
+              </p>
+            )}
+          </div>
+          <div
+            className={`icon-3d rounded-lg bg-gradient-to-br ${variant.icon} p-2 sm:p-2.5 text-white shadow-sm shrink-0 ml-2`}
+          >
+            {icon}
+          </div>
         </div>
       </div>
-    </div>
+    </Tilt>
   );
 }

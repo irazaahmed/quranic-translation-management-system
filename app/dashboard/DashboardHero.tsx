@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePermissions } from "@/components/AuthProvider";
 import LiveClock from "@/components/LiveClock";
+import Tilt from "@/components/Tilt";
 
 interface DashboardHeroProps {
   needsAttention: number;
@@ -27,12 +28,20 @@ export default function DashboardHero({
   const name = profile?.full_name?.trim() || profile?.email?.split("@")[0];
 
   return (
-    <div className="animate-fade-in-up relative mb-4 sm:mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 p-5 sm:p-7 text-white shadow-lg">
-      {/* Decorative circles */}
-      <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-12 right-24 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+    <Tilt
+      max={6}
+      scale={1.01}
+      className="animate-pop-3d mb-4 sm:mb-6 rounded-2xl shadow-lg"
+    >
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 p-5 sm:p-7 text-white">
+        {/* Decorative floating circles */}
+        <div className="float-3d pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+        <div
+          className="float-3d pointer-events-none absolute -bottom-12 right-24 h-32 w-32 rounded-full bg-white/10 blur-2xl"
+          style={{ animationDelay: "1.2s" }}
+        />
 
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <LiveClock longDate showIcon className="text-sm text-white/80" />
           <h2 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold">
@@ -67,7 +76,8 @@ export default function DashboardHero({
             <div className="text-[11px] uppercase tracking-wide text-white/80">Upcoming</div>
           </Link>
         </div>
+        </div>
       </div>
-    </div>
+    </Tilt>
   );
 }

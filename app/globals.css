@@ -133,17 +133,95 @@ body {
 .stagger-5 { animation-delay: 0.25s; }
 .stagger-6 { animation-delay: 0.30s; }
 
-/* Card hover lift */
+/* Card hover lift — now a subtle 3D pop (self-contained perspective) */
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease,
+    border-color 0.2s ease;
+  transform: perspective(900px) translateZ(0);
   will-change: transform;
 }
 .card-hover:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+  transform: perspective(900px) translateY(-5px) rotateX(3deg) scale(1.012);
+  box-shadow: 0 18px 32px -12px rgba(0, 0, 0, 0.22), 0 6px 12px -6px rgba(0, 0, 0, 0.12);
 }
 .dark .card-hover:hover {
-  box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 38px -12px rgba(0, 0, 0, 0.6), 0 6px 14px -6px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   3D toolkit — tilt, depth, float
+   ============================================================ */
+
+/* Mouse-follow 3D tilt (driven by <Tilt/> via CSS vars --rx/--ry/--gx/--gy) */
+.tilt-3d {
+  perspective: 1000px;
+  border-radius: inherit;
+}
+.tilt-3d-inner {
+  position: relative;
+  height: 100%;
+  border-radius: inherit;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--tilt-scale, 1));
+  transform-style: preserve-3d;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.tilt-3d-glare {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(
+    circle at var(--gx, 50%) var(--gy, 50%),
+    rgba(255, 255, 255, 0.35),
+    rgba(255, 255, 255, 0) 55%
+  );
+  mix-blend-mode: soft-light;
+}
+.tilt-3d:hover .tilt-3d-glare {
+  opacity: 1;
+}
+
+/* Continuous gentle 3D float (for icons / badges / decorative bits) */
+@keyframes float3d {
+  0%,
+  100% {
+    transform: translateY(0) rotateX(0deg) rotateY(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotateX(6deg) rotateY(-6deg);
+  }
+}
+.float-3d {
+  animation: float3d 5s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+/* 3D icon pop on group hover */
+.icon-3d {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style: preserve-3d;
+}
+.group:hover .icon-3d {
+  transform: perspective(400px) rotateY(18deg) rotateX(-8deg) translateZ(8px) scale(1.08);
+}
+
+/* 3D entrance — flips up into place with depth */
+@keyframes popIn3d {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateX(-18deg) translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(900px) rotateX(0deg) translateY(0) scale(1);
+  }
+}
+.animate-pop-3d {
+  animation: popIn3d 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center bottom;
 }
 
 /* Button press feedback */
@@ -166,13 +244,22 @@ body {
   .animate-fade-in,
   .animate-fade-in-up,
   .animate-scale-in,
-  .animate-slide-in-left {
+  .animate-slide-in-left,
+  .animate-pop-3d,
+  .float-3d {
     animation: none !important;
   }
   .card-hover:hover,
   .btn-press:hover,
-  .btn-press:active {
+  .btn-press:active,
+  .group:hover .icon-3d {
     transform: none !important;
+  }
+  .tilt-3d-inner {
+    transform: none !important;
+  }
+  .tilt-3d-glare {
+    display: none !important;
   }
 }
 
