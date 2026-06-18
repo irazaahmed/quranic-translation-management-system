@@ -71,12 +71,15 @@ export default function Header() {
             </svg>
           </button>
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <span className="relative flex h-8 w-8 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-gray-200 dark:ring-gray-700">
-              <img
-                src="/MyLogoYellow.jpeg"
-                alt="Logo"
-                className="h-full w-full object-cover"
-              />
+            <span className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center">
+              <span className="absolute inset-0 rounded-full bg-emerald-400/40 animate-ping" />
+              <span className="relative flex h-8 w-8 overflow-hidden rounded-full ring-2 ring-emerald-400/60">
+                <img
+                  src="/MyLogoYellow.jpeg"
+                  alt="Logo"
+                  className="h-full w-full object-cover"
+                />
+              </span>
             </span>
             <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white truncate min-w-0 transition-colors duration-200">
               <span className="hidden sm:inline">Quranic Translation </span>Management System
@@ -243,7 +246,7 @@ export default function Header() {
             ) : (
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
+                className="animate-gradient btn-press inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 via-teal-500 to-blue-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white shadow-md transition-colors duration-200"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

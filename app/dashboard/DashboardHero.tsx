@@ -33,7 +33,7 @@ export default function DashboardHero({
       scale={1.01}
       className="animate-pop-3d mb-4 sm:mb-6 rounded-2xl shadow-lg"
     >
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 p-5 sm:p-7 text-white">
+      <div className="animate-gradient relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 p-5 sm:p-7 text-white">
         {/* Decorative floating circles */}
         <div className="float-3d pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         <div
