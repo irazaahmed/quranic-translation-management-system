@@ -14,15 +14,25 @@ export default function ProgressEditForm({ lang }: { lang: LanguageProgress }) {
   const stages = getStagesForLanguage(lang.language);
 
   // Live-controlled para values so the bars/summary update as you type.
-  const [paras, setParas] = useState<Record<string, number>>(() => {
-    const init: Record<string, number> = {};
-    for (const s of stages) init[s.key] = lang.stages[s.key]?.current_para ?? 0;
+  // Stored as strings so the field can be left empty (a 0 shows as a
+  // placeholder, not a literal "0" you have to delete first).
+  const [paras, setParas] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    for (const s of stages) {
+      const p = lang.stages[s.key]?.current_para ?? 0;
+      init[s.key] = p === 0 ? "" : String(p);
+    }
     return init;
   });
 
-  function setPara(key: string, value: number) {
-    const v = Math.max(0, Math.min(TOTAL_PARAS, Number.isNaN(value) ? 0 : value));
-    setParas((prev) => ({ ...prev, [key]: v }));
+  function setPara(key: string, raw: string) {
+    const digits = raw.replace(/\D/g, ""); // manual entry only — digits, no signs
+    if (digits === "") {
+      setParas((prev) => ({ ...prev, [key]: "" }));
+      return;
+    }
+    const n = Math.min(TOTAL_PARAS, parseInt(digits, 10));
+    setParas((prev) => ({ ...prev, [key]: String(n) }));
   }
 
   return (
@@ -41,7 +51,7 @@ export default function ProgressEditForm({ lang }: { lang: LanguageProgress }) {
         <div className="space-y-5">
           {stages.map((meta, idx) => {
             const row = lang.stages[meta.key];
-            const value = paras[meta.key] ?? 0;
+            const value = parseInt(paras[meta.key] || "0", 10) || 0;
             const pct = Math.round((value / TOTAL_PARAS) * 100);
             return (
               <div
@@ -72,14 +82,16 @@ export default function ProgressEditForm({ lang }: { lang: LanguageProgress }) {
                       Para reached (0–{TOTAL_PARAS})
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoComplete="off"
                       id={`para_${meta.key}`}
                       name={`para_${meta.key}`}
-                      min={0}
-                      max={TOTAL_PARAS}
-                      value={value}
-                      onChange={(e) => setPara(meta.key, parseInt(e.target.value, 10))}
-                      className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      value={paras[meta.key]}
+                      placeholder="0"
+                      onChange={(e) => setPara(meta.key, e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
 
