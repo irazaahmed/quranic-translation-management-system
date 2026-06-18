@@ -74,8 +74,8 @@ export default function SummaryCard({
             )}
           </div>
           <div
-            className={`wobble-3d rounded-lg bg-gradient-to-br ${variant.icon} p-2 sm:p-2.5 text-white shadow-md shrink-0 ml-2`}
-            style={{ animationDelay: `${index * 0.4}s` }}
+            className={`wobble-3d breathe-glow rounded-lg bg-gradient-to-br ${variant.icon} p-2 sm:p-2.5 text-white shrink-0 ml-2`}
+            style={{ animationDelay: `${index * 0.4}s, ${index * 0.3}s` }}
           >
             {icon}
           </div>
