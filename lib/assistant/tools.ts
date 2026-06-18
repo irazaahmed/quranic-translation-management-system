@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { createMeeting, upsertStageProgress } from "@/lib/mutations";
 import { getCachedLanguageProgress } from "@/lib/progressData";
-import { getLatestMeetingByLanguage } from "@/lib/supabase";
+import { getLatestMeetingByLanguage, searchLanguages } from "@/lib/supabase";
 import {
   ALL_STAGE_KEYS,
   clampPara,
@@ -27,6 +27,21 @@ import {
 // ---- Function declarations sent to Gemini (its tool catalogue) ----
 
 export const functionDeclarations = [
+  {
+    name: "find_language",
+    description:
+      "Find a language and get its id. Call this FIRST whenever the user names a language, before any other tool. Search by the language word (e.g. 'English'); results include the project so you can pick the right row when the user also named a project.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Language name or keyword, e.g. 'English', 'Chinese', 'Bangla'.",
+        },
+      },
+      required: ["query"],
+    },
+  },
   {
     name: "get_language_progress",
     description:
@@ -130,6 +145,41 @@ type ToolArgs = Record<string, unknown>;
 function str(v: unknown): string | undefined {
   if (typeof v === "string" && v.trim()) return v.trim();
   return undefined;
+}
+
+async function findLanguage(args: ToolArgs) {
+  const q = str(args.query);
+  if (!q) return { error: "query is required." };
+
+  // Try the whole phrase first (cheap for single words like "Chinese"); if
+  // nothing matches, fall back to searching the individual words so a phrase
+  // like "Sirat ul Jinan English" still surfaces the English rows.
+  let matches = await searchLanguages(q);
+  if (matches.length === 0) {
+    const tokens = q.split(/\s+/).filter((t) => t.length > 2).slice(0, 3);
+    const seen = new Set<string>();
+    const merged: typeof matches = [];
+    for (const t of tokens) {
+      for (const r of await searchLanguages(t)) {
+        if (!seen.has(r.id)) {
+          seen.add(r.id);
+          merged.push(r);
+        }
+      }
+    }
+    matches = merged;
+  }
+
+  if (matches.length === 0) return { matches: [], message: "No language matched that name." };
+
+  return {
+    matches: matches.slice(0, 8).map((l) => ({
+      id: l.id,
+      language: l.language,
+      country: l.country,
+      project: l.project?.name ?? null,
+    })),
+  };
 }
 
 async function getLanguageProgress(args: ToolArgs) {
@@ -258,6 +308,8 @@ async function logMeeting(args: ToolArgs) {
 export async function executeTool(name: string, args: ToolArgs): Promise<unknown> {
   try {
     switch (name) {
+      case "find_language":
+        return await findLanguage(args);
       case "get_language_progress":
         return await getLanguageProgress(args);
       case "get_last_meeting":

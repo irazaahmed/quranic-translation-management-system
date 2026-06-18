@@ -17,7 +17,7 @@ export async function POST(request: Request) {
           typeof (m as ChatMessage).content === "string" &&
           ((m as ChatMessage).role === "user" || (m as ChatMessage).role === "assistant")
       )
-      .slice(-20);
+      .slice(-8);
 
     if (messages.length === 0) {
       return NextResponse.json({ error: "No message provided." }, { status: 400 });
@@ -27,10 +27,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ reply });
   } catch (err) {
     console.error("Assistant route failed:", err);
-    const message =
-      err instanceof Error && err.message.startsWith("GEMINI_")
-        ? "The AI service returned an error. Please try again in a moment."
-        : "Something went wrong. Please try again.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    // Temporary: surface the real detail so we can diagnose setup issues.
+    const detail = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: detail }, { status: 500 });
   }
 }

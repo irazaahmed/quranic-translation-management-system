@@ -1,18 +1,18 @@
 import "server-only";
 
-import { getCachedLanguages, getCachedProjects } from "@/lib/cachedData";
 import { functionDeclarations, executeTool } from "./tools";
 
 /**
- * Drives the Gemini (free tier) function-calling loop for the QTMS assistant.
+ * Drives the Groq (OpenAI-compatible) function-calling loop for the QTMS
+ * assistant.
  *
  * Flow: build a system prompt that includes the live list of languages (so the
  * model can map "Chinese Kanz ul Irfan" to the right row id), send the
- * conversation + tool catalogue to Gemini, run whatever tools it asks for, feed
+ * conversation + tool catalogue to Groq, run whatever tools it asks for, feed
  * results back, and repeat until it produces a normal text reply.
  */
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 const MAX_TOOL_ROUNDS = 6;
 
 export interface ChatMessage {
@@ -20,128 +20,135 @@ export interface ChatMessage {
   content: string;
 }
 
-interface GeminiPart {
-  text?: string;
-  functionCall?: { name: string; args?: Record<string, unknown>; id?: string };
-  functionResponse?: { name: string; id?: string; response: Record<string, unknown> };
+interface OpenAIToolCall {
+  id: string;
+  type: "function";
+  function: { name: string; arguments: string };
 }
-interface GeminiContent {
-  role: "user" | "model";
-  parts: GeminiPart[];
+interface OpenAIMessage {
+  role: "system" | "user" | "assistant" | "tool";
+  content: string | null;
+  tool_calls?: OpenAIToolCall[];
+  tool_call_id?: string;
 }
 
-async function buildSystemPrompt(): Promise<string> {
-  const [languages, projects] = await Promise.all([
-    getCachedLanguages(),
-    getCachedProjects(),
-  ]);
-  const projectName = new Map(projects.map((p) => [p.id, p.name]));
+// Groq/OpenAI tool shape wraps each declaration in { type, function }.
+const tools = functionDeclarations.map((d) => ({ type: "function", function: d }));
 
-  const list = languages
-    .map((l) => {
-      const proj = l.project_id ? projectName.get(l.project_id) ?? "—" : "—";
-      return `- id=${l.id} | ${l.language} (${l.country}) | project: ${proj} | status: ${l.work_status}`;
-    })
-    .join("\n");
-
+function buildSystemPrompt(): string {
   const today = new Date().toISOString().slice(0, 10);
 
-  return `You are the assistant for QTMS (Quranic Translation Management System). You help the team check and update translation progress and meetings. Reply in the same language/script the user writes in (Roman Urdu if they use Roman Urdu). Be concise and friendly.
+  // Static + compact: no language list here (it's fetched on demand via
+  // find_language), which keeps every request small on the free token budget.
+  return `You are the assistant for QTMS (Quranic Translation Management System). Help the team check and update translation progress and meetings. Reply in the user's language/script (Roman Urdu if they use Roman Urdu). Be concise.
 
 Today's date is ${today}.
 
-DATA MODEL:
-- Each project has languages. Each language has 30 paras moving through stages.
-- Standard pipeline: Translation, Comparison, Formation, Tafteesh, Designing, Final Proof Reading.
-- Braille languages use: Translation (for Braille), Comparison, Convert into Braille, Tafteesh, Final Proof Reading.
-- Stage keys for tools: translation, comparison, formation, convert_into_braille, tafteesh, designing, final_proof_reading.
+Each project has languages; each language has 30 paras moving through stages.
+Stage keys: translation, comparison, formation, convert_into_braille, tafteesh, designing, final_proof_reading.
+Standard languages use translation, comparison, formation, tafteesh, designing, final_proof_reading. Braille languages use translation, comparison, convert_into_braille, tafteesh, final_proof_reading.
 
-YOU HAVE THESE LANGUAGES (always pass the exact id to tools):
-${list}
+HOW TO ACT:
+1. Whenever the user names a language, FIRST call find_language (search by the language word, e.g. "English"). The results include each match's project — if the user also named a project (e.g. "Sirat ul Jinan English"), pick the row whose project matches. If several still match, ask the user which one. Never invent an id.
+2. Then use the id with the right tool.
 
-RULES:
-- To answer "how much work is done" or "what stage" → call get_language_progress.
-- To answer "last meeting" → call get_last_meeting.
-- To record progress (e.g. "10 paras Final Proof Reading done") → call update_stage_progress with the right stage key.
-- To record a meeting → call log_meeting. Clean up and rewrite the user's rough notes into a clear discussion summary before saving.
-- If the user's words match more than one language, ask them which one before acting. Never guess an id that isn't in the list.
-- Writing (update_stage_progress, log_meeting) needs the user to be logged-in staff. If a tool returns PERMISSION_DENIED, tell the user they must log in to make changes — do not retry.
-- After a successful write, confirm exactly what you saved.`;
+READING — answering questions NEVER needs login. Just call the tool and reply:
+- "how much work / what stage / kitna kaam / kahan tak" -> get_language_progress
+- "last meeting / aakhri meeting kab/kya hui" -> get_last_meeting
+Do NOT ask the user to log in for information questions. Never refuse a question because of login.
+
+WRITING — only these two change data and require logged-in staff:
+- update_stage_progress (record paras reached at a stage)
+- log_meeting (record a meeting — first rewrite the user's rough notes into a clean summary)
+Call them only when the user clearly wants to record or update something. ONLY if such a write tool returns PERMISSION_DENIED, tell the user they must log in to make changes. After a successful write, confirm exactly what was saved.`;
 }
 
-async function callGemini(
-  systemPrompt: string,
-  contents: GeminiContent[]
-): Promise<GeminiContent> {
-  const apiKey = process.env.GEMINI_API_KEY;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function callGroq(messages: OpenAIMessage[]): Promise<OpenAIMessage> {
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error("MISSING_KEY");
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-    {
+  // Retry transient rate limits (429) using the wait time Groq suggests.
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents,
-        tools: [{ functionDeclarations }],
+        model: GROQ_MODEL,
+        messages,
+        tools,
+        tool_choice: "auto",
+        temperature: 0.3,
+        max_tokens: 800,
       }),
-    }
-  );
+    });
 
-  if (!res.ok) {
+    if (res.ok) {
+      const data = await res.json();
+      const msg = data?.choices?.[0]?.message as OpenAIMessage | undefined;
+      if (!msg) throw new Error("GROQ_EMPTY");
+      return msg;
+    }
+
     const body = await res.text();
-    throw new Error(`GEMINI_${res.status}: ${body.slice(0, 300)}`);
+
+    if (res.status === 429 && attempt < MAX_ATTEMPTS) {
+      // "Please try again in 14.84s" — wait that long (capped), then retry.
+      const m = body.match(/try again in ([\d.]+)s/i);
+      const waitSec = m ? Math.min(parseFloat(m[1]) + 0.5, 20) : 3;
+      await sleep(waitSec * 1000);
+      continue;
+    }
+
+    throw new Error(`GROQ_${res.status}: ${body.slice(0, 400)}`);
   }
 
-  const data = await res.json();
-  const candidate = data?.candidates?.[0]?.content as GeminiContent | undefined;
-  if (!candidate) throw new Error("GEMINI_EMPTY");
-  return candidate;
+  throw new Error("GROQ_RETRY_EXHAUSTED");
 }
 
 /** Run the assistant for a conversation and return its final text reply. */
 export async function runAssistant(messages: ChatMessage[]): Promise<string> {
-  if (!process.env.GEMINI_API_KEY) {
-    return "The AI assistant isn't configured yet — a GEMINI_API_KEY needs to be added in the environment settings.";
+  if (!process.env.GROQ_API_KEY) {
+    return "The AI assistant isn't configured yet — a GROQ_API_KEY needs to be added in the environment settings.";
   }
 
-  const systemPrompt = await buildSystemPrompt();
+  const systemPrompt = buildSystemPrompt();
 
-  const contents: GeminiContent[] = messages.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
-  }));
+  const convo: OpenAIMessage[] = [
+    { role: "system", content: systemPrompt },
+    ...messages.map((m) => ({ role: m.role, content: m.content })),
+  ];
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-    const reply = await callGemini(systemPrompt, contents);
-    contents.push(reply);
+    const reply = await callGroq(convo);
+    convo.push(reply);
 
-    const calls = (reply.parts || []).filter((p) => p.functionCall);
+    const calls = reply.tool_calls ?? [];
 
     if (calls.length === 0) {
-      const text = (reply.parts || [])
-        .map((p) => p.text)
-        .filter(Boolean)
-        .join("\n")
-        .trim();
-      return text || "Sorry, I couldn't form a reply. Please try rephrasing.";
+      return (reply.content ?? "").trim() || "Sorry, I couldn't form a reply. Please try rephrasing.";
     }
 
     // Run every tool the model asked for, then feed the results back.
-    const responseParts: GeminiPart[] = [];
-    for (const part of calls) {
-      const fc = part.functionCall!;
-      const result = await executeTool(fc.name, fc.args ?? {});
-      responseParts.push({
-        functionResponse: {
-          name: fc.name,
-          ...(fc.id ? { id: fc.id } : {}),
-          response: result as Record<string, unknown>,
-        },
+    for (const call of calls) {
+      let args: Record<string, unknown> = {};
+      try {
+        args = call.function.arguments ? JSON.parse(call.function.arguments) : {};
+      } catch {
+        args = {};
+      }
+      const result = await executeTool(call.function.name, args);
+      convo.push({
+        role: "tool",
+        tool_call_id: call.id,
+        content: JSON.stringify(result),
       });
     }
-    contents.push({ role: "user", parts: responseParts });
   }
 
   return "That took too many steps — please try breaking your request into smaller parts.";
