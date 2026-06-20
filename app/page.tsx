@@ -16,7 +16,6 @@ import TodaysSchedule, { type TodaysScheduleItem } from "./dashboard/TodaysSched
 import RecentMeetings from "./dashboard/RecentMeetings";
 import LanguagesNeedingAttention from "./dashboard/LanguagesNeedingAttention";
 import UrgentFollowUps from "./dashboard/UrgentFollowUps";
-import ReportsDropdown from "./dashboard/ReportsDropdown";
 import ProjectStatsCards from "./dashboard/ProjectStatsCards";
 import AnalyticsCharts from "./dashboard/AnalyticsCharts";
 import UpcomingMeetings from "./dashboard/UpcomingMeetings";
@@ -141,33 +140,30 @@ export default async function Dashboard() {
               Overview of language meeting tracking status
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-            <ReportsDropdown />
-            <StaffOnly>
+          <StaffOnly>
+            <div className="flex w-full sm:w-auto items-center gap-2 flex-shrink-0">
               <Link
                 href="/languages/new"
-                className="btn-press inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 sm:px-4 lg:px-5 py-2 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 whitespace-nowrap"
+                className="btn-press flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 sm:px-4 lg:px-5 py-2.5 sm:py-2 text-sm font-medium text-white shadow-sm hover:from-blue-700 hover:to-indigo-700 whitespace-nowrap"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span className="hidden lg:inline">Add Language</span>
+                <span className="sm:hidden lg:inline">Add Language</span>
                 <span className="hidden sm:inline lg:hidden">Language</span>
-                <span className="sm:hidden">Add</span>
               </Link>
               <Link
                 href="/meetings/new"
-                className="btn-press inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3 sm:px-4 lg:px-5 py-2 text-sm font-medium text-white shadow-sm hover:from-emerald-700 hover:to-teal-700 whitespace-nowrap"
+                className="btn-press flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3 sm:px-4 lg:px-5 py-2.5 sm:py-2 text-sm font-medium text-white shadow-sm hover:from-emerald-700 hover:to-teal-700 whitespace-nowrap"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span className="hidden lg:inline">Quick Meeting</span>
+                <span className="sm:hidden lg:inline">Quick Meeting</span>
                 <span className="hidden sm:inline lg:hidden">Meeting</span>
-                <span className="sm:hidden">New</span>
               </Link>
-            </StaffOnly>
-          </div>
+            </div>
+          </StaffOnly>
         </div>
       </div>
 
