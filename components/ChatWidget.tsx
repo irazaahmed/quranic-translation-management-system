@@ -65,8 +65,8 @@ export default function ChatWidget() {
   if (pathname?.startsWith("/assistant") || pathname?.startsWith("/login")) return null;
 
   const panelClassName = isMobile
-    ? "animate-scale-in fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl"
-    : "animate-scale-in fixed bottom-24 right-4 sm:right-6 z-50 flex h-[70vh] max-h-[32rem] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl";
+    ? "glass animate-pop-3d fixed z-50 flex flex-col overflow-hidden rounded-3xl border border-white/40 dark:border-white/10 shadow-2xl ring-1 ring-emerald-500/10"
+    : "glass animate-pop-3d fixed bottom-24 right-4 sm:right-6 z-50 flex h-[70vh] max-h-[32rem] w-[calc(100vw-2rem)] max-w-sm flex-col overflow-hidden rounded-3xl border border-white/40 dark:border-white/10 shadow-2xl ring-1 ring-emerald-500/10";
   const panelStyle: React.CSSProperties | undefined = isMobile
     ? {
         left: 8,
@@ -82,16 +82,19 @@ export default function ChatWidget() {
       {open && (
         <div className={panelClassName} style={panelStyle}>
           {/* Header */}
-          <div className="animate-gradient flex items-center justify-between bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 px-4 py-3 text-white">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+          <div className="gloss animate-gradient flex items-center justify-between bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 px-4 py-3 text-white shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <span className="float-3d flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/30 shadow-inner">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 4v-4z" />
                 </svg>
               </span>
               <div className="leading-tight">
-                <p className="text-sm font-bold">QTMS Assistant</p>
-                <p className="text-[10px] text-white/80">Progress · meetings · updates</p>
+                <p className="text-sm font-bold tracking-tight">QTMS Assistant</p>
+                <p className="flex items-center gap-1 text-[10px] text-white/85">
+                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_6px] shadow-emerald-300" />
+                  Online · progress · meetings
+                </p>
               </div>
             </div>
             <button
@@ -116,12 +119,19 @@ export default function ChatWidget() {
               </div>
             )}
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={i} className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                {m.role === "assistant" && (
+                  <span className="mb-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-blue-600 text-white shadow">
+                    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 4v-4z" />
+                    </svg>
+                  </span>
+                )}
                 <div
-                  className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                  className={`gloss animate-bubble-in max-w-[82%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-md ${
                     m.role === "user"
-                      ? "bg-gradient-to-br from-emerald-600 to-teal-600 text-white rounded-br-md"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-md"
+                      ? "bg-gradient-to-br from-emerald-600 to-teal-600 text-white rounded-br-sm"
+                      : "bg-white/80 dark:bg-gray-800/80 text-gray-800 dark:text-gray-100 rounded-bl-sm ring-1 ring-black/5 dark:ring-white/5"
                   }`}
                 >
                   {m.content}
@@ -191,7 +201,7 @@ export default function ChatWidget() {
       {!(open && isMobile) && (
       <button
         onClick={() => setOpen((o) => !o)}
-        className="btn-press fixed bottom-5 right-4 sm:right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 text-white shadow-lg"
+        className="gradient-ring gloss btn-press float-3d fixed bottom-5 right-4 sm:right-6 z-50 flex h-[3.75rem] w-[3.75rem] items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 via-teal-600 to-blue-600 text-white shadow-xl ring-1 ring-white/30"
         aria-label={open ? "Close assistant" : "Open assistant"}
       >
         {!open && (
@@ -203,7 +213,7 @@ export default function ChatWidget() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           ) : (
-            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 4v-4z" />
             </svg>
           )}

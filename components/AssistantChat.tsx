@@ -63,12 +63,19 @@ export default function AssistantChat() {
         )}
 
         {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} animate-fade-in-up`}>
+          <div key={i} className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            {m.role === "assistant" && (
+              <span className="mb-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-blue-600 text-white shadow">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 4v-4z" />
+                </svg>
+              </span>
+            )}
             <div
-              className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
+              className={`gloss animate-bubble-in max-w-[82%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-md ${
                 m.role === "user"
-                  ? "bg-gradient-to-br from-emerald-600 to-teal-600 text-white rounded-br-md"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-md"
+                  ? "bg-gradient-to-br from-emerald-600 to-teal-600 text-white rounded-br-sm"
+                  : "bg-white/80 dark:bg-gray-800/80 text-gray-800 dark:text-gray-100 rounded-bl-sm ring-1 ring-black/5 dark:ring-white/5"
               }`}
             >
               {m.content}
