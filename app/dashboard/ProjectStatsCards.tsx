@@ -16,7 +16,7 @@ export default function ProjectStatsCards({ stats }: ProjectStatsCardsProps) {
       <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-200 mb-4">
         Project-wise Statistics
       </h2>
-      <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-5 grid-cols-1 lg:grid-cols-3">
         {stats.map((stat, i) => (
           <div
             key={stat.project.id}
