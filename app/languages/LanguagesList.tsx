@@ -327,7 +327,7 @@ export default function LanguagesList({ initialLanguages, projects }: LanguagesL
         {filteredLanguages.map((lang) => (
           <div
             key={lang.id}
-            className="card-hover rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 hover:border-emerald-300 dark:hover:border-emerald-700"
+            className="gloss card-hover rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm hover:border-emerald-300 dark:hover:border-emerald-700"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">

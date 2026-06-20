@@ -129,14 +129,16 @@ export default function Sidebar() {
       >
         {/* Logo */}
         <div className="flex h-16 items-center border-b border-gray-200 dark:border-gray-700 px-6 transition-colors duration-200 flex-shrink-0">
-          <Link href="/" className="flex items-center gap-3">
-            <img
-              src="/MyLogoYellow.jpeg"
-              alt="Logo"
-              className="h-8 w-8 object-cover rounded-full flex-shrink-0"
-            />
+          <Link href="/" className="group flex items-center gap-3">
+            <span className="gradient-ring float-3d flex-shrink-0 rounded-full">
+              <img
+                src="/MyLogoYellow.jpeg"
+                alt="Logo"
+                className="h-8 w-8 object-cover rounded-full ring-2 ring-white dark:ring-gray-900"
+              />
+            </span>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-gray-900 dark:text-white transition-colors duration-200">QTM</span>
+              <span className="text-sm font-bold text-gradient transition-colors duration-200">QTM</span>
               <span className="text-xs text-gray-500 dark:text-gray-400 hidden xl:block transition-colors duration-200">Quranic Translation</span>
             </div>
           </Link>
@@ -152,13 +154,16 @@ export default function Sidebar() {
                 key={item.name}
                 href={item.href}
                 onClick={() => setIsMobileOpen(false)}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all duration-200 hover:translate-x-1 ${
+                className={`group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 hover:translate-x-1 ${
                   isActive
-                    ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/25 dark:to-teal-900/10 text-emerald-700 dark:text-emerald-400 shadow-sm"
+                    ? "bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/10 text-emerald-700 dark:text-emerald-400 shadow-sm ring-1 ring-emerald-500/20"
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
-                {item.icon}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 h-6 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-emerald-500 to-teal-500 w-1 shadow-[0_0_8px] shadow-emerald-500/50" />
+                )}
+                <span className="icon-3d">{item.icon}</span>
                 {item.name}
               </Link>
             );
@@ -222,9 +227,9 @@ export default function Sidebar() {
             <Link
               href="/languages/new"
               onClick={() => setIsMobileOpen(false)}
-              className="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition-colors duration-200"
+              className="gloss btn-press animate-gradient group flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-500 to-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-emerald-500/25"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="icon-3d w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
               Add Language

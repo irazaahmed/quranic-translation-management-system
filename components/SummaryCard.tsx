@@ -58,7 +58,7 @@ export default function SummaryCard({
   return (
     <Tilt className={`animate-pop-3d stagger-${index} rounded-lg sm:rounded-xl`}>
       <div
-        className="group h-full rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4 shadow-sm transition-shadow duration-200 hover:shadow-xl"
+        className="gloss group h-full rounded-lg sm:rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4 shadow-sm transition-shadow duration-200 hover:shadow-xl"
       >
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
