@@ -14,10 +14,19 @@ export default function AssistantChat() {
   const { isLoggedIn } = usePermissions();
   const { messages, input, setInput, loading, error, send } = useAssistantChat();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  // Auto-grow the textarea as the user types (up to a max height, then scroll).
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  }, [input]);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,6 +102,7 @@ export default function AssistantChat() {
         )}
         <form onSubmit={onSubmit} className="flex items-end gap-2">
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -103,7 +113,7 @@ export default function AssistantChat() {
             }}
             rows={1}
             placeholder="Apna sawal ya update yahan likhein…"
-            className="max-h-32 flex-1 resize-none rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            className="max-h-32 flex-1 resize-none overflow-y-auto rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm leading-relaxed text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           />
           <button
             type="submit"

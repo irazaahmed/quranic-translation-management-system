@@ -19,12 +19,21 @@ export default function ChatWidget() {
   // Visible viewport (shrinks when the mobile keyboard opens).
   const [vv, setVv] = useState<{ height: number; offsetTop: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (open) {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }
   }, [messages, loading, open, vv]);
+
+  // Auto-grow the textarea as the user types (up to a max height, then scroll).
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
+  }, [input, open]);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 639px)");
@@ -150,6 +159,7 @@ export default function ChatWidget() {
               className="flex items-end gap-2"
             >
               <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -160,7 +170,7 @@ export default function ChatWidget() {
                 }}
                 rows={1}
                 placeholder="Yahan likhein…"
-                className="max-h-24 flex-1 resize-none rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="max-h-24 flex-1 resize-none overflow-y-auto rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm leading-relaxed text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               />
               <button
                 type="submit"
