@@ -86,6 +86,13 @@ export async function deleteEtItem(itemId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Stop (skip) or resume a project. */
+export async function setEtStopped(itemId: string, stopped: boolean): Promise<void> {
+  const supabase = await getWriteClient();
+  const { error } = await supabase.from("et_items").update({ stopped }).eq("id", itemId);
+  if (error) throw error;
+}
+
 export interface StageUpsert {
   stage: StageCode;
   person: string | null;

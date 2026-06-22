@@ -7,6 +7,7 @@ import {
   createEtItem,
   updateEtItem,
   deleteEtItem,
+  setEtStopped,
   saveEtStages,
   patchEtStages,
   type StageUpsert,
@@ -139,6 +140,24 @@ export async function patchEtStagesAction(
     console.error("Failed to advance stage:", error);
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return { error: "You don't have permission to update the pipeline." };
+    }
+    return { error: "Failed to save. Please try again." };
+  }
+}
+
+export async function setEtStoppedAction(
+  itemId: string,
+  stopped: boolean
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireStaff();
+    await setEtStopped(itemId, stopped);
+    revalidateEt(itemId);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to set stopped:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to change this." };
     }
     return { error: "Failed to save. Please try again." };
   }

@@ -59,6 +59,29 @@ export function isMagazineType(type: string | null | undefined): boolean {
   return (type || "").toLowerCase() === "mgz";
 }
 
+/** High-level category used to group/filter the Work Items list. */
+export type ItemCategory = "weekly" | "magazine" | "quran" | "books" | "other";
+
+export const CATEGORY_LABELS: Record<ItemCategory, string> = {
+  weekly: "Weekly Docs",
+  magazine: "Magazine",
+  quran: "Quran",
+  books: "Books",
+  other: "Other Works",
+};
+
+/** Order categories appear as tabs. */
+export const CATEGORY_ORDER: ItemCategory[] = ["weekly", "magazine", "quran", "books", "other"];
+
+export function itemCategory(type: string | null | undefined): ItemCategory {
+  const t = (type || "").toLowerCase();
+  if (isWeeklyType(t)) return "weekly";
+  if (t === "mgz") return "magazine";
+  if (t === "quran") return "quran";
+  if (t === "bks") return "books";
+  return "other";
+}
+
 export const BOARD_LABELS: Record<ItemBoard, string> = {
   main_2026: "Main (2026)",
   kanzul_madaris: "Kanzul Madaris",
@@ -99,6 +122,8 @@ export interface EtItem {
   delivery_date: string | null;
   /** When set, the final email was sent and the item is complete. */
   final_email_date: string | null;
+  /** Manually stopped / skipped projects (e.g. cancelled FOA work) — kept for the record. */
+  stopped: boolean;
   priority: ItemPriority | null;
   status: ItemStatus;
   further_process: string | null;

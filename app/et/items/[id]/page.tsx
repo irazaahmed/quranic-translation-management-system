@@ -38,7 +38,7 @@ export default async function EtItemDetailPage({ params }: Props) {
   const peopleNames = people.map((p) => p.name);
 
   // Quick-advance data: which stage to act on next, straight from the summary.
-  const quickAdvance = computeAdvance(item.stages, item.final_email_date);
+  const quickAdvance = item.stopped ? null : computeAdvance(item.stages, item.final_email_date);
 
   // Movement timeline: stages that have actually been touched (assigned/sent),
   // in pipeline order — who had it, when it was sent and came back, how long.
@@ -56,8 +56,17 @@ export default async function EtItemDetailPage({ params }: Props) {
           </svg>
           Back to Work Items
         </Link>
-        <EtItemActions itemId={item.id} title={item.title} />
+        <EtItemActions itemId={item.id} title={item.title} stopped={item.stopped} />
       </div>
+
+      {item.stopped && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/60 p-3 text-sm text-gray-700 dark:text-gray-300">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          This project is <span className="font-semibold">stopped / skipped</span> — kept for the record. Use “Resume” to bring it back.
+        </div>
+      )}
 
       {/* Header card */}
       <div className="gloss mb-5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-6 shadow-sm">

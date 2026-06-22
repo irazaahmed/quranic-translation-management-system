@@ -431,7 +431,7 @@ async function logMeeting(args: ToolArgs) {
 // ---- English Translation tool implementations ----
 
 async function getEtOverview() {
-  const rows = await getCachedEtItemRows();
+  const rows = (await getCachedEtItemRows()).filter((r) => !r.stopped);
   const active = rows.filter((r) => r.derivedStatus !== "completed");
   const dueSoon = active.filter((r) => {
     const d = reminderInfo(r).daysLeft;
@@ -461,7 +461,7 @@ async function getEtOverview() {
 
 async function getEtWorkload(args: ToolArgs) {
   const person = str(args.person);
-  const rows = (await getCachedEtItemRows()).filter((r) => r.derivedStatus !== "completed" && r.current.holder);
+  const rows = (await getCachedEtItemRows()).filter((r) => !r.stopped && r.derivedStatus !== "completed" && r.current.holder);
 
   if (person) {
     const items = rows
@@ -482,7 +482,7 @@ async function getEtReminders(args: ToolArgs) {
   const within = typeof args.within_days === "number" ? (args.within_days as number) : 14;
   const rows = await getCachedEtItemRows();
   const entries = rows
-    .filter((r) => r.derivedStatus !== "completed")
+    .filter((r) => !r.stopped && r.derivedStatus !== "completed")
     .map((r) => ({ r, info: reminderInfo(r) }))
     .filter((x) => x.info.delivery && (x.info.daysLeft! < 0 || x.info.daysLeft! <= within))
     .sort((a, b) => (a.info.daysLeft ?? 0) - (b.info.daysLeft ?? 0))

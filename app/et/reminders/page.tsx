@@ -77,7 +77,7 @@ export default async function EtRemindersPage() {
   }
 
   // Weekly documents only (wsb / fsp / wbl) — the recurring deliverables.
-  const weekly = rows.filter((r) => r.derivedStatus !== "completed" && isWeeklyType(r.type));
+  const weekly = rows.filter((r) => !r.stopped && r.derivedStatus !== "completed" && isWeeklyType(r.type));
 
   const entries: Entry[] = weekly
     .map((row) => ({ row, info: reminderInfo(row) }))

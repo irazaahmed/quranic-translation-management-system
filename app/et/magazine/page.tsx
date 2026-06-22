@@ -67,7 +67,7 @@ export default async function EtMagazinePage() {
   }
 
   const articles = rows
-    .filter((r) => isMagazineType(r.type))
+    .filter((r) => isMagazineType(r.type) && !r.stopped)
     .sort((a, b) => a.title.localeCompare(b.title));
 
   const active = articles.filter((a) => a.derivedStatus !== "completed");

@@ -5,16 +5,28 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { usePermissions } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
-import { deleteEtItemAction } from "@/app/actions/etActions";
+import { deleteEtItemAction, setEtStoppedAction } from "@/app/actions/etActions";
 
-export default function EtItemActions({ itemId, title }: { itemId: string; title: string }) {
+export default function EtItemActions({ itemId, title, stopped }: { itemId: string; title: string; stopped: boolean }) {
   const { canWrite } = usePermissions();
   const toast = useToast();
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [stopPending, startStop] = useTransition();
 
   if (!canWrite) return null;
+
+  const toggleStopped = () => {
+    startStop(async () => {
+      const res = await setEtStoppedAction(itemId, !stopped);
+      if (res.error) toast({ type: "error", message: res.error });
+      else {
+        toast({ type: "success", message: stopped ? "Project resumed." : "Project stopped." });
+        router.refresh();
+      }
+    });
+  };
 
   const doDelete = () => {
     startTransition(async () => {
@@ -30,6 +42,18 @@ export default function EtItemActions({ itemId, title }: { itemId: string; title
 
   return (
     <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={toggleStopped}
+        disabled={stopPending}
+        className={`btn-press inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium disabled:opacity-50 ${
+          stopped
+            ? "border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+            : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+        }`}
+      >
+        {stopped ? "Resume" : "Stop"}
+      </button>
       <Link
         href={`/et/items/${itemId}/edit`}
         className="btn-press inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"

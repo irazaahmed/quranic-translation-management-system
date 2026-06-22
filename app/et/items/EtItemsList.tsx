@@ -3,12 +3,19 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  CATEGORY_LABELS,
+  CATEGORY_ORDER,
   STAGES,
   daysSince,
+  itemCategory,
+  reminderInfo,
   stageBadgeClasses,
   typeLabel,
+  type ItemCategory,
 } from "@/lib/et";
 import type { EtItemRow } from "@/lib/etData";
+
+type CategoryTab = ItemCategory | "skipped" | "all";
 
 function fmtDate(d: string | null): string {
   if (!d) return "—";
@@ -49,11 +56,12 @@ interface Props {
 }
 
 export default function EtItemsList({ items, initial }: Props) {
+  const [category, setCategory] = useState<CategoryTab>("weekly");
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<string>(initial?.status ?? "active");
+  const [status, setStatus] = useState<string>(initial?.status ?? "all");
   const [stage, setStage] = useState<string>(initial?.stage ?? "all");
   const [holder, setHolder] = useState<string>(initial?.holder ?? "all");
-  const [sortBy, setSortBy] = useState<string>("oldest");
+  const [sortBy, setSortBy] = useState<string>("smart");
 
   const holders = useMemo(() => {
     const set = new Set<string>();
@@ -61,19 +69,41 @@ export default function EtItemsList({ items, initial }: Props) {
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [items]);
 
+  // Counts per category tab (non-stopped), plus the skipped count.
+  const counts = useMemo(() => {
+    const c: Record<string, number> = { all: 0, skipped: 0, weekly: 0, magazine: 0, quran: 0, books: 0, other: 0 };
+    items.forEach((i) => {
+      if (i.stopped) {
+        c.skipped++;
+        return;
+      }
+      c.all++;
+      c[itemCategory(i.type)]++;
+    });
+    return c;
+  }, [items]);
+
   const hasFilter =
-    query.trim() !== "" || status !== "active" || stage !== "all" || holder !== "all";
+    query.trim() !== "" || status !== "all" || stage !== "all" || holder !== "all";
 
   const reset = () => {
     setQuery("");
-    setStatus("active");
+    setStatus("all");
     setStage("all");
     setHolder("all");
   };
 
+  const deliveryOf = (r: EtItemRow) => reminderInfo(r).delivery;
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return items
+      .filter((i) => {
+        if (category === "skipped") return i.stopped;
+        if (i.stopped) return false;
+        if (category === "all") return true;
+        return itemCategory(i.type) === category;
+      })
       .filter((i) => {
         if (status === "all") return true;
         if (status === "active") return i.derivedStatus !== "completed";
@@ -99,21 +129,65 @@ export default function EtItemsList({ items, initial }: Props) {
             const bd = daysSince(b.current.since) ?? -1;
             return bd - ad;
           }
-          case "oldest":
-          default: {
+          case "oldest": {
             const at = a.current.since ? new Date(a.current.since).getTime() : Infinity;
             const bt = b.current.since ? new Date(b.current.since).getTime() : Infinity;
             return at - bt;
           }
+          case "smart":
+          default: {
+            // Incomplete first, by delivery date (earliest/overdue first); completed last.
+            const aDone = a.derivedStatus === "completed" ? 1 : 0;
+            const bDone = b.derivedStatus === "completed" ? 1 : 0;
+            if (aDone !== bDone) return aDone - bDone;
+            const ad = deliveryOf(a);
+            const bd = deliveryOf(b);
+            if (ad && bd && ad !== bd) return ad.localeCompare(bd);
+            if (ad && !bd) return -1;
+            if (!ad && bd) return 1;
+            return a.title.localeCompare(b.title);
+          }
         }
       });
-  }, [items, query, status, stage, holder, sortBy]);
+  }, [items, category, query, status, stage, holder, sortBy]);
 
   const selectCls =
     "rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
 
+  const tabs: { key: CategoryTab; label: string }[] = [
+    ...CATEGORY_ORDER.map((c) => ({ key: c as CategoryTab, label: CATEGORY_LABELS[c] })),
+    { key: "skipped", label: "Skipped" },
+    { key: "all", label: "All" },
+  ];
+
   return (
     <>
+      {/* Category tabs */}
+      <div className="mb-3 flex flex-wrap gap-2">
+        {tabs.map((t) => {
+          const isActive = category === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setCategory(t.key)}
+              className={`btn-press inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                isActive
+                  ? t.key === "skipped"
+                    ? "bg-gray-700 text-white dark:bg-gray-600"
+                    : "bg-emerald-600 text-white shadow-sm"
+                  : "border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              }`}
+            >
+              {t.label}
+              <span className={`rounded-full px-1.5 text-xs ${isActive ? "bg-white/20" : "bg-gray-100 dark:bg-gray-700"}`}>
+                {counts[t.key] ?? 0}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filters */}
       <div className="mb-4 sm:mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -159,6 +233,7 @@ export default function EtItemsList({ items, initial }: Props) {
           <div className="flex items-center gap-2">
             <label htmlFor="et_sort" className="text-sm text-gray-500 dark:text-gray-400">Sort by:</label>
             <select id="et_sort" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={`${selectCls} py-1.5`}>
+              <option value="smart">Incomplete first · delivery date</option>
               <option value="oldest">At step since (oldest)</option>
               <option value="stuck">Most stuck</option>
               <option value="title">Title (A–Z)</option>
@@ -194,8 +269,11 @@ export default function EtItemsList({ items, initial }: Props) {
               return (
                 <tr key={row.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800">
                   <td className="px-3 lg:px-4 py-3 max-w-[360px]">
-                    <Link href={`/et/items/${row.id}`} className="block text-sm font-medium text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate" title={row.title}>
-                      {row.title}
+                    <Link href={`/et/items/${row.id}`} className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400" title={row.title}>
+                      <span className="truncate">{row.title}</span>
+                      {row.stopped && (
+                        <span className="flex-shrink-0 rounded-full bg-gray-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-300">Stopped</span>
+                      )}
                     </Link>
                   </td>
                   <td className="px-3 lg:px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{typeLabel(row.type)}</td>
@@ -229,7 +307,7 @@ export default function EtItemsList({ items, initial }: Props) {
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className="flex-1 text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">{row.title}</h3>
-                <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${sb.className}`}>{sb.label}</span>
+                <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${row.stopped ? "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300" : sb.className}`}>{row.stopped ? "Stopped" : sb.label}</span>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <StageBadge row={row} />

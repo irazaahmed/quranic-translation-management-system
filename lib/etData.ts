@@ -19,7 +19,7 @@ import {
 // ============================================
 
 const ITEM_COLUMNS =
-  "id, title, type, board, received_date, word_count, delivery_date, final_email_date, priority, status, further_process, created_at, updated_at";
+  "id, title, type, board, received_date, word_count, delivery_date, final_email_date, stopped, priority, status, further_process, created_at, updated_at";
 const STAGE_COLUMNS =
   "id, item_id, stage, seq, person, sent_date, received_back_date, not_applicable, merged, created_at, updated_at";
 

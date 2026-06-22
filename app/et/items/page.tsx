@@ -22,9 +22,10 @@ export default async function EtItemsPage({ searchParams }: Props) {
     error = "Failed to load items. Have you run the migration and import yet?";
   }
 
-  const active = rows.filter((r) => r.derivedStatus !== "completed").length;
-  const completed = rows.filter((r) => r.derivedStatus === "completed").length;
-  const unassigned = rows.filter((r) => r.derivedStatus === "pending_assignment").length;
+  const live = rows.filter((r) => !r.stopped);
+  const active = live.filter((r) => r.derivedStatus !== "completed").length;
+  const completed = live.filter((r) => r.derivedStatus === "completed").length;
+  const skipped = rows.filter((r) => r.stopped).length;
 
   return (
     <DashboardLayout>
@@ -33,7 +34,7 @@ export default async function EtItemsPage({ searchParams }: Props) {
           <p className="text-xs font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400">English Translation</p>
           <h1 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Work Items</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {rows.length} items in the production pipeline · {active} active · {completed} completed · {unassigned} unassigned
+            {live.length} items · {active} active · {completed} completed{skipped > 0 ? ` · ${skipped} skipped` : ""}
           </p>
         </div>
         <StaffOnly>

@@ -29,7 +29,7 @@ export default async function EtWorkforcePage() {
   // Active workload per holder (match on the name as stored in stages).
   const load = new Map<string, number>();
   rows
-    .filter((r) => r.derivedStatus !== "completed")
+    .filter((r) => r.derivedStatus !== "completed" && !r.stopped)
     .forEach((r) => {
       if (r.current.holder) load.set(r.current.holder, (load.get(r.current.holder) || 0) + 1);
     });
