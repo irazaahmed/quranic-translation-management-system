@@ -1,13 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  BOARD_LABELS,
-  TYPE_LABELS,
-  type EtItem,
-  type ItemBoard,
-} from "@/lib/et";
+import { TYPE_LABELS, parseTitleDate, type EtItem } from "@/lib/et";
 import {
   createEtItemAction,
   updateEtItemAction,
@@ -32,6 +27,17 @@ export default function EtItemForm({ item }: Props) {
   );
 
   const cancelHref = isEdit ? `/et/items/${item!.id}` : "/et/items";
+
+  // Auto-fetch the delivery date from a title ending in e.g. "(20-07-26)".
+  // Keeps following the title until the user manually edits the date field.
+  const [title, setTitle] = useState(item?.title ?? "");
+  const [delivery, setDelivery] = useState(item?.delivery_date ?? "");
+  const [deliveryTouched, setDeliveryTouched] = useState(!!item?.delivery_date);
+  const detected = parseTitleDate(title);
+
+  useEffect(() => {
+    if (!deliveryTouched) setDelivery(detected ?? "");
+  }, [detected, deliveryTouched]);
 
   return (
     <>
@@ -61,20 +67,16 @@ export default function EtItemForm({ item }: Props) {
                 id="title"
                 name="title"
                 required
-                defaultValue={item?.title ?? ""}
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 className={inputCls}
-                placeholder="e.g., 260710 Fri bayan - Khof-e-Khuda Key Faidy (10-7-26)"
+                placeholder="e.g., 260720 Fri bayan - Khof-e-Khuda Key Faidy (20-07-26)"
               />
-            </div>
-
-            {/* Board */}
-            <div>
-              <label htmlFor="board" className={labelCls}>Board</label>
-              <select id="board" name="board" defaultValue={item?.board ?? "main_2026"} className={inputCls}>
-                {(Object.keys(BOARD_LABELS) as ItemBoard[]).map((b) => (
-                  <option key={b} value={b}>{BOARD_LABELS[b]}</option>
-                ))}
-              </select>
+              {detected && !deliveryTouched && (
+                <p className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                  ✓ Delivery date auto-detected from title: {new Date(detected).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                </p>
+              )}
             </div>
 
             {/* Type */}
@@ -100,12 +102,27 @@ export default function EtItemForm({ item }: Props) {
               <input type="number" min="0" id="word_count" name="word_count" defaultValue={item?.word_count ?? ""} className={inputCls} placeholder="e.g., 5367" />
             </div>
 
-            {/* Delivery date */}
+            {/* Delivery date (auto-filled from title; editable) */}
             <div>
               <label htmlFor="delivery_date" className={labelCls}>
                 Delivery date <span className="font-normal text-gray-400 dark:text-gray-500">(for reminders)</span>
               </label>
-              <input type="date" id="delivery_date" name="delivery_date" defaultValue={item?.delivery_date ?? ""} className={inputCls} />
+              <input
+                type="date"
+                id="delivery_date"
+                name="delivery_date"
+                value={delivery}
+                onChange={(e) => {
+                  setDelivery(e.target.value);
+                  setDeliveryTouched(true);
+                }}
+                className={inputCls}
+              />
+              {deliveryTouched && detected && delivery !== detected && (
+                <button type="button" onClick={() => { setDelivery(detected); setDeliveryTouched(false); }} className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+                  Use date from title ({detected})
+                </button>
+              )}
             </div>
 
             {/* Priority */}

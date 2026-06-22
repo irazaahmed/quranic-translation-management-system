@@ -19,7 +19,7 @@ import {
   getCachedEtItemRows,
   getCachedEtItemsWithStages,
 } from "@/lib/etData";
-import { BOARD_LABELS, computeCurrentStep, daysSince, reminderInfo, typeLabel } from "@/lib/et";
+import { computeCurrentStep, daysSince, reminderInfo, typeLabel } from "@/lib/et";
 
 /**
  * Tool layer for the AI assistant. The model decides which of these to call;
@@ -508,7 +508,6 @@ async function findEtItem(args: ToolArgs) {
     .map((r) => ({
       id: r.id,
       title: r.title,
-      board: BOARD_LABELS[r.board],
       type: typeLabel(r.type),
       current_step: r.current.label,
       holder: r.current.holder,
@@ -528,7 +527,6 @@ async function getEtItem(args: ToolArgs) {
   const current = computeCurrentStep(item.stages);
   return {
     title: item.title,
-    board: BOARD_LABELS[item.board],
     type: typeLabel(item.type),
     word_count: item.word_count,
     status: item.status,

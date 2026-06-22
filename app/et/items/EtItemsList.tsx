@@ -3,10 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  BOARD_LABELS,
   STAGES,
-  type ItemBoard,
-  type StageCode,
   daysSince,
   stageBadgeClasses,
   typeLabel,
@@ -48,12 +45,11 @@ function StageBadge({ row }: { row: EtItemRow }) {
 
 interface Props {
   items: EtItemRow[];
-  initial?: { holder?: string; stage?: string; board?: string; status?: string };
+  initial?: { holder?: string; stage?: string; status?: string };
 }
 
 export default function EtItemsList({ items, initial }: Props) {
   const [query, setQuery] = useState("");
-  const [board, setBoard] = useState<string>(initial?.board ?? "all");
   const [status, setStatus] = useState<string>(initial?.status ?? "active");
   const [stage, setStage] = useState<string>(initial?.stage ?? "all");
   const [holder, setHolder] = useState<string>(initial?.holder ?? "all");
@@ -66,11 +62,10 @@ export default function EtItemsList({ items, initial }: Props) {
   }, [items]);
 
   const hasFilter =
-    query.trim() !== "" || board !== "all" || status !== "active" || stage !== "all" || holder !== "all";
+    query.trim() !== "" || status !== "active" || stage !== "all" || holder !== "all";
 
   const reset = () => {
     setQuery("");
-    setBoard("all");
     setStatus("active");
     setStage("all");
     setHolder("all");
@@ -79,7 +74,6 @@ export default function EtItemsList({ items, initial }: Props) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return items
-      .filter((i) => board === "all" || i.board === board)
       .filter((i) => {
         if (status === "all") return true;
         if (status === "active") return i.status !== "completed";
@@ -113,7 +107,7 @@ export default function EtItemsList({ items, initial }: Props) {
           }
         }
       });
-  }, [items, query, board, status, stage, holder, sortBy]);
+  }, [items, query, status, stage, holder, sortBy]);
 
   const selectCls =
     "rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
@@ -122,7 +116,7 @@ export default function EtItemsList({ items, initial }: Props) {
     <>
       {/* Filters */}
       <div className="mb-4 sm:mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div className="relative lg:col-span-2">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,13 +131,6 @@ export default function EtItemsList({ items, initial }: Props) {
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-9 pr-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>
-
-          <select aria-label="Filter by board" value={board} onChange={(e) => setBoard(e.target.value)} className={selectCls}>
-            <option value="all">All Boards</option>
-            {(Object.keys(BOARD_LABELS) as ItemBoard[]).map((b) => (
-              <option key={b} value={b}>{BOARD_LABELS[b]}</option>
-            ))}
-          </select>
 
           <select aria-label="Filter by status" value={status} onChange={(e) => setStatus(e.target.value)} className={selectCls}>
             <option value="active">Active (not completed)</option>
@@ -194,7 +181,7 @@ export default function EtItemsList({ items, initial }: Props) {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
-              {["Title", "Type", "Board", "Current Step", "Holder", "Progress", "At step since"].map((h) => (
+              {["Title", "Type", "Current Step", "Holder", "Progress", "At step since"].map((h) => (
                 <th key={h} scope="col" className="px-3 lg:px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                   {h}
                 </th>
@@ -212,7 +199,6 @@ export default function EtItemsList({ items, initial }: Props) {
                     </Link>
                   </td>
                   <td className="px-3 lg:px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{typeLabel(row.type)}</td>
-                  <td className="px-3 lg:px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{BOARD_LABELS[row.board]}</td>
                   <td className="px-3 lg:px-4 py-3 whitespace-nowrap"><StageBadge row={row} /></td>
                   <td className="px-3 lg:px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{row.current.holder || "—"}</td>
                   <td className="px-3 lg:px-4 py-3 whitespace-nowrap">
@@ -247,7 +233,7 @@ export default function EtItemsList({ items, initial }: Props) {
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <StageBadge row={row} />
-                <span className="text-xs text-gray-500 dark:text-gray-400">{typeLabel(row.type)} · {BOARD_LABELS[row.board]}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{typeLabel(row.type)}</span>
               </div>
               <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                 <div>

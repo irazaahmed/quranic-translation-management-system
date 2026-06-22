@@ -10,19 +10,15 @@ import {
   saveEtStages,
   type StageUpsert,
 } from "@/lib/etMutations";
-import type { ItemBoard, ItemPriority } from "@/lib/et";
+import { parseTitleDate, type ItemPriority } from "@/lib/et";
 
 export interface EtFormState {
   error?: string;
   success?: boolean;
 }
 
-const VALID_BOARDS: ItemBoard[] = ["main_2026", "kanzul_madaris", "magazine"];
 const VALID_PRIORITIES: ItemPriority[] = ["low", "normal", "urgent"];
 
-function parseBoard(v: string | null): ItemBoard {
-  return VALID_BOARDS.includes(v as ItemBoard) ? (v as ItemBoard) : "main_2026";
-}
 function parsePriority(v: string | null): ItemPriority | null {
   return VALID_PRIORITIES.includes(v as ItemPriority) ? (v as ItemPriority) : null;
 }
@@ -45,16 +41,19 @@ export async function createEtItemAction(
   const title = (formData.get("title") as string)?.trim();
   if (!title) return { error: "Title is required" };
 
+  // Auto-fetch delivery date from a title ending in e.g. "(20-07-26)".
+  const delivery_date = (formData.get("delivery_date") as string) || parseTitleDate(title) || null;
+
   let newId: string;
   try {
     await requireStaff();
     newId = await createEtItem({
       title,
       type: (formData.get("type") as string)?.trim() || null,
-      board: parseBoard(formData.get("board") as string),
+      board: "main_2026",
       received_date: (formData.get("received_date") as string) || null,
       word_count: parseInt0(formData.get("word_count") as string),
-      delivery_date: (formData.get("delivery_date") as string) || null,
+      delivery_date,
       priority: parsePriority(formData.get("priority") as string),
       further_process: (formData.get("further_process") as string)?.trim() || null,
     });
@@ -78,15 +77,17 @@ export async function updateEtItemAction(
   if (!itemId) return { error: "Missing item id" };
   if (!title) return { error: "Title is required" };
 
+  // Auto-fetch delivery date from a title ending in e.g. "(20-07-26)".
+  const delivery_date = (formData.get("delivery_date") as string) || parseTitleDate(title) || null;
+
   try {
     await requireStaff();
     await updateEtItem(itemId, {
       title,
       type: (formData.get("type") as string)?.trim() || null,
-      board: parseBoard(formData.get("board") as string),
       received_date: (formData.get("received_date") as string) || null,
       word_count: parseInt0(formData.get("word_count") as string),
-      delivery_date: (formData.get("delivery_date") as string) || null,
+      delivery_date,
       priority: parsePriority(formData.get("priority") as string),
       further_process: (formData.get("further_process") as string)?.trim() || null,
     });

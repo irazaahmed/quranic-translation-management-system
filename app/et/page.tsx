@@ -3,7 +3,6 @@ import Link from "next/link";
 import SummaryCard from "@/components/SummaryCard";
 import { getCachedEtItemRows, type EtItemRow } from "@/lib/etData";
 import {
-  BOARD_LABELS,
   daysSince,
   reminderInfo,
   stageBadgeClasses,
@@ -167,7 +166,7 @@ export default async function EtDashboardPage() {
                         <span className="min-w-0 flex-1 truncate text-sm text-gray-800 dark:text-gray-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400">{row.title}</span>
                         <StageChip row={row} />
                         <span className="hidden sm:block flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">{row.current.holder || "—"}</span>
-                        <span className="hidden md:block flex-shrink-0 text-xs text-gray-400 dark:text-gray-500">{typeLabel(row.type)} · {BOARD_LABELS[row.board]}</span>
+                        <span className="hidden md:block flex-shrink-0 text-xs text-gray-400 dark:text-gray-500">{typeLabel(row.type)}</span>
                       </Link>
                     </li>
                   );
