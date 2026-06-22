@@ -90,6 +90,7 @@ export interface StageUpsert {
   sent_date: string | null;
   received_back_date: string | null;
   not_applicable: boolean;
+  merged: boolean;
 }
 
 /**
@@ -108,6 +109,7 @@ export async function saveEtStages(itemId: string, stages: StageUpsert[]): Promi
     sent_date: s.sent_date || null,
     received_back_date: s.received_back_date || null,
     not_applicable: !!s.not_applicable,
+    merged: !!s.merged,
   }));
 
   const { error } = await supabase

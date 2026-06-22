@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCachedEtItem, getCachedEtPeople } from "@/lib/etData";
-import { computeCurrentStep, daysSince, stageName, typeLabel } from "@/lib/et";
+import { computeCurrentStep, daysSince, isStageSkipped, stageName, typeLabel } from "@/lib/et";
 import EtPipelineEditor from "./EtPipelineEditor";
 import EtItemActions from "./EtItemActions";
 
@@ -39,7 +39,7 @@ export default async function EtItemDetailPage({ params }: Props) {
   // Movement timeline: stages that have actually been touched (assigned/sent),
   // in pipeline order — who had it, when it was sent and came back, how long.
   const timeline = item.stages
-    .filter((s) => !s.not_applicable && (s.person || s.sent_date || s.received_back_date))
+    .filter((s) => !isStageSkipped(s) && (s.person || s.sent_date || s.received_back_date))
     .sort((a, b) => a.seq - b.seq);
 
   return (

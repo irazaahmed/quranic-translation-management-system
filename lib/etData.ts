@@ -18,7 +18,7 @@ import {
 const ITEM_COLUMNS =
   "id, title, type, board, received_date, word_count, delivery_date, priority, status, further_process, created_at, updated_at";
 const STAGE_COLUMNS =
-  "id, item_id, stage, seq, person, sent_date, received_back_date, not_applicable, created_at, updated_at";
+  "id, item_id, stage, seq, person, sent_date, received_back_date, not_applicable, merged, created_at, updated_at";
 
 /** A list row: the item plus its computed current step (stages omitted to keep payload small). */
 export interface EtItemRow extends EtItem {

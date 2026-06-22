@@ -4,6 +4,7 @@ import SummaryCard from "@/components/SummaryCard";
 import { getCachedEtItemRows, type EtItemRow } from "@/lib/etData";
 import {
   daysSince,
+  isWeeklyType,
   reminderInfo,
   stageBadgeClasses,
   urgencyClasses,
@@ -41,8 +42,9 @@ export default async function EtDashboardPage() {
   const completed = rows.filter((r) => r.status === "completed");
   const unassigned = rows.filter((r) => r.status === "pending_assignment");
 
-  // Reminders (active items with an effective delivery date).
+  // Weekly delivery reminders (wsb/fsp/wbl with an effective delivery date).
   const reminders = active
+    .filter((r) => isWeeklyType(r.type))
     .map((r) => ({ row: r, info: reminderInfo(r) }))
     .filter((x) => x.info.delivery)
     .sort((a, b) => (a.info.daysLeft ?? 0) - (b.info.daysLeft ?? 0));
@@ -96,7 +98,7 @@ export default async function EtDashboardPage() {
             {/* Reminders */}
             <div className="xl:col-span-2 gloss rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-white">Delivery reminders</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white">Weekly deliveries</h2>
                 <Link href="/et/reminders" className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline">View all →</Link>
               </div>
               {dueSoon.length === 0 ? (

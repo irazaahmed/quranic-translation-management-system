@@ -32,23 +32,31 @@ export function stageName(code: StageCode): string {
   return STAGE_BY_CODE[code]?.name ?? code;
 }
 
-/** Human-readable label for a content type code. */
+/** Human-readable label for a content type code (drives the form dropdown order). */
 export const TYPE_LABELS: Record<string, string> = {
-  bks: "Book",
-  dwk: "Daily Wazifa / Kalam",
-  wsb: "Weekly Ijtima Bayan",
-  fsp: "Friday Bayan",
+  bks: "Books",
+  wsb: "Weekly Speech Brothers",
+  fsp: "Friday Speech",
   wbl: "Weekly Booklet",
-  quran: "Quran",
+  dwk: "Other Departmental Work",
   mgz: "Magazine",
-  aer: "Aer",
+  aer: "Ala Hazrat English Rasail",
   rpr: "Reprint",
-  wss: "Wss",
+  quran: "Quran",
 };
 
 export function typeLabel(type: string | null | undefined): string {
   if (!type) return "—";
   return TYPE_LABELS[type.toLowerCase()] ?? type;
+}
+
+/** Weekly documents that must be delivered every week (handled like the Excel REMINDER sheet). */
+export const WEEKLY_TYPES = ["wsb", "fsp", "wbl"] as const;
+export function isWeeklyType(type: string | null | undefined): boolean {
+  return !!type && (WEEKLY_TYPES as readonly string[]).includes(type.toLowerCase());
+}
+export function isMagazineType(type: string | null | undefined): boolean {
+  return (type || "").toLowerCase() === "mgz";
 }
 
 export const BOARD_LABELS: Record<ItemBoard, string> = {
@@ -70,8 +78,15 @@ export interface EtStage {
   sent_date: string | null;
   received_back_date: string | null;
   not_applicable: boolean;
+  /** Stage skipped because the parts were merged into another file. */
+  merged: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+/** A stage that does not count toward the pipeline (skipped as N/A or Merged). */
+export function isStageSkipped(s: Pick<EtStage, "not_applicable" | "merged">): boolean {
+  return s.not_applicable || s.merged;
 }
 
 export interface EtItem {
@@ -136,7 +151,7 @@ export interface CurrentStep {
  */
 export function computeCurrentStep(stages: EtStage[]): CurrentStep {
   const applicable = [...stages]
-    .filter((s) => !s.not_applicable)
+    .filter((s) => !isStageSkipped(s))
     .sort((a, b) => a.seq - b.seq);
 
   const totalCount = applicable.length;
@@ -209,11 +224,14 @@ export function deriveStatus(stages: EtStage[]): ItemStatus {
 }
 
 /** Build the 8 blank stage rows for a brand-new item (no item_id yet). */
-export function blankStages(): Array<Pick<EtStage, "stage" | "seq"> & {
+export function blankStages(): Array<{
+  stage: StageCode;
+  seq: number;
   person: null;
   sent_date: null;
   received_back_date: null;
   not_applicable: false;
+  merged: false;
 }> {
   return STAGES.map((s) => ({
     stage: s.code,
@@ -222,6 +240,7 @@ export function blankStages(): Array<Pick<EtStage, "stage" | "seq"> & {
     sent_date: null,
     received_back_date: null,
     not_applicable: false,
+    merged: false,
   }));
 }
 
