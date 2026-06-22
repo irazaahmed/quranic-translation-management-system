@@ -1,17 +1,10 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCachedEtItem } from "@/lib/etData";
-import {
-  BOARD_LABELS,
-  STAGES,
-  computeCurrentStep,
-  daysSince,
-  stageName,
-  typeLabel,
-  type EtStage,
-  type StageCode,
-} from "@/lib/et";
+import { getCachedEtItem, getCachedEtPeople } from "@/lib/etData";
+import { BOARD_LABELS, computeCurrentStep, daysSince, typeLabel } from "@/lib/et";
+import EtPipelineEditor from "./EtPipelineEditor";
+import EtItemActions from "./EtItemActions";
 
 export const dynamic = "force-dynamic";
 
@@ -26,50 +19,26 @@ function fmt(d: string | null): string {
   return dt.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
-type StageState = "done" | "current" | "pending" | "na";
-
-function stageState(stage: EtStage, currentStage: StageCode | null): StageState {
-  if (stage.not_applicable) return "na";
-  if (stage.received_back_date) return "done";
-  if (stage.stage === currentStage) return "current";
-  return "pending";
-}
-
-const STATE_DOT: Record<StageState, string> = {
-  done: "bg-green-500 text-white",
-  current: "bg-emerald-600 text-white ring-4 ring-emerald-500/25",
-  pending: "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400",
-  na: "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600",
-};
-
-const STATE_LABEL: Record<StageState, string> = {
-  done: "Done",
-  current: "In progress",
-  pending: "Pending",
-  na: "N/A",
-};
-
 export default async function EtItemDetailPage({ params }: Props) {
   const { id } = await params;
-  const item = await getCachedEtItem(id);
+  const [item, people] = await Promise.all([getCachedEtItem(id), getCachedEtPeople()]);
   if (!item) notFound();
 
   const current = computeCurrentStep(item.stages);
   const sinceDays = daysSince(current.since);
-
-  // Index stages by code so we can render the canonical 8-stage pipeline order.
-  const byCode = new Map(item.stages.map((s) => [s.stage, s]));
+  const peopleNames = people.map((p) => p.name);
 
   return (
     <DashboardLayout>
       {/* Back + breadcrumb */}
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <Link href="/et/items" className="inline-flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400 hover:underline">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Work Items
         </Link>
+        <EtItemActions itemId={item.id} title={item.title} />
       </div>
 
       {/* Header card */}
@@ -132,42 +101,9 @@ export default async function EtItemDetailPage({ params }: Props) {
         )}
       </div>
 
-      {/* Pipeline */}
+      {/* Pipeline (editable for staff, read-only for viewers) */}
       <h2 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">Pipeline</h2>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {STAGES.map((s) => {
-          const stage = byCode.get(s.code);
-          const st: StageState = stage ? stageState(stage, current.stage) : "pending";
-          return (
-            <div
-              key={s.code}
-              className={`rounded-xl border p-3 ${st === "current" ? "border-emerald-400 dark:border-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/10" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"}`}
-            >
-              <div className="flex items-center gap-2">
-                <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${STATE_DOT[st]}`}>
-                  {st === "done" ? "✓" : s.seq}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{s.code}</p>
-                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">{stageName(s.code)}</p>
-                </div>
-                <span className="ml-auto text-[11px] font-medium text-gray-400 dark:text-gray-500">{STATE_LABEL[st]}</span>
-              </div>
-              <div className="mt-2 space-y-1 text-xs">
-                <p className="text-gray-700 dark:text-gray-300">
-                  <span className="text-gray-400 dark:text-gray-500">Person: </span>
-                  {stage?.person || (st === "na" ? "N/A" : "—")}
-                </p>
-                <p className="text-gray-600 dark:text-gray-400">
-                  <span className="text-gray-400 dark:text-gray-500">Sent: </span>{fmt(stage?.sent_date ?? null)}
-                  <span className="mx-1">→</span>
-                  <span className="text-gray-400 dark:text-gray-500">Back: </span>{fmt(stage?.received_back_date ?? null)}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <EtPipelineEditor itemId={item.id} stages={item.stages} peopleNames={peopleNames} />
 
       {/* Further process notes */}
       {item.further_process && (

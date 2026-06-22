@@ -200,12 +200,95 @@ export function computeCurrentStep(stages: EtStage[]): CurrentStep {
   };
 }
 
+/** Derive the high-level lifecycle status from an item's stage rows. */
+export function deriveStatus(stages: EtStage[]): ItemStatus {
+  const c = computeCurrentStep(stages);
+  if (c.completed) return "completed";
+  if (c.unassigned) return "pending_assignment";
+  return "in_progress";
+}
+
+/** Build the 8 blank stage rows for a brand-new item (no item_id yet). */
+export function blankStages(): Array<Pick<EtStage, "stage" | "seq"> & {
+  person: null;
+  sent_date: null;
+  received_back_date: null;
+  not_applicable: false;
+}> {
+  return STAGES.map((s) => ({
+    stage: s.code,
+    seq: s.seq,
+    person: null,
+    sent_date: null,
+    received_back_date: null,
+    not_applicable: false,
+  }));
+}
+
 /** Days an item has been sitting at its current step (or null). */
 export function daysSince(since: string | null, now: Date = new Date()): number | null {
   if (!since) return null;
   const d = new Date(since);
   if (isNaN(d.getTime())) return null;
   return Math.floor((now.getTime() - d.getTime()) / (24 * 60 * 60 * 1000));
+}
+
+/**
+ * Best-effort parse of a trailing delivery date from a title, e.g.
+ * "… (10-7-26)" or "… (18-07-26)" or "… (08.01.2026)". Day-month-year order.
+ * Returns an ISO date string, or null. Titles ending in "(old …)" won't match.
+ */
+export function parseTitleDate(title: string): string | null {
+  const m = title.match(/\((\d{1,2})[-.\/](\d{1,2})[-.\/](\d{2,4})\)\s*$/);
+  if (!m) return null;
+  let [, dd, mm, yy] = m;
+  let day = parseInt(dd, 10);
+  let mon = parseInt(mm, 10);
+  let year = parseInt(yy, 10);
+  if (year < 100) year += 2000;
+  if (mon < 1 || mon > 12 || day < 1 || day > 31) return null;
+  const d = new Date(Date.UTC(year, mon - 1, day));
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
+export type ReminderUrgency = "overdue" | "urgent" | "soon" | "later";
+
+export interface ReminderInfo {
+  delivery: string | null;
+  daysLeft: number | null;
+  urgency: ReminderUrgency | null;
+}
+
+/** Effective delivery date (explicit, else parsed from title) + days-left + urgency. */
+export function reminderInfo(
+  item: { delivery_date: string | null; title: string },
+  now: Date = new Date()
+): ReminderInfo {
+  const delivery = item.delivery_date ?? parseTitleDate(item.title);
+  if (!delivery) return { delivery: null, daysLeft: null, urgency: null };
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(delivery);
+  const daysLeft = Math.round((target.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+  let urgency: ReminderUrgency;
+  if (daysLeft < 0) urgency = "overdue";
+  else if (daysLeft <= 3) urgency = "urgent";
+  else if (daysLeft <= 10) urgency = "soon";
+  else urgency = "later";
+  return { delivery, daysLeft, urgency };
+}
+
+export function urgencyClasses(u: ReminderUrgency | null): string {
+  switch (u) {
+    case "overdue":
+      return "bg-red-100 text-red-700 ring-red-600/20 dark:bg-red-900/20 dark:text-red-400";
+    case "urgent":
+      return "bg-orange-100 text-orange-700 ring-orange-600/20 dark:bg-orange-900/20 dark:text-orange-400";
+    case "soon":
+      return "bg-amber-100 text-amber-700 ring-amber-600/20 dark:bg-amber-900/20 dark:text-amber-400";
+    default:
+      return "bg-gray-100 text-gray-600 ring-gray-500/20 dark:bg-gray-800 dark:text-gray-400";
+  }
 }
 
 /** Tailwind classes for a stage badge, colour-coded by pipeline position. */

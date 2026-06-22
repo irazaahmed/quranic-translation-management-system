@@ -1,10 +1,17 @@
 import DashboardLayout from "@/components/DashboardLayout";
+import Link from "next/link";
 import { getCachedEtItemRows } from "@/lib/etData";
+import { StaffOnly } from "@/components/AuthProvider";
 import EtItemsList from "./EtItemsList";
 
 export const dynamic = "force-dynamic";
 
-export default async function EtItemsPage() {
+interface Props {
+  searchParams: Promise<{ holder?: string; stage?: string; board?: string; status?: string }>;
+}
+
+export default async function EtItemsPage({ searchParams }: Props) {
+  const sp = await searchParams;
   let rows: Awaited<ReturnType<typeof getCachedEtItemRows>> = [];
   let error: string | null = null;
 
@@ -21,12 +28,25 @@ export default async function EtItemsPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-4 sm:mb-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400">English Translation</p>
-        <h1 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Work Items</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          {rows.length} items in the production pipeline · {active} active · {completed} completed · {unassigned} unassigned
-        </p>
+      <div className="mb-4 sm:mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400">English Translation</p>
+          <h1 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Work Items</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {rows.length} items in the production pipeline · {active} active · {completed} completed · {unassigned} unassigned
+          </p>
+        </div>
+        <StaffOnly>
+          <Link
+            href="/et/items/new"
+            className="btn-press inline-flex flex-shrink-0 items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:from-emerald-700 hover:to-teal-700"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Item
+          </Link>
+        </StaffOnly>
       </div>
 
       {error ? (
@@ -38,7 +58,10 @@ export default async function EtItemsPage() {
           </p>
         </div>
       ) : (
-        <EtItemsList items={rows} />
+        <EtItemsList
+          items={rows}
+          initial={{ holder: sp.holder, stage: sp.stage, board: sp.board, status: sp.status }}
+        />
       )}
     </DashboardLayout>
   );

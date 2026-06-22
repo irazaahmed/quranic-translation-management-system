@@ -48,14 +48,15 @@ function StageBadge({ row }: { row: EtItemRow }) {
 
 interface Props {
   items: EtItemRow[];
+  initial?: { holder?: string; stage?: string; board?: string; status?: string };
 }
 
-export default function EtItemsList({ items }: Props) {
+export default function EtItemsList({ items, initial }: Props) {
   const [query, setQuery] = useState("");
-  const [board, setBoard] = useState<string>("all");
-  const [status, setStatus] = useState<string>("active");
-  const [stage, setStage] = useState<string>("all");
-  const [holder, setHolder] = useState<string>("all");
+  const [board, setBoard] = useState<string>(initial?.board ?? "all");
+  const [status, setStatus] = useState<string>(initial?.status ?? "active");
+  const [stage, setStage] = useState<string>(initial?.stage ?? "all");
+  const [holder, setHolder] = useState<string>(initial?.holder ?? "all");
   const [sortBy, setSortBy] = useState<string>("oldest");
 
   const holders = useMemo(() => {

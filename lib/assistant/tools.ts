@@ -15,6 +15,11 @@ import {
   type StageKey,
 } from "@/lib/progress";
 import { WEEKDAYS, computeScheduleStatus, weekdayName } from "@/lib/schedule";
+import {
+  getCachedEtItemRows,
+  getCachedEtItemsWithStages,
+} from "@/lib/etData";
+import { BOARD_LABELS, computeCurrentStep, daysSince, reminderInfo, typeLabel } from "@/lib/et";
 
 /**
  * Tool layer for the AI assistant. The model decides which of these to call;
@@ -152,6 +157,61 @@ export const functionDeclarations = [
         },
       },
       required: ["language_id", "meeting_date", "discussion_points"],
+    },
+  },
+  // ---- English Translation (ET) module tools ----
+  {
+    name: "get_et_overview",
+    description:
+      "English Translation module summary: total/active/completed/unassigned work items, how many are due within 7 days, and the items stuck longest at their current step. Use for questions like 'English translation ka kya haal hai', 'how many books are in progress', 'overall English work status'. The English Translation module is a separate production pipeline (TR→IF→CM→ED→NR→ST→FF→FPR) — NOT the Quranic languages.",
+    parameters: { type: "object", properties: {}, required: [] },
+  },
+  {
+    name: "get_et_workload",
+    description:
+      "Who is holding which English Translation items right now, grouped by person. Use for 'Sagheer ke paas kitne kaam hain', 'kis ke paas kitna kaam hai', 'who is busiest'. Optionally pass a person name to get just their items.",
+    parameters: {
+      type: "object",
+      properties: {
+        person: { type: "string", description: "Optional person name to filter to (e.g. 'Sagheer')." },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "get_et_reminders",
+    description:
+      "Upcoming and overdue English Translation deliveries, soonest first. Use for 'is hafte kya deliver karna hai', 'what English work is due', 'kya overdue hai'.",
+    parameters: {
+      type: "object",
+      properties: {
+        within_days: { type: "integer", description: "Optional horizon in days (default 14). Overdue items are always included." },
+      },
+      required: [],
+    },
+  },
+  {
+    name: "find_et_item",
+    description:
+      "Find English Translation work item(s) by title keyword and get their id + current pipeline step. Call this FIRST when the user names a specific book/bayan/article in the English module, before get_et_item.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Keyword from the item title, e.g. 'Bahar e Dua', 'Tafseer Talimul Quran'." },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "get_et_item",
+    description:
+      "Full pipeline of one English Translation item: every stage (TR→FPR) with its person and sent/received dates, plus the current step/holder. Use after find_et_item when the user asks about a specific item's status.",
+    parameters: {
+      type: "object",
+      properties: {
+        item_id: { type: "string", description: "The exact id from find_et_item." },
+      },
+      required: ["item_id"],
     },
   },
 ];
@@ -368,6 +428,125 @@ async function logMeeting(args: ToolArgs) {
   return { success: true, meeting_date: meetingDate.toISOString().slice(0, 10) };
 }
 
+// ---- English Translation tool implementations ----
+
+async function getEtOverview() {
+  const rows = await getCachedEtItemRows();
+  const active = rows.filter((r) => r.status !== "completed");
+  const dueSoon = active.filter((r) => {
+    const d = reminderInfo(r).daysLeft;
+    return d != null && d <= 7;
+  }).length;
+
+  const stuck = active
+    .filter((r) => r.current.since)
+    .sort((a, b) => new Date(a.current.since!).getTime() - new Date(b.current.since!).getTime())
+    .slice(0, 5)
+    .map((r) => ({
+      title: r.title,
+      current_step: r.current.label,
+      holder: r.current.holder,
+      days_at_step: daysSince(r.current.since),
+    }));
+
+  return {
+    total_items: rows.length,
+    active: active.length,
+    completed: rows.filter((r) => r.status === "completed").length,
+    unassigned: rows.filter((r) => r.status === "pending_assignment").length,
+    due_within_7_days: dueSoon,
+    longest_at_step: stuck,
+  };
+}
+
+async function getEtWorkload(args: ToolArgs) {
+  const person = str(args.person);
+  const rows = (await getCachedEtItemRows()).filter((r) => r.status !== "completed" && r.current.holder);
+
+  if (person) {
+    const items = rows
+      .filter((r) => r.current.holder!.toLowerCase().includes(person.toLowerCase()))
+      .map((r) => ({ title: r.title, current_step: r.current.label, days_at_step: daysSince(r.current.since) }));
+    return { person, count: items.length, items };
+  }
+
+  const map = new Map<string, number>();
+  rows.forEach((r) => map.set(r.current.holder!, (map.get(r.current.holder!) || 0) + 1));
+  const workload = [...map.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ person: name, active_items: count }));
+  return { people: workload.length, workload };
+}
+
+async function getEtReminders(args: ToolArgs) {
+  const within = typeof args.within_days === "number" ? (args.within_days as number) : 14;
+  const rows = await getCachedEtItemRows();
+  const entries = rows
+    .filter((r) => r.status !== "completed")
+    .map((r) => ({ r, info: reminderInfo(r) }))
+    .filter((x) => x.info.delivery && (x.info.daysLeft! < 0 || x.info.daysLeft! <= within))
+    .sort((a, b) => (a.info.daysLeft ?? 0) - (b.info.daysLeft ?? 0))
+    .map(({ r, info }) => ({
+      title: r.title,
+      delivery_date: info.delivery,
+      days_left: info.daysLeft,
+      urgency: info.urgency,
+      current_step: r.current.label,
+      holder: r.current.holder,
+    }));
+  return { within_days: within, count: entries.length, reminders: entries };
+}
+
+async function findEtItem(args: ToolArgs) {
+  const q = str(args.query);
+  if (!q) return { error: "query is required." };
+  const ql = q.toLowerCase();
+  const rows = await getCachedEtItemRows();
+  const matches = rows
+    .filter((r) => r.title.toLowerCase().includes(ql))
+    .slice(0, 8)
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      board: BOARD_LABELS[r.board],
+      type: typeLabel(r.type),
+      current_step: r.current.label,
+      holder: r.current.holder,
+      status: r.status,
+    }));
+  if (matches.length === 0) return { matches: [], message: "No English Translation item matched that title." };
+  return { matches };
+}
+
+async function getEtItem(args: ToolArgs) {
+  const id = str(args.item_id);
+  if (!id) return { error: "item_id is required." };
+  const items = await getCachedEtItemsWithStages();
+  const item = items.find((i) => i.id === id);
+  if (!item) return { error: "No item found for that id." };
+
+  const current = computeCurrentStep(item.stages);
+  return {
+    title: item.title,
+    board: BOARD_LABELS[item.board],
+    type: typeLabel(item.type),
+    word_count: item.word_count,
+    status: item.status,
+    current_step: current.label,
+    current_holder: current.holder,
+    at_step_since: current.since,
+    days_at_step: daysSince(current.since),
+    progress: `${current.doneCount}/${current.totalCount}`,
+    stages: item.stages.map((s) => ({
+      stage: s.stage,
+      person: s.person,
+      sent: s.sent_date,
+      received_back: s.received_back_date,
+      not_applicable: s.not_applicable,
+    })),
+  };
+}
+
 /** Dispatch a tool call by name. Always resolves (errors are returned, not thrown). */
 export async function executeTool(name: string, args: ToolArgs): Promise<unknown> {
   try {
@@ -384,6 +563,16 @@ export async function executeTool(name: string, args: ToolArgs): Promise<unknown
         return await updateStageProgress(args);
       case "log_meeting":
         return await logMeeting(args);
+      case "get_et_overview":
+        return await getEtOverview();
+      case "get_et_workload":
+        return await getEtWorkload(args);
+      case "get_et_reminders":
+        return await getEtReminders(args);
+      case "find_et_item":
+        return await findEtItem(args);
+      case "get_et_item":
+        return await getEtItem(args);
       default:
         return { error: `Unknown tool "${name}".` };
     }
