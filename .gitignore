@@ -64,3 +64,8 @@ logs/
 
 # misc
 *.local
+
+# Local work files (data exports)
+*.xlsx
+__pycache__/
+*.pyc

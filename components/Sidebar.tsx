@@ -73,6 +73,28 @@ const mainNavItems: NavItem[] = [
   },
 ];
 
+// English Translation module navigation (parallel to the Quranic nav above).
+const etNavItems: NavItem[] = [
+  {
+    name: "Work Items",
+    href: "/et/items",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    name: "AI Assistant",
+    href: "/assistant",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z" />
+      </svg>
+    ),
+  },
+];
+
 const reportItems: NavItem[] = [
   {
     name: "Daily Report",
@@ -108,8 +130,23 @@ export default function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isReportsOpen, setIsReportsOpen] = useState(false);
 
+  // Which module are we in? English Translation lives under /et/*.
+  const isEt = pathname.startsWith("/et");
+  const navItems = isEt ? etNavItems : mainNavItems;
+
   // Check if any report page is active
   const isReportsActive = pathname.startsWith("/reports");
+
+  // A nav link is active for its exact route or any sub-route under it.
+  const isActiveHref = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
+
+  const pillCls = (active: boolean) =>
+    `rounded-lg px-3 py-1.5 text-center text-xs font-semibold transition-colors duration-200 ${
+      active
+        ? "bg-white dark:bg-gray-900 text-emerald-700 dark:text-emerald-400 shadow-sm"
+        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+    }`;
 
   return (
     <>
@@ -138,17 +175,31 @@ export default function Sidebar() {
               />
             </span>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-gradient transition-colors duration-200">QTM</span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 hidden xl:block transition-colors duration-200">Quranic Translation</span>
+              <span className="text-sm font-bold text-gradient transition-colors duration-200">TMS</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 hidden xl:block transition-colors duration-200">
+                {isEt ? "English Translation" : "Quranic Translation"}
+              </span>
             </div>
           </Link>
+        </div>
+
+        {/* Module switcher */}
+        <div className="px-4 pt-3 flex-shrink-0">
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
+            <Link href="/" onClick={() => setIsMobileOpen(false)} className={pillCls(!isEt)}>
+              Quranic
+            </Link>
+            <Link href="/et/items" onClick={() => setIsMobileOpen(false)} className={pillCls(isEt)}>
+              English
+            </Link>
+          </div>
         </div>
 
         {/* Navigation - scrollable */}
         <nav className="flex flex-col p-4 flex-1 gap-1 overflow-y-auto">
           {/* Main Nav Items */}
-          {mainNavItems.map((item) => {
-            const isActive = pathname === item.href;
+          {navItems.map((item) => {
+            const isActive = isActiveHref(item.href);
             return (
               <Link
                 key={item.name}
@@ -169,7 +220,8 @@ export default function Sidebar() {
             );
           })}
 
-          {/* Reports Dropdown */}
+          {/* Reports Dropdown (Quranic module only) */}
+          {!isEt && (
           <div className="relative">
             <button
               onClick={() => setIsReportsOpen(!isReportsOpen)}
@@ -219,9 +271,11 @@ export default function Sidebar() {
               </div>
             )}
           </div>
+          )}
         </nav>
 
-        {/* Add New Button */}
+        {/* Add New Button (Quranic module only for now; ET create comes next phase) */}
+        {!isEt && (
         <StaffOnly>
           <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
             <Link
@@ -236,6 +290,7 @@ export default function Sidebar() {
             </Link>
           </div>
         </StaffOnly>
+        )}
       </aside>
 
       {/* Expose mobile menu state via custom event for Header */}
