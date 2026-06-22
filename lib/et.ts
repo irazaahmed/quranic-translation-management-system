@@ -176,13 +176,29 @@ export function computeCurrentStep(
     };
   }
 
-  // Stages that have actually been worked on (assigned / sent / returned).
-  // We always report the FURTHEST of these so that, when two steps run in
-  // parallel, the LAST one shows — and empty intermediate steps that were
-  // skipped (e.g. ED when TR came from AI) never get reported as "current".
-  const touched = applicable.filter((s) => s.person || s.sent_date || s.received_back_date);
+  // A stage's work "starts" when its SENT (first) date is written and "ends"
+  // when the received-back date is written. So a stage that has a sent date but
+  // no received-back date is the one actively in progress. When several are in
+  // progress at once, the LAST (highest-seq) one is where the item is now —
+  // even if a later stage was already finished out of order.
+  const inProgress = applicable.filter((s) => s.sent_date && !s.received_back_date);
+  if (inProgress.length > 0) {
+    const cur = inProgress[inProgress.length - 1];
+    return {
+      stage: cur.stage,
+      label: stageName(cur.stage),
+      holder: cur.person ?? null,
+      since: cur.sent_date ?? null,
+      completed: false,
+      unassigned: false,
+      doneCount,
+      totalCount,
+    };
+  }
 
-  if (touched.length === 0) {
+  // Nothing in progress. If no stage has been touched at all -> not started.
+  const anyActivity = applicable.some((s) => s.person || s.sent_date || s.received_back_date);
+  if (!anyActivity) {
     return {
       stage: null,
       label: "Pending Assignment",
@@ -195,26 +211,12 @@ export function computeCurrentStep(
     };
   }
 
-  const furthest = touched[touched.length - 1]; // highest seq (touched keeps sort order)
-
-  // The furthest worked stage is still in progress -> that's where it is now.
-  if (!furthest.received_back_date) {
-    return {
-      stage: furthest.stage,
-      label: stageName(furthest.stage),
-      holder: furthest.person ?? null,
-      since: furthest.sent_date ?? null,
-      completed: false,
-      unassigned: false,
-      doneCount,
-      totalCount,
-    };
-  }
-
-  // Furthest worked stage is finished. If it's the last applicable stage, the
-  // whole item is done (even if some earlier stages were left empty/skipped).
+  // Every started stage is finished. If the last applicable stage is done, the
+  // item is complete (even if an earlier stage was left empty/skipped).
+  const finished = applicable.filter((s) => s.received_back_date);
+  const furthestFinished = finished.length ? finished[finished.length - 1] : null;
   const lastApplicable = applicable[applicable.length - 1];
-  if (lastApplicable && furthest.seq === lastApplicable.seq) {
+  if (furthestFinished && lastApplicable && furthestFinished.seq === lastApplicable.seq) {
     return {
       stage: null,
       label: "Completed",
@@ -227,14 +229,15 @@ export function computeCurrentStep(
     };
   }
 
-  // Finished an intermediate stage; the next stage hasn't started yet.
-  const next = applicable.find((s) => s.seq > furthest.seq);
+  // Otherwise the work is waiting between stages: show the next unfinished stage.
+  const fromSeq = furthestFinished ? furthestFinished.seq : 0;
+  const next = applicable.find((s) => s.seq > fromSeq && !s.received_back_date);
   if (next) {
     return {
       stage: next.stage,
       label: stageName(next.stage),
       holder: next.person ?? null,
-      since: next.sent_date ?? furthest.received_back_date ?? null,
+      since: next.sent_date ?? furthestFinished?.received_back_date ?? null,
       completed: false,
       unassigned: false,
       doneCount,
