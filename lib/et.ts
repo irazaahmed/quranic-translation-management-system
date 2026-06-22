@@ -97,6 +97,8 @@ export interface EtItem {
   received_date: string | null;
   word_count: number | null;
   delivery_date: string | null;
+  /** When set, the final email was sent and the item is complete. */
+  final_email_date: string | null;
   priority: ItemPriority | null;
   status: ItemStatus;
   further_process: string | null;
@@ -149,13 +151,30 @@ export interface CurrentStep {
  * been received back. The holder is that stage's person; "since" is its
  * sent date (falling back to the previous stage's received-back date).
  */
-export function computeCurrentStep(stages: EtStage[]): CurrentStep {
+export function computeCurrentStep(
+  stages: EtStage[],
+  finalEmailDate?: string | null
+): CurrentStep {
   const applicable = [...stages]
     .filter((s) => !isStageSkipped(s))
     .sort((a, b) => a.seq - b.seq);
 
   const totalCount = applicable.length;
   const doneCount = applicable.filter((s) => !!s.received_back_date).length;
+
+  // Final email sent => done, regardless of any unfinished stage.
+  if (finalEmailDate) {
+    return {
+      stage: null,
+      label: "Completed",
+      holder: null,
+      since: null,
+      completed: true,
+      unassigned: false,
+      doneCount: totalCount,
+      totalCount,
+    };
+  }
 
   // Stages that have actually been worked on (assigned / sent / returned).
   // We always report the FURTHEST of these so that, when two steps run in

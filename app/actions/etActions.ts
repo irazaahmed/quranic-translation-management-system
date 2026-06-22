@@ -54,6 +54,7 @@ export async function createEtItemAction(
       received_date: (formData.get("received_date") as string) || null,
       word_count: parseInt0(formData.get("word_count") as string),
       delivery_date,
+      final_email_date: (formData.get("final_email_date") as string) || null,
       priority: parsePriority(formData.get("priority") as string),
       further_process: (formData.get("further_process") as string)?.trim() || null,
     });
@@ -88,6 +89,7 @@ export async function updateEtItemAction(
       received_date: (formData.get("received_date") as string) || null,
       word_count: parseInt0(formData.get("word_count") as string),
       delivery_date,
+      final_email_date: (formData.get("final_email_date") as string) || null,
       priority: parsePriority(formData.get("priority") as string),
       further_process: (formData.get("further_process") as string)?.trim() || null,
     });

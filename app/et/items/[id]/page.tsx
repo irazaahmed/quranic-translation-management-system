@@ -32,7 +32,7 @@ export default async function EtItemDetailPage({ params }: Props) {
   const [item, people] = await Promise.all([getCachedEtItem(id), getCachedEtPeople()]);
   if (!item) notFound();
 
-  const current = computeCurrentStep(item.stages);
+  const current = computeCurrentStep(item.stages, item.final_email_date);
   const sinceDays = daysSince(current.since);
   const peopleNames = people.map((p) => p.name);
 
@@ -71,13 +71,20 @@ export default async function EtItemDetailPage({ params }: Props) {
               Delivery: {fmt(item.delivery_date)}
             </span>
           )}
+          {item.final_email_date && (
+            <span className="rounded-full bg-green-50 px-2 py-0.5 font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
+              ✓ Final email: {fmt(item.final_email_date)}
+            </span>
+          )}
         </div>
         <h1 className="mt-2 text-lg sm:text-2xl font-bold text-gray-900 dark:text-white break-words">{item.title}</h1>
 
         {/* Current step banner */}
         <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3 sm:p-4">
           {current.completed ? (
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">✓ Completed — all applicable stages done.</p>
+            <p className="text-sm font-medium text-green-700 dark:text-green-400">
+              ✓ Completed{item.final_email_date ? " — final email sent." : " — all applicable stages done."}
+            </p>
           ) : current.unassigned ? (
             <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pending assignment — no stage has been assigned yet.</p>
           ) : (
@@ -119,7 +126,7 @@ export default async function EtItemDetailPage({ params }: Props) {
 
       {/* Pipeline (editable for staff, read-only for viewers) */}
       <h2 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">Pipeline</h2>
-      <EtPipelineEditor itemId={item.id} stages={item.stages} peopleNames={peopleNames} />
+      <EtPipelineEditor itemId={item.id} stages={item.stages} peopleNames={peopleNames} finalEmailDate={item.final_email_date} />
 
       {/* Movement timeline — who had it, when sent, when returned, how long */}
       <h2 className="mt-6 mb-3 text-base font-semibold text-gray-900 dark:text-white">Tracking — who had it &amp; when</h2>

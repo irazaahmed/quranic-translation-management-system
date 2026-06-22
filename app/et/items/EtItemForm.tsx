@@ -125,6 +125,15 @@ export default function EtItemForm({ item }: Props) {
               )}
             </div>
 
+            {/* Final email date — when set, the item is complete */}
+            <div>
+              <label htmlFor="final_email_date" className={labelCls}>
+                Final email date <span className="font-normal text-emerald-600 dark:text-emerald-400">(sets item complete)</span>
+              </label>
+              <input type="date" id="final_email_date" name="final_email_date" defaultValue={item?.final_email_date ?? ""} className={inputCls} />
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">If the final email was sent, the item counts as completed even if a stage was skipped.</p>
+            </div>
+
             {/* Priority */}
             <div>
               <label htmlFor="priority" className={labelCls}>Priority</label>

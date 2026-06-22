@@ -70,9 +70,10 @@ interface Props {
   itemId: string;
   stages: EtStage[];
   peopleNames: string[];
+  finalEmailDate?: string | null;
 }
 
-export default function EtPipelineEditor({ itemId, stages, peopleNames }: Props) {
+export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEmailDate }: Props) {
   const { canWrite } = usePermissions();
   const toast = useToast();
   const router = useRouter();
@@ -95,9 +96,10 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames }: Props)
           received_back_date: r.received_back_date || null,
           not_applicable: r.skip === "na",
           merged: r.skip === "merged",
-        }))
+        })),
+        finalEmailDate
       ),
-    [rows, itemId]
+    [rows, itemId, finalEmailDate]
   );
 
   const update = (i: number, patch: Partial<Editable>) => {

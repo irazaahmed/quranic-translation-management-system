@@ -194,6 +194,7 @@ def parse_item_sheet(ws, cfg, board_resolver):
             "received_date": iso(ws.cell(r, cfg["rcv"]).value),
             "word_count": to_int(ws.cell(r, cfg["words"]).value),
             "delivery_date": None,
+            "final_email_date": final_email,
             "priority": None,
             "status": status,
             "further_process": clean_str(ws.cell(r, cfg["further"]).value) if cfg["further"] else None,

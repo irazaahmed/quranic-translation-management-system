@@ -28,6 +28,7 @@ export interface CreateEtItemInput {
   received_date: string | null;
   word_count: number | null;
   delivery_date: string | null;
+  final_email_date: string | null;
   priority: ItemPriority | null;
   further_process: string | null;
 }
@@ -46,8 +47,9 @@ export async function createEtItem(input: CreateEtItemInput): Promise<string> {
         received_date: input.received_date,
         word_count: input.word_count,
         delivery_date: input.delivery_date,
+        final_email_date: input.final_email_date,
         priority: input.priority,
-        status: "pending_assignment",
+        status: input.final_email_date ? "completed" : "pending_assignment",
         further_process: input.further_process,
       },
     ])
@@ -67,7 +69,7 @@ export async function createEtItem(input: CreateEtItemInput): Promise<string> {
 export type UpdateEtItemInput = Partial<
   Pick<
     EtItem,
-    "title" | "type" | "board" | "received_date" | "word_count" | "delivery_date" | "priority" | "further_process"
+    "title" | "type" | "board" | "received_date" | "word_count" | "delivery_date" | "final_email_date" | "priority" | "further_process"
   >
 >;
 
