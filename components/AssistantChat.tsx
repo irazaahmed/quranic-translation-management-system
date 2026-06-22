@@ -44,7 +44,7 @@ export default function AssistantChat() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 4v-4z" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">QTMS Assistant</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">TMS Assistant</h3>
             <p className="mt-1 max-w-md text-sm text-gray-500 dark:text-gray-400">
               Progress poochhein, meetings ka summary lein, ya data update karwayein — sab aam zubaan mein.
             </p>

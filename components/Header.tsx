@@ -82,7 +82,7 @@ export default function Header() {
               </span>
             </span>
             <h1 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white truncate min-w-0 transition-colors duration-200">
-              <span className="hidden sm:inline">Quranic Translation </span>Management System
+              <span className="hidden sm:inline">Translation </span>Management System
             </h1>
           </div>
         </div>

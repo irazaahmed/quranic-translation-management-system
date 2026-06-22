@@ -43,7 +43,8 @@ export default function DashboardHero({
 
         <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 text-center sm:text-left">
-          <LiveClock longDate showIcon className="justify-center sm:justify-start text-xs sm:text-sm text-white/80" />
+          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-white/70">Translation Management System</p>
+          <LiveClock longDate showIcon className="mt-1 justify-center sm:justify-start text-xs sm:text-sm text-white/80" />
           <h2 className="mt-1 text-lg sm:text-2xl lg:text-3xl font-bold">
             {greeting}
             {name ? (

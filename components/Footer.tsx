@@ -9,16 +9,16 @@ export default function Footer() {
             <span className="relative flex h-10 w-10 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-gray-200 dark:ring-gray-700">
               <img
                 src="/MyLogoYellow.jpeg"
-                alt="QTMS Logo"
+                alt="TMS Logo"
                 className="h-full w-full object-cover"
               />
             </span>
             <div>
               <p className="text-base font-bold text-gray-900 dark:text-white">
-                QTMS
+                TMS
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Quranic Translation Management System
+                Translation Management System
               </p>
             </div>
           </div>

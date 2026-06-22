@@ -3,7 +3,7 @@ import "server-only";
 import { functionDeclarations, executeTool } from "./tools";
 
 /**
- * Drives the Groq (OpenAI-compatible) function-calling loop for the QTMS
+ * Drives the Groq (OpenAI-compatible) function-calling loop for the TMS
  * assistant.
  *
  * Flow: build a system prompt that includes the live list of languages (so the

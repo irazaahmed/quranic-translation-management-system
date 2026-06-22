@@ -48,7 +48,7 @@ export default async function LoginPage({
             alt="Logo"
             className="h-12 w-12 rounded-full object-cover shadow-lg ring-2 ring-white/40"
           />
-          <span className="text-lg font-semibold tracking-tight">QTMS</span>
+          <span className="text-lg font-semibold tracking-tight">TMS</span>
         </div>
 
         {/* Heading + tagline */}
@@ -58,7 +58,7 @@ export default async function LoginPage({
             Real-time translation management
           </span>
           <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-            Quranic Translation
+            Translation
             <br />
             <span className="bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent">
               Management System

@@ -90,7 +90,7 @@ export default function ChatWidget() {
                 </svg>
               </span>
               <div className="leading-tight">
-                <p className="text-sm font-bold tracking-tight">QTMS Assistant</p>
+                <p className="text-sm font-bold tracking-tight">TMS Assistant</p>
                 <p className="flex items-center gap-1 text-[10px] text-white/85">
                   <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_6px] shadow-emerald-300" />
                   Online · progress · meetings

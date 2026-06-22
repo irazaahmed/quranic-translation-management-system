@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Quranic Translation Management System",
-  description: "Manage and track meeting notes for Quranic translations across multiple languages",
+  title: "Translation Management System",
+  description: "Manage Quranic translation meetings and the English translation production pipeline in one place",
   icons: {
     icon: "/MyLogoYellow.jpeg",
     apple: "/MyLogoYellow.jpeg",

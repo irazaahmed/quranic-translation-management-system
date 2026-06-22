@@ -20,6 +20,8 @@ import ProjectStatsCards from "./dashboard/ProjectStatsCards";
 import AnalyticsCharts from "./dashboard/AnalyticsCharts";
 import UpcomingMeetings from "./dashboard/UpcomingMeetings";
 import DashboardHero from "./dashboard/DashboardHero";
+import ModuleCards from "./dashboard/ModuleCards";
+import { getCachedEtItemRows } from "@/lib/etData";
 import { StaffOnly } from "@/components/AuthProvider";
 import Link from "next/link";
 
@@ -117,6 +119,17 @@ export default async function Dashboard() {
     error = "Failed to load dashboard data";
   }
 
+  // English Translation module counts (isolated so an ET issue can't break the home page).
+  let englishActive = 0;
+  let englishTotal = 0;
+  try {
+    const etRows = (await getCachedEtItemRows()).filter((r) => !r.stopped);
+    englishTotal = etRows.length;
+    englishActive = etRows.filter((r) => r.derivedStatus !== "completed").length;
+  } catch (err) {
+    console.error("Failed to fetch English module counts:", err);
+  }
+
   const displayStats = stats || {
     totalLanguages: 0,
     meetingsThisWeek: 0,
@@ -137,7 +150,7 @@ export default async function Dashboard() {
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gradient truncate">Dashboard</h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 transition-colors duration-200">
-              Overview of language meeting tracking status
+              Translation Management System — Quranic & English workspaces
             </p>
           </div>
           <StaffOnly>
@@ -179,8 +192,8 @@ export default async function Dashboard() {
         </div>
       )}
 
-      {/* Empty State */}
-      {displayStats.totalLanguages === 0 && !error ? (
+      {/* Empty State (only when BOTH modules are empty) */}
+      {displayStats.totalLanguages === 0 && englishTotal === 0 && !error ? (
         <div className="flex min-h-[400px] items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-12 text-center transition-colors duration-200">
           <div>
             <svg className="mx-auto h-16 w-16 text-gray-300 dark:text-gray-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,6 +224,15 @@ export default async function Dashboard() {
             upcoming={upcomingMeetings.length}
             meetingsThisWeek={displayStats.meetingsThisWeek}
           />
+
+          {/* Workspaces — the two TMS modules */}
+          <div className="mt-4 sm:mt-6">
+            <ModuleCards
+              quranicLanguages={displayStats.totalLanguages}
+              englishActive={englishActive}
+              englishTotal={englishTotal}
+            />
+          </div>
 
           {/* Stats Grid */}
           <div className="mt-4 sm:mt-6 grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-6 xl:grid-cols-5">
