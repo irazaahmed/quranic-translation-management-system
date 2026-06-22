@@ -63,7 +63,7 @@ export default async function EtRemindersPage() {
   }
 
   // Weekly documents only (wsb / fsp / wbl) — the recurring deliverables.
-  const weekly = rows.filter((r) => r.status !== "completed" && isWeeklyType(r.type));
+  const weekly = rows.filter((r) => r.derivedStatus !== "completed" && isWeeklyType(r.type));
 
   const entries: Entry[] = weekly
     .map((row) => ({ row, info: reminderInfo(row) }))
@@ -75,7 +75,7 @@ export default async function EtRemindersPage() {
   const upcoming = entries.filter((e) => (e.info.daysLeft ?? 0) > 7);
 
   // Unassigned weekly tasks (like the Excel sheet's second column).
-  const unassigned = weekly.filter((r) => r.status === "pending_assignment");
+  const unassigned = weekly.filter((r) => r.derivedStatus === "pending_assignment");
 
   return (
     <DashboardLayout>

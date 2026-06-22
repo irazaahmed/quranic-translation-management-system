@@ -432,7 +432,7 @@ async function logMeeting(args: ToolArgs) {
 
 async function getEtOverview() {
   const rows = await getCachedEtItemRows();
-  const active = rows.filter((r) => r.status !== "completed");
+  const active = rows.filter((r) => r.derivedStatus !== "completed");
   const dueSoon = active.filter((r) => {
     const d = reminderInfo(r).daysLeft;
     return d != null && d <= 7;
@@ -452,8 +452,8 @@ async function getEtOverview() {
   return {
     total_items: rows.length,
     active: active.length,
-    completed: rows.filter((r) => r.status === "completed").length,
-    unassigned: rows.filter((r) => r.status === "pending_assignment").length,
+    completed: rows.filter((r) => r.derivedStatus === "completed").length,
+    unassigned: rows.filter((r) => r.derivedStatus === "pending_assignment").length,
     due_within_7_days: dueSoon,
     longest_at_step: stuck,
   };
@@ -461,7 +461,7 @@ async function getEtOverview() {
 
 async function getEtWorkload(args: ToolArgs) {
   const person = str(args.person);
-  const rows = (await getCachedEtItemRows()).filter((r) => r.status !== "completed" && r.current.holder);
+  const rows = (await getCachedEtItemRows()).filter((r) => r.derivedStatus !== "completed" && r.current.holder);
 
   if (person) {
     const items = rows
@@ -482,7 +482,7 @@ async function getEtReminders(args: ToolArgs) {
   const within = typeof args.within_days === "number" ? (args.within_days as number) : 14;
   const rows = await getCachedEtItemRows();
   const entries = rows
-    .filter((r) => r.status !== "completed")
+    .filter((r) => r.derivedStatus !== "completed")
     .map((r) => ({ r, info: reminderInfo(r) }))
     .filter((x) => x.info.delivery && (x.info.daysLeft! < 0 || x.info.daysLeft! <= within))
     .sort((a, b) => (a.info.daysLeft ?? 0) - (b.info.daysLeft ?? 0))
@@ -511,7 +511,7 @@ async function findEtItem(args: ToolArgs) {
       type: typeLabel(r.type),
       current_step: r.current.label,
       holder: r.current.holder,
-      status: r.status,
+      status: r.derivedStatus,
     }));
   if (matches.length === 0) return { matches: [], message: "No English Translation item matched that title." };
   return { matches };
@@ -529,7 +529,7 @@ async function getEtItem(args: ToolArgs) {
     title: item.title,
     type: typeLabel(item.type),
     word_count: item.word_count,
-    status: item.status,
+    status: current.completed ? "completed" : current.unassigned ? "pending_assignment" : "in_progress",
     current_step: current.label,
     current_holder: current.holder,
     at_step_since: current.since,

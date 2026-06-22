@@ -22,9 +22,9 @@ export default async function EtItemsPage({ searchParams }: Props) {
     error = "Failed to load items. Have you run the migration and import yet?";
   }
 
-  const active = rows.filter((r) => r.status !== "completed").length;
-  const completed = rows.filter((r) => r.status === "completed").length;
-  const unassigned = rows.filter((r) => r.status === "pending_assignment").length;
+  const active = rows.filter((r) => r.derivedStatus !== "completed").length;
+  const completed = rows.filter((r) => r.derivedStatus === "completed").length;
+  const unassigned = rows.filter((r) => r.derivedStatus === "pending_assignment").length;
 
   return (
     <DashboardLayout>

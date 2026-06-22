@@ -76,8 +76,8 @@ export default function EtItemsList({ items, initial }: Props) {
     return items
       .filter((i) => {
         if (status === "all") return true;
-        if (status === "active") return i.status !== "completed";
-        return i.status === status;
+        if (status === "active") return i.derivedStatus !== "completed";
+        return i.derivedStatus === status;
       })
       .filter((i) => stage === "all" || i.current.stage === stage)
       .filter((i) => holder === "all" || i.current.holder === holder)
@@ -220,7 +220,7 @@ export default function EtItemsList({ items, initial }: Props) {
       {/* Mobile cards */}
       <div className="sm:hidden grid gap-3">
         {filtered.map((row) => {
-          const sb = statusBadge(row.status);
+          const sb = statusBadge(row.derivedStatus);
           return (
             <Link
               key={row.id}

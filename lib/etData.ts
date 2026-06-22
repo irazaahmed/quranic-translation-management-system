@@ -9,6 +9,7 @@ import {
   EtPerson,
   computeCurrentStep,
   type CurrentStep,
+  type ItemStatus,
 } from "@/lib/et";
 
 // ============================================
@@ -23,6 +24,8 @@ const STAGE_COLUMNS =
 /** A list row: the item plus its computed current step (stages omitted to keep payload small). */
 export interface EtItemRow extends EtItem {
   current: CurrentStep;
+  /** Lifecycle status derived live from the stages (overrides the stored field). */
+  derivedStatus: ItemStatus;
 }
 
 function sortStages(stages: EtStage[]): EtStage[] {
@@ -47,10 +50,15 @@ export const getCachedEtItemsWithStages = cache(async (): Promise<EtItemWithStag
 /** Lightweight list rows with computed current step (no stage arrays). */
 export const getCachedEtItemRows = cache(async (): Promise<EtItemRow[]> => {
   const items = await getCachedEtItemsWithStages();
-  return items.map(({ stages, ...item }) => ({
-    ...(item as EtItem),
-    current: computeCurrentStep(stages),
-  }));
+  return items.map(({ stages, ...item }) => {
+    const current = computeCurrentStep(stages);
+    const derivedStatus: ItemStatus = current.completed
+      ? "completed"
+      : current.unassigned
+        ? "pending_assignment"
+        : "in_progress";
+    return { ...(item as EtItem), current, derivedStatus };
+  });
 });
 
 /** A single item with its stages, or null. */

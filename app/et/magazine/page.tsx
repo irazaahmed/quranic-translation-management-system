@@ -26,8 +26,8 @@ export default async function EtMagazinePage() {
     .filter((r) => isMagazineType(r.type))
     .sort((a, b) => a.title.localeCompare(b.title));
 
-  const active = articles.filter((a) => a.status !== "completed");
-  const completed = articles.filter((a) => a.status === "completed");
+  const active = articles.filter((a) => a.derivedStatus !== "completed");
+  const completed = articles.filter((a) => a.derivedStatus === "completed");
 
   return (
     <DashboardLayout>

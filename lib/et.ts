@@ -156,22 +156,14 @@ export function computeCurrentStep(stages: EtStage[]): CurrentStep {
 
   const totalCount = applicable.length;
   const doneCount = applicable.filter((s) => !!s.received_back_date).length;
-  const anyAssigned = applicable.some((s) => !!s.person || !!s.sent_date || !!s.received_back_date);
 
-  if (totalCount > 0 && doneCount === totalCount) {
-    return {
-      stage: null,
-      label: "Completed",
-      holder: null,
-      since: null,
-      completed: true,
-      unassigned: false,
-      doneCount,
-      totalCount,
-    };
-  }
+  // Stages that have actually been worked on (assigned / sent / returned).
+  // We always report the FURTHEST of these so that, when two steps run in
+  // parallel, the LAST one shows — and empty intermediate steps that were
+  // skipped (e.g. ED when TR came from AI) never get reported as "current".
+  const touched = applicable.filter((s) => s.person || s.sent_date || s.received_back_date);
 
-  if (!anyAssigned) {
+  if (touched.length === 0) {
     return {
       stage: null,
       label: "Pending Assignment",
@@ -184,25 +176,54 @@ export function computeCurrentStep(stages: EtStage[]): CurrentStep {
     };
   }
 
-  // First applicable stage not yet received back.
-  for (let i = 0; i < applicable.length; i++) {
-    const s = applicable[i];
-    if (!s.received_back_date) {
-      const prev = applicable[i - 1];
-      return {
-        stage: s.stage,
-        label: stageName(s.stage),
-        holder: s.person ?? null,
-        since: s.sent_date ?? prev?.received_back_date ?? null,
-        completed: false,
-        unassigned: false,
-        doneCount,
-        totalCount,
-      };
-    }
+  const furthest = touched[touched.length - 1]; // highest seq (touched keeps sort order)
+
+  // The furthest worked stage is still in progress -> that's where it is now.
+  if (!furthest.received_back_date) {
+    return {
+      stage: furthest.stage,
+      label: stageName(furthest.stage),
+      holder: furthest.person ?? null,
+      since: furthest.sent_date ?? null,
+      completed: false,
+      unassigned: false,
+      doneCount,
+      totalCount,
+    };
   }
 
-  // Fallback (shouldn't reach): treat as completed.
+  // Furthest worked stage is finished. If it's the last applicable stage, the
+  // whole item is done (even if some earlier stages were left empty/skipped).
+  const lastApplicable = applicable[applicable.length - 1];
+  if (lastApplicable && furthest.seq === lastApplicable.seq) {
+    return {
+      stage: null,
+      label: "Completed",
+      holder: null,
+      since: null,
+      completed: true,
+      unassigned: false,
+      doneCount: totalCount,
+      totalCount,
+    };
+  }
+
+  // Finished an intermediate stage; the next stage hasn't started yet.
+  const next = applicable.find((s) => s.seq > furthest.seq);
+  if (next) {
+    return {
+      stage: next.stage,
+      label: stageName(next.stage),
+      holder: next.person ?? null,
+      since: next.sent_date ?? furthest.received_back_date ?? null,
+      completed: false,
+      unassigned: false,
+      doneCount,
+      totalCount,
+    };
+  }
+
+  // Fallback.
   return {
     stage: null,
     label: "Completed",
@@ -210,7 +231,7 @@ export function computeCurrentStep(stages: EtStage[]): CurrentStep {
     since: null,
     completed: true,
     unassigned: false,
-    doneCount,
+    doneCount: totalCount,
     totalCount,
   };
 }

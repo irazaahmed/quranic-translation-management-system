@@ -38,9 +38,9 @@ export default async function EtDashboardPage() {
     error = "Failed to load. Have you run the migration and import yet?";
   }
 
-  const active = rows.filter((r) => r.status !== "completed");
-  const completed = rows.filter((r) => r.status === "completed");
-  const unassigned = rows.filter((r) => r.status === "pending_assignment");
+  const active = rows.filter((r) => r.derivedStatus !== "completed");
+  const completed = rows.filter((r) => r.derivedStatus === "completed");
+  const unassigned = rows.filter((r) => r.derivedStatus === "pending_assignment");
 
   // Weekly delivery reminders (wsb/fsp/wbl with an effective delivery date).
   const reminders = active
