@@ -127,3 +127,50 @@ export async function saveEtStages(itemId: string, stages: StageUpsert[]): Promi
     .eq("id", itemId);
   if (statusError) throw statusError;
 }
+
+export interface StagePatch {
+  stage: StageCode;
+  person?: string | null;
+  sent_date?: string | null;
+  received_back_date?: string | null;
+}
+
+/**
+ * Patch one or more stages (only the provided fields) and recompute the item's
+ * status. Used by the quick "advance to next step" control on the item page.
+ */
+export async function patchEtStages(itemId: string, patches: StagePatch[]): Promise<void> {
+  const supabase = await getWriteClient();
+
+  for (const p of patches) {
+    const patch: Record<string, unknown> = {};
+    if ("person" in p) patch.person = p.person?.trim() || null;
+    if ("sent_date" in p) patch.sent_date = p.sent_date || null;
+    if ("received_back_date" in p) patch.received_back_date = p.received_back_date || null;
+    if (Object.keys(patch).length === 0) continue;
+
+    const { error } = await supabase
+      .from("et_stages")
+      .update(patch)
+      .eq("item_id", itemId)
+      .eq("stage", p.stage);
+    if (error) throw error;
+  }
+
+  // Recompute the stored status from the item's full, current stage set.
+  const { data: stages, error } = await supabase
+    .from("et_stages")
+    .select("stage, seq, person, sent_date, received_back_date, not_applicable, merged")
+    .eq("item_id", itemId);
+  if (error) throw error;
+
+  const { data: item } = await supabase
+    .from("et_items")
+    .select("final_email_date")
+    .eq("id", itemId)
+    .maybeSingle();
+
+  const status = deriveStatus((stages || []) as EtStage[], item?.final_email_date ?? null);
+  const { error: statusError } = await supabase.from("et_items").update({ status }).eq("id", itemId);
+  if (statusError) throw statusError;
+}

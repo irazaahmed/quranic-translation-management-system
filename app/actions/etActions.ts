@@ -8,7 +8,9 @@ import {
   updateEtItem,
   deleteEtItem,
   saveEtStages,
+  patchEtStages,
   type StageUpsert,
+  type StagePatch,
 } from "@/lib/etMutations";
 import { parseTitleDate, type ItemPriority } from "@/lib/et";
 
@@ -116,6 +118,25 @@ export async function saveEtStagesAction(
     return { success: true };
   } catch (error) {
     console.error("Failed to save stages:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to update the pipeline." };
+    }
+    return { error: "Failed to save. Please try again." };
+  }
+}
+
+/** Quick advance: patch a couple of stages (mark returned / assign next) from the item summary. */
+export async function patchEtStagesAction(
+  itemId: string,
+  patches: StagePatch[]
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireStaff();
+    await patchEtStages(itemId, patches);
+    revalidateEt(itemId);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to advance stage:", error);
     if (error instanceof Error && error.message === "UNAUTHORIZED") {
       return { error: "You don't have permission to update the pipeline." };
     }

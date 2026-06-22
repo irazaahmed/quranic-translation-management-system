@@ -259,8 +259,8 @@ export function computeCurrentStep(
 }
 
 /** Derive the high-level lifecycle status from an item's stage rows. */
-export function deriveStatus(stages: EtStage[]): ItemStatus {
-  const c = computeCurrentStep(stages);
+export function deriveStatus(stages: EtStage[], finalEmailDate?: string | null): ItemStatus {
+  const c = computeCurrentStep(stages, finalEmailDate);
   if (c.completed) return "completed";
   if (c.unassigned) return "pending_assignment";
   return "in_progress";

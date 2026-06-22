@@ -206,8 +206,8 @@ export default function EtItemsList({ items, initial }: Props) {
                   </td>
                   <td className="px-3 lg:px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                     {fmtDate(row.current.since)}
-                    {d !== null && d > 30 && (
-                      <span className="ml-2 rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-medium text-red-700 dark:bg-red-900/20 dark:text-red-400">{d}d</span>
+                    {d !== null && (
+                      <span className={`ml-2 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${d > 30 ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}>{d}d</span>
                     )}
                   </td>
                 </tr>
@@ -238,7 +238,12 @@ export default function EtItemsList({ items, initial }: Props) {
               <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <p className="text-gray-500 dark:text-gray-400">Holder</p>
-                  <p className="font-medium text-gray-900 dark:text-white truncate">{row.current.holder || "—"}</p>
+                  <p className="font-medium text-gray-900 dark:text-white truncate">
+                    {row.current.holder || "—"}
+                    {daysSince(row.current.since) != null && (
+                      <span className="text-gray-500 dark:text-gray-400"> · {daysSince(row.current.since)}d</span>
+                    )}
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-500 dark:text-gray-400">Progress · since</p>
