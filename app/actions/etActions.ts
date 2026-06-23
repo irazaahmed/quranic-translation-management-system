@@ -123,11 +123,12 @@ export async function updateEtItemAction(
 /** Save the full pipeline (called from the client pipeline editor). */
 export async function saveEtStagesAction(
   itemId: string,
-  stages: StageUpsert[]
+  stages: StageUpsert[],
+  finalEmailDate?: string | null
 ): Promise<{ error?: string; success?: boolean }> {
   try {
     await requireStaff();
-    await saveEtStages(itemId, stages);
+    await saveEtStages(itemId, stages, finalEmailDate);
     revalidateEt(itemId);
     return { success: true };
   } catch (error) {

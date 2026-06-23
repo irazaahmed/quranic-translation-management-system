@@ -8,7 +8,6 @@ import {
   type EtStage,
   type ItemBoard,
   type ItemPriority,
-  type ItemStatus,
   type StageCode,
 } from "./et";
 
@@ -113,8 +112,16 @@ export interface StageUpsert {
 /**
  * Save all pipeline stages for an item in one call, then recompute and store
  * the item's derived status. Relies on UNIQUE(item_id, stage).
+ *
+ * The final email date is saved alongside the stages: when set, the item counts
+ * as complete (final email sent), regardless of any skipped stage. Pass
+ * `undefined` to leave it untouched, or a date / null to set / clear it.
  */
-export async function saveEtStages(itemId: string, stages: StageUpsert[]): Promise<void> {
+export async function saveEtStages(
+  itemId: string,
+  stages: StageUpsert[],
+  finalEmailDate?: string | null
+): Promise<void> {
   const supabase = await getWriteClient();
   const seqByCode = Object.fromEntries(STAGES.map((s) => [s.code, s.seq]));
 
@@ -134,11 +141,16 @@ export async function saveEtStages(itemId: string, stages: StageUpsert[]): Promi
     .upsert(rows, { onConflict: "item_id,stage" });
   if (error) throw error;
 
-  // Recompute status from the just-saved stage data.
-  const status: ItemStatus = deriveStatus(rows as unknown as EtStage[]);
+  // Recompute status from the just-saved stage data (+ the final email date).
+  const itemUpdate: Record<string, unknown> = {
+    status: deriveStatus(rows as unknown as EtStage[], finalEmailDate ?? null),
+  };
+  // Only write final_email_date when the caller actually provided it.
+  if (finalEmailDate !== undefined) itemUpdate.final_email_date = finalEmailDate || null;
+
   const { error: statusError } = await supabase
     .from("et_items")
-    .update({ status })
+    .update(itemUpdate)
     .eq("id", itemId);
   if (statusError) throw statusError;
 }

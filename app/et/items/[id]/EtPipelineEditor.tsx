@@ -81,11 +81,12 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
   const [isPending, startTransition] = useTransition();
 
   const [rows, setRows] = useState<Editable[]>(() => toEditable(stages));
+  const [finalEmail, setFinalEmail] = useState(finalEmailDate ?? "");
   const [dirty, setDirty] = useState(false);
   // Which save button was clicked (so only that one shows the "Saving…" state).
   const [savingBack, setSavingBack] = useState(false);
 
-  // Live current-step computation from the in-memory rows.
+  // Live current-step computation from the in-memory rows (+ final email date).
   const current = useMemo(
     () =>
       computeCurrentStep(
@@ -100,10 +101,15 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
           not_applicable: r.skip === "na",
           merged: r.skip === "merged",
         })),
-        finalEmailDate
+        finalEmail || null
       ),
-    [rows, itemId, finalEmailDate]
+    [rows, itemId, finalEmail]
   );
+
+  const setFinal = (v: string) => {
+    setFinalEmail(v);
+    setDirty(true);
+  };
 
   const update = (i: number, patch: Partial<Editable>) => {
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
@@ -145,7 +151,8 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
           received_back_date: r.received_back_date || null,
           not_applicable: r.skip === "na",
           merged: r.skip === "merged",
-        }))
+        })),
+        finalEmail || null
       );
       if (res.error) {
         toast({ type: "error", message: res.error });
@@ -161,6 +168,7 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
   // ---- Read-only view (viewers) ----
   if (!canWrite) {
     return (
+      <div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {rows.map((r) => {
           const st = stageStateOf(r);
@@ -191,6 +199,17 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
             </div>
           );
         })}
+      </div>
+
+      {/* Final email — when set, the item is complete */}
+      <div className={`mt-3 flex flex-wrap items-center gap-3 rounded-xl border p-4 ${finalEmail ? "border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"}`}>
+        <span className={`flex h-7 w-7 items-center justify-center rounded-full text-sm ${finalEmail ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-300"}`}>✉</span>
+        <div>
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">Final email {finalEmail ? "sent" : "not sent"}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Sending the final email completes the item.</p>
+        </div>
+        <span className="ml-auto text-sm font-medium text-gray-700 dark:text-gray-300">{fmt(finalEmail || null)}</span>
+      </div>
       </div>
     );
   }
@@ -248,6 +267,28 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
             </div>
           );
         })}
+      </div>
+
+      {/* Final email — when set, the item is Complete (final email sent) */}
+      <div className={`mt-3 flex flex-wrap items-center gap-3 rounded-xl border p-4 ${finalEmail ? "border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10" : "border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-900/10"}`}>
+        <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-sm ${finalEmail ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-300"}`}>✉</span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-900 dark:text-white">Final email</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">When the date is set, the item is <span className="font-medium">Complete</span> — final email sent.</p>
+        </div>
+        <div className="ml-auto flex items-center gap-1">
+          <input
+            type="date"
+            value={finalEmail}
+            onChange={(e) => setFinal(e.target.value)}
+            aria-label="Final email date"
+            className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-xs text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none"
+          />
+          <button type="button" onClick={() => setFinal(TODAY)} title="Final email sent today" className="flex-shrink-0 rounded-md bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-1 text-[10px] font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50">✉Today</button>
+          {finalEmail && (
+            <button type="button" onClick={() => setFinal("")} title="Clear final email date" className="flex-shrink-0 rounded-md px-1.5 py-1 text-[11px] font-medium text-gray-400 hover:text-red-600 dark:hover:text-red-400">✕</button>
+          )}
+        </div>
       </div>
 
       {/* Save bar */}
