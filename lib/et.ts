@@ -42,7 +42,6 @@ export const TYPE_LABELS: Record<string, string> = {
   mgz: "Magazine",
   aer: "Ala Hazrat English Rasail",
   rpr: "Reprint",
-  quran: "Quran",
 };
 
 export function typeLabel(type: string | null | undefined): string {
@@ -58,26 +57,31 @@ export function isWeeklyType(type: string | null | undefined): boolean {
 export function isMagazineType(type: string | null | undefined): boolean {
   return (type || "").toLowerCase() === "mgz";
 }
+/**
+ * Quran-e-Pak items are handled in the Quranic Translation module, not here, so
+ * the English Translation module ignores/hides them entirely.
+ */
+export function isQuranType(type: string | null | undefined): boolean {
+  return (type || "").toLowerCase() === "quran";
+}
 
 /** High-level category used to group/filter the Work Items list. */
-export type ItemCategory = "weekly" | "magazine" | "quran" | "books" | "other";
+export type ItemCategory = "weekly" | "magazine" | "books" | "other";
 
 export const CATEGORY_LABELS: Record<ItemCategory, string> = {
   weekly: "Weekly Docs",
   magazine: "Magazine",
-  quran: "Quran",
   books: "Books",
   other: "Other Works",
 };
 
 /** Order categories appear as tabs. */
-export const CATEGORY_ORDER: ItemCategory[] = ["weekly", "magazine", "quran", "books", "other"];
+export const CATEGORY_ORDER: ItemCategory[] = ["weekly", "magazine", "books", "other"];
 
 export function itemCategory(type: string | null | undefined): ItemCategory {
   const t = (type || "").toLowerCase();
   if (isWeeklyType(t)) return "weekly";
   if (t === "mgz") return "magazine";
-  if (t === "quran") return "quran";
   if (t === "bks") return "books";
   return "other";
 }

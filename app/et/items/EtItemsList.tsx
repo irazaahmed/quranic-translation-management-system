@@ -71,7 +71,7 @@ export default function EtItemsList({ items, initial }: Props) {
 
   // Counts per category tab (non-stopped), plus the skipped count.
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: 0, skipped: 0, weekly: 0, magazine: 0, quran: 0, books: 0, other: 0 };
+    const c: Record<string, number> = { all: 0, skipped: 0, weekly: 0, magazine: 0, books: 0, other: 0 };
     items.forEach((i) => {
       if (i.stopped) {
         c.skipped++;

@@ -10,6 +10,7 @@ import {
   EtReturn,
   computeCurrentStep,
   computeAdvance,
+  isQuranType,
   type CurrentStep,
   type ItemAdvance,
   type ItemStatus,
@@ -46,10 +47,13 @@ export const getCachedEtItemsWithStages = cache(async (): Promise<EtItemWithStag
 
   if (error) throw error;
 
-  return (data || []).map((row: any) => ({
-    ...(row as EtItem),
-    stages: sortStages((row.et_stages || []) as EtStage[]),
-  }));
+  return (data || [])
+    .map((row: any) => ({
+      ...(row as EtItem),
+      stages: sortStages((row.et_stages || []) as EtStage[]),
+    }))
+    // Quran-e-Pak items live in the Quranic module — hide them from English.
+    .filter((item) => !isQuranType(item.type));
 });
 
 /** Lightweight list rows with computed current step (no stage arrays). */
@@ -77,6 +81,8 @@ export const getCachedEtItem = cache(async (id: string): Promise<EtItemWithStage
 
   if (error) throw error;
   if (!data) return null;
+  // Quran-e-Pak items belong to the Quranic module — not visible in English.
+  if (isQuranType((data as EtItem).type)) return null;
 
   return {
     ...(data as EtItem),
