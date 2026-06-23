@@ -179,6 +179,81 @@ export async function deleteEtReturn(returnId: string): Promise<void> {
   if (error) throw error;
 }
 
+// ============================================
+// Workforce (et_people) — the single source of truth for holder names.
+// ============================================
+
+export interface EtPersonInput {
+  name: string;
+  skills: string | null;
+  email: string | null;
+  working_hours: string | null;
+  active: boolean;
+}
+
+/** Add a new workforce member. */
+export async function addEtPerson(input: EtPersonInput): Promise<void> {
+  const supabase = await getWriteClient();
+  const { error } = await supabase.from("et_people").insert([
+    {
+      name: input.name.trim(),
+      skills: input.skills?.trim() || null,
+      email: input.email?.trim() || null,
+      working_hours: input.working_hours?.trim() || null,
+      active: input.active,
+    },
+  ]);
+  if (error) throw error;
+}
+
+/**
+ * Update a workforce member. When the name changes, the new name is cascaded to
+ * every stage holder and return entry that used the old name, so editing a
+ * person here flows through to the whole site automatically.
+ */
+export async function updateEtPerson(
+  personId: string,
+  prevName: string,
+  input: EtPersonInput
+): Promise<void> {
+  const supabase = await getWriteClient();
+  const newName = input.name.trim();
+
+  const { error } = await supabase
+    .from("et_people")
+    .update({
+      name: newName,
+      skills: input.skills?.trim() || null,
+      email: input.email?.trim() || null,
+      working_hours: input.working_hours?.trim() || null,
+      active: input.active,
+    })
+    .eq("id", personId);
+  if (error) throw error;
+
+  // Cascade the rename so existing work history points at the new name.
+  if (prevName && newName && prevName !== newName) {
+    const { error: stageErr } = await supabase
+      .from("et_stages")
+      .update({ person: newName })
+      .eq("person", prevName);
+    if (stageErr) throw stageErr;
+    // et_returns may not exist yet on older databases — ignore if missing.
+    try {
+      await supabase.from("et_returns").update({ person: newName }).eq("person", prevName);
+    } catch (err) {
+      console.error("Cascade rename on et_returns skipped:", err);
+    }
+  }
+}
+
+/** Remove a workforce member (does not touch their past work history). */
+export async function deleteEtPerson(personId: string): Promise<void> {
+  const supabase = await getWriteClient();
+  const { error } = await supabase.from("et_people").delete().eq("id", personId);
+  if (error) throw error;
+}
+
 export interface StagePatch {
   stage: StageCode;
   person?: string | null;

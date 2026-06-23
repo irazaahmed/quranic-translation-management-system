@@ -13,8 +13,12 @@ import {
   addEtReturn,
   updateEtReturn,
   deleteEtReturn,
+  addEtPerson,
+  updateEtPerson,
+  deleteEtPerson,
   type StageUpsert,
   type StagePatch,
+  type EtPersonInput,
 } from "@/lib/etMutations";
 import { parseTitleDate, type ItemPriority, type StageCode } from "@/lib/et";
 
@@ -38,6 +42,12 @@ function revalidateEt(itemId?: string) {
   revalidatePath("/et");
   revalidatePath("/et/items");
   if (itemId) revalidatePath(`/et/items/${itemId}`);
+}
+
+function revalidateWorkforce() {
+  revalidatePath("/et/workforce");
+  revalidatePath("/et");
+  revalidatePath("/et/items");
 }
 
 export async function createEtItemAction(
@@ -230,6 +240,72 @@ export async function setEtStoppedAction(
       return { error: "You don't have permission to change this." };
     }
     return { error: "Failed to save. Please try again." };
+  }
+}
+
+// ============================================
+// Workforce actions
+// ============================================
+
+function validatePerson(input: EtPersonInput): string | null {
+  if (!input.name?.trim()) return "Name is required.";
+  return null;
+}
+
+export async function addEtPersonAction(
+  input: EtPersonInput
+): Promise<{ error?: string; success?: boolean }> {
+  const invalid = validatePerson(input);
+  if (invalid) return { error: invalid };
+  try {
+    await requireStaff();
+    await addEtPerson(input);
+    revalidateWorkforce();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to add person:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to manage the workforce." };
+    }
+    return { error: "Failed to add person. Please try again." };
+  }
+}
+
+export async function updateEtPersonAction(
+  personId: string,
+  prevName: string,
+  input: EtPersonInput
+): Promise<{ error?: string; success?: boolean }> {
+  const invalid = validatePerson(input);
+  if (invalid) return { error: invalid };
+  try {
+    await requireStaff();
+    await updateEtPerson(personId, prevName, input);
+    revalidateWorkforce();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update person:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to manage the workforce." };
+    }
+    return { error: "Failed to save. Please try again." };
+  }
+}
+
+export async function deleteEtPersonAction(
+  personId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireStaff();
+    await deleteEtPerson(personId);
+    revalidateWorkforce();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete person:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to manage the workforce." };
+    }
+    return { error: "Failed to delete. Please try again." };
   }
 }
 

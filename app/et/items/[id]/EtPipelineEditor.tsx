@@ -12,6 +12,7 @@ import {
   type StageCode,
 } from "@/lib/et";
 import { saveEtStagesAction } from "@/app/actions/etActions";
+import PersonSelect from "@/components/PersonSelect";
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -197,12 +198,6 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
   // ---- Editable view (staff) ----
   return (
     <div>
-      <datalist id="et-people">
-        {peopleNames.map((n) => (
-          <option key={n} value={n} />
-        ))}
-      </datalist>
-
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {rows.map((r, i) => {
           const st = stageStateOf(r);
@@ -234,12 +229,10 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
                 <p className="mt-2 text-xs italic text-gray-400 dark:text-gray-500">Not applicable for this item.</p>
               ) : (
                 <div className="mt-2 space-y-2">
-                  <input
-                    type="text"
-                    list="et-people"
+                  <PersonSelect
                     value={r.person}
-                    onChange={(e) => update(i, { person: e.target.value })}
-                    placeholder="Person…"
+                    onChange={(v) => update(i, { person: v })}
+                    people={peopleNames}
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-xs text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none"
                   />
                   <div className="flex items-center gap-1">

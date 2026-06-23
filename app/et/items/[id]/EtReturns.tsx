@@ -10,6 +10,7 @@ import {
   updateEtReturnAction,
   deleteEtReturnAction,
 } from "@/app/actions/etActions";
+import PersonSelect from "@/components/PersonSelect";
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -116,9 +117,6 @@ export default function EtReturns({ itemId, returns, peopleNames }: Props) {
 
       {canWrite && open && (
         <div className="mb-3 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-900/10 p-4">
-          <datalist id="ret-people">
-            {peopleNames.map((n) => <option key={n} value={n} />)}
-          </datalist>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">What&apos;s missing / to complete</label>
@@ -132,7 +130,7 @@ export default function EtReturns({ itemId, returns, peopleNames }: Props) {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">Returned to (person)</label>
-              <input type="text" list="ret-people" value={person} onChange={(e) => setPerson(e.target.value)} placeholder="Person…" className={`mt-1 ${inputCls}`} />
+              <PersonSelect value={person} onChange={setPerson} people={peopleNames} className={`mt-1 ${inputCls}`} />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">Stage (optional)</label>

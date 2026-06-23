@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { usePermissions } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { patchEtStagesAction } from "@/app/actions/etActions";
+import PersonSelect from "@/components/PersonSelect";
 import type { ItemAdvance } from "@/lib/et";
 import type { StagePatch } from "@/lib/etMutations";
 
@@ -91,10 +92,6 @@ export default function EtQuickAdvance({ itemId, advance, peopleNames, compact =
 
       {open && (
         <div className="mt-3 border-t border-emerald-200/70 dark:border-emerald-800/40 pt-3">
-          <datalist id="qa-people">
-            {peopleNames.map((n) => <option key={n} value={n} />)}
-          </datalist>
-
           {advance.inProgress ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
@@ -107,7 +104,7 @@ export default function EtQuickAdvance({ itemId, advance, peopleNames, compact =
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">Give {advance.nextStage} to</label>
-                    <input type="text" list="qa-people" value={nextPerson} onChange={(e) => setNextPerson(e.target.value)} placeholder="Person…" className={`mt-1 ${inputCls}`} />
+                    <PersonSelect value={nextPerson} onChange={setNextPerson} people={peopleNames} className={`mt-1 ${inputCls}`} />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">Sent on</label>
@@ -122,7 +119,7 @@ export default function EtQuickAdvance({ itemId, advance, peopleNames, compact =
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">Give {advance.stage} to</label>
-                <input type="text" list="qa-people" value={startPerson} onChange={(e) => setStartPerson(e.target.value)} placeholder="Person…" className={`mt-1 ${inputCls}`} />
+                <PersonSelect value={startPerson} onChange={setStartPerson} people={peopleNames} className={`mt-1 ${inputCls}`} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400">Sent on</label>
