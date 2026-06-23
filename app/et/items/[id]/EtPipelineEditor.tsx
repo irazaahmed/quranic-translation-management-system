@@ -81,6 +81,8 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
 
   const [rows, setRows] = useState<Editable[]>(() => toEditable(stages));
   const [dirty, setDirty] = useState(false);
+  // Which save button was clicked (so only that one shows the "Saving…" state).
+  const [savingBack, setSavingBack] = useState(false);
 
   // Live current-step computation from the in-memory rows.
   const current = useMemo(
@@ -130,7 +132,8 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
     return "pending";
   };
 
-  const save = () => {
+  const save = (goBack: boolean) => {
+    setSavingBack(goBack);
     startTransition(async () => {
       const res = await saveEtStagesAction(
         itemId,
@@ -148,7 +151,8 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
       } else {
         toast({ type: "success", message: "Pipeline saved." });
         setDirty(false);
-        router.refresh();
+        if (goBack) router.back();
+        else router.refresh();
       }
     });
   };
@@ -267,17 +271,35 @@ export default function EtPipelineEditor({ itemId, stages, peopleNames, finalEma
         {dirty && <span className="text-xs text-amber-600 dark:text-amber-400">Unsaved changes</span>}
         <button
           type="button"
-          onClick={save}
+          onClick={() => save(false)}
           disabled={isPending || !dirty}
-          className="btn-press inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="btn-press inline-flex items-center gap-2 rounded-lg border border-emerald-600 px-5 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 disabled:opacity-50"
         >
-          {isPending && (
+          {isPending && !savingBack && (
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           )}
-          {isPending ? "Saving…" : "Save Pipeline"}
+          {isPending && !savingBack ? "Saving…" : "Save Pipeline"}
+        </button>
+        <button
+          type="button"
+          onClick={() => save(true)}
+          disabled={isPending || !dirty}
+          className="btn-press inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {isPending && savingBack ? (
+            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+          )}
+          {isPending && savingBack ? "Saving…" : "Save & Back"}
         </button>
       </div>
     </div>
