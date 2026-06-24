@@ -140,13 +140,12 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
   const stageLabelFor = (code: string) =>
     stageOptions.find((s) => s.code === code)?.name ?? code;
 
-  // Names that actually appear (workforce + any holder/person on record).
-  const personOptions = useMemo(() => {
-    const set = new Set<string>(people);
-    activity.forEach((a) => a.person && set.add(a.person));
-    items.forEach((i) => i.holder && set.add(i.holder));
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [people, activity, items]);
+  // Only real workforce names — the stage "person" field sometimes holds free
+  // text notes (e.g. "emailed to Aashir on 5/11…"), which must NOT appear here.
+  const personOptions = useMemo(
+    () => [...people].sort((a, b) => a.localeCompare(b)),
+    [people]
+  );
 
   const activityRows = useMemo(() => {
     const rows = activity.filter((a) => {
@@ -307,36 +306,59 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
       const scope = scopeLine();
       const generated = generatedLine();
 
+      // Pre-measure the scope so it wraps to full width (never overlapping the
+      // generated stamp) and the table starts just below it.
+      const BAND_H = 22;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      const scopeLines = doc.splitTextToSize(scope, pageW - 20) as string[];
+      const scopeTop = BAND_H + 6;
+      const dividerY = scopeTop + scopeLines.length * 4.2;
+      const startY = dividerY + 4;
+
       autoTable(doc, {
         head: [header],
         body,
-        startY: 34,
-        styles: { fontSize: 7, cellPadding: 1.5, overflow: "linebreak", valign: "middle" },
-        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: "bold" },
-        alternateRowStyles: { fillColor: [243, 244, 246] },
-        margin: { top: 34, left: 10, right: 10, bottom: 16 },
+        startY,
+        styles: {
+          fontSize: 7.5,
+          cellPadding: 2,
+          overflow: "linebreak",
+          valign: "middle",
+          lineColor: [229, 231, 235],
+          lineWidth: 0.1,
+          textColor: [31, 41, 55],
+        },
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: "bold", halign: "left" },
+        alternateRowStyles: { fillColor: [240, 253, 244] },
+        margin: { top: startY, left: 10, right: 10, bottom: 16 },
         didDrawPage: (data) => {
           // ---- Header band ----
           doc.setFillColor(16, 185, 129);
-          doc.rect(0, 0, pageW, 20, "F");
+          doc.rect(0, 0, pageW, BAND_H, "F");
+          doc.setFillColor(5, 150, 105);
+          doc.rect(0, BAND_H, pageW, 0.8, "F"); // darker accent under the band
           doc.setTextColor(255, 255, 255);
           doc.setFont("helvetica", "bold");
           doc.setFontSize(15);
-          doc.text(ORG_NAME, 10, 9);
+          doc.text(ORG_NAME, 10, 10);
           doc.setFont("helvetica", "normal");
           doc.setFontSize(10);
-          doc.text(reportLabel, 10, 16);
+          doc.text(reportLabel, 10, 17.5);
+          // Generated stamp on the right, inside the band (kept clear of scope).
+          doc.setFontSize(8);
+          doc.text(generated, pageW - 10, 17.5, { align: "right" });
 
-          // ---- Scope + generated (just under the band) ----
+          // ---- Scope line(s), wrapped, just under the band ----
           doc.setTextColor(75, 85, 99);
-          doc.setFontSize(7.5);
-          doc.text(scope, 10, 26);
-          doc.text(generated, pageW - 10, 26, { align: "right" });
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.text(scopeLines, 10, scopeTop);
           doc.setDrawColor(209, 213, 219);
-          doc.line(10, 29, pageW - 10, 29);
+          doc.setLineWidth(0.2);
+          doc.line(10, dividerY, pageW - 10, dividerY);
 
           // ---- Footer (every page) ----
-          doc.setDrawColor(209, 213, 219);
           doc.line(10, pageH - 11, pageW - 10, pageH - 11);
           doc.setFont("helvetica", "bold");
           doc.setFontSize(8);
