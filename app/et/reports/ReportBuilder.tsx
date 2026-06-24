@@ -58,6 +58,39 @@ function inRange(d: string | null, from: string, to: string): boolean {
   return day >= from && day <= to;
 }
 
+/** Compare two date strings; empty/missing dates always sort last. */
+function cmpDate(a: string | null, b: string | null, dir: "asc" | "desc"): number {
+  const av = a ? a.slice(0, 10) : "";
+  const bv = b ? b.slice(0, 10) : "";
+  if (!av && !bv) return 0;
+  if (!av) return 1;
+  if (!bv) return -1;
+  if (av === bv) return 0;
+  return dir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+}
+
+const ACTIVITY_SORTS = [
+  { value: "received-desc", label: "Received date (newest)" },
+  { value: "received-asc", label: "Received date (oldest)" },
+  { value: "sent-desc", label: "Sent date (newest)" },
+  { value: "sent-asc", label: "Sent date (oldest)" },
+  { value: "type", label: "Type" },
+  { value: "person", label: "Person (A–Z)" },
+  { value: "title", label: "Item title (A–Z)" },
+];
+
+const ITEM_SORTS = [
+  { value: "received-desc", label: "Received date (newest)" },
+  { value: "received-asc", label: "Received date (oldest)" },
+  { value: "delivery-asc", label: "Delivery date (soonest)" },
+  { value: "final-desc", label: "Final email (newest)" },
+  { value: "type", label: "Type" },
+  { value: "words-desc", label: "Words (high→low)" },
+  { value: "title", label: "Title (A–Z)" },
+];
+
+const DEFAULT_SORT = "received-desc";
+
 export default function ReportBuilder({ activity, items, people, defaultFrom, defaultTo }: Props) {
   const [reportType, setReportType] = useState<ReportType>("activity");
   const [person, setPerson] = useState("all");
@@ -65,7 +98,17 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [allDates, setAllDates] = useState(false);
+  const [sortBy, setSortBy] = useState(DEFAULT_SORT);
   const [busy, setBusy] = useState<"" | "xlsx" | "pdf">("");
+
+  const sortOptions = reportType === "activity" ? ACTIVITY_SORTS : ITEM_SORTS;
+
+  // Switching report type: keep the sort if it still exists, else reset.
+  const switchReportType = (t: ReportType) => {
+    setReportType(t);
+    const valid = (t === "activity" ? ACTIVITY_SORTS : ITEM_SORTS).some((o) => o.value === sortBy);
+    if (!valid) setSortBy(DEFAULT_SORT);
+  };
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -83,22 +126,46 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
   }, [people, activity, items]);
 
   const activityRows = useMemo(() => {
-    return activity.filter((a) => {
+    const rows = activity.filter((a) => {
       if (person !== "all" && a.person !== person) return false;
       if (category !== "all" && a.category !== category) return false;
       if (!allDates && !(inRange(a.received, from, to) || inRange(a.sent, from, to))) return false;
       return true;
     });
-  }, [activity, person, category, from, to, allDates]);
+    return rows.sort((a, b) => {
+      switch (sortBy) {
+        case "received-asc": return cmpDate(a.received, b.received, "asc");
+        case "sent-desc": return cmpDate(a.sent, b.sent, "desc");
+        case "sent-asc": return cmpDate(a.sent, b.sent, "asc");
+        case "type": return a.type.localeCompare(b.type) || a.itemTitle.localeCompare(b.itemTitle);
+        case "person": return (a.person || "").localeCompare(b.person || "");
+        case "title": return a.itemTitle.localeCompare(b.itemTitle);
+        case "received-desc":
+        default: return cmpDate(a.received, b.received, "desc");
+      }
+    });
+  }, [activity, person, category, from, to, allDates, sortBy]);
 
   const itemRows = useMemo(() => {
-    return items.filter((i) => {
+    const rows = items.filter((i) => {
       if (person !== "all" && i.holder !== person) return false;
       if (category !== "all" && i.category !== category) return false;
       if (!allDates && !inRange(i.received, from, to)) return false;
       return true;
     });
-  }, [items, person, category, from, to, allDates]);
+    return rows.sort((a, b) => {
+      switch (sortBy) {
+        case "received-asc": return cmpDate(a.received, b.received, "asc");
+        case "delivery-asc": return cmpDate(a.delivery, b.delivery, "asc");
+        case "final-desc": return cmpDate(a.finalEmail, b.finalEmail, "desc");
+        case "type": return a.type.localeCompare(b.type) || a.title.localeCompare(b.title);
+        case "words-desc": return (b.wordCount || 0) - (a.wordCount || 0);
+        case "title": return a.title.localeCompare(b.title);
+        case "received-desc":
+        default: return cmpDate(a.received, b.received, "desc");
+      }
+    });
+  }, [items, person, category, from, to, allDates, sortBy]);
 
   const isActivity = reportType === "activity";
   const count = isActivity ? activityRows.length : itemRows.length;
@@ -197,7 +264,7 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
           <button
             key={t}
             type="button"
-            onClick={() => setReportType(t)}
+            onClick={() => switchReportType(t)}
             className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
               reportType === t
                 ? "bg-white dark:bg-gray-900 text-emerald-700 dark:text-emerald-400 shadow-sm"
@@ -240,10 +307,20 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
           </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <label className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <input type="checkbox" checked={allDates} onChange={(e) => setAllDates(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
-            All dates (ignore range)
-          </label>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="flex items-center gap-2">
+              <label htmlFor="rpt_sort" className="text-sm text-gray-500 dark:text-gray-400">Sort by:</label>
+              <select id="rpt_sort" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={`${selectCls} py-1.5`}>
+                {sortOptions.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <label className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              <input type="checkbox" checked={allDates} onChange={(e) => setAllDates(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+              All dates (ignore range)
+            </label>
+          </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-500 dark:text-gray-400">{count} row{count === 1 ? "" : "s"}</span>
             <button

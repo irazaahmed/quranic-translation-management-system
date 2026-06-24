@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   CATEGORY_LABELS,
@@ -52,7 +52,7 @@ function StageBadge({ row }: { row: EtItemRow }) {
 
 interface Props {
   items: EtItemRow[];
-  initial?: { holder?: string; stage?: string; status?: string; category?: string; q?: string; sort?: string };
+  initial?: { holder?: string; stage?: string; status?: string; category?: string; type?: string; q?: string; sort?: string };
 }
 
 const VALID_CATEGORY_TABS: CategoryTab[] = [...CATEGORY_ORDER, "skipped", "all"];
@@ -65,6 +65,7 @@ export default function EtItemsList({ items, initial }: Props) {
   const [status, setStatus] = useState<string>(initial?.status ?? "all");
   const [stage, setStage] = useState<string>(initial?.stage ?? "all");
   const [holder, setHolder] = useState<string>(initial?.holder ?? "all");
+  const [type, setType] = useState<string>(initial?.type ?? "all");
   const [sortBy, setSortBy] = useState<string>(initial?.sort ?? "smart");
 
   // Encodes the current filtered view so an item opened from here can send the
@@ -75,11 +76,12 @@ export default function EtItemsList({ items, initial }: Props) {
     if (status !== "all") p.set("status", status);
     if (stage !== "all") p.set("stage", stage);
     if (holder !== "all") p.set("holder", holder);
+    if (type !== "all") p.set("type", type);
     if (query.trim()) p.set("q", query.trim());
     if (sortBy !== "smart") p.set("sort", sortBy);
     const qs = p.toString();
     return encodeURIComponent(`/et/items${qs ? `?${qs}` : ""}`);
-  }, [category, status, stage, holder, query, sortBy]);
+  }, [category, status, stage, holder, type, query, sortBy]);
   const itemHref = (id: string) => `/et/items/${id}?from=${fromParam}`;
 
   const holders = useMemo(() => {
@@ -87,6 +89,28 @@ export default function EtItemsList({ items, initial }: Props) {
     items.forEach((i) => i.current.holder && set.add(i.current.holder));
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [items]);
+
+  // Distinct content types present in the currently selected category (e.g. wsb,
+  // wbl, fsp under Weekly Docs), so the Type dropdown only offers relevant ones.
+  const typeOptions = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach((i) => {
+      if (category === "skipped") {
+        if (!i.stopped) return;
+      } else if (i.stopped) {
+        return;
+      } else if (category !== "all" && itemCategory(i.type) !== category) {
+        return;
+      }
+      if (i.type) set.add(i.type.toLowerCase());
+    });
+    return [...set].sort((a, b) => typeLabel(a).localeCompare(typeLabel(b)));
+  }, [items, category]);
+
+  // If the chosen category no longer contains the selected type, fall back to All.
+  useEffect(() => {
+    if (type !== "all" && !typeOptions.includes(type)) setType("all");
+  }, [type, typeOptions]);
 
   // Counts per category tab (non-stopped), plus the skipped count.
   const counts = useMemo(() => {
@@ -103,13 +127,14 @@ export default function EtItemsList({ items, initial }: Props) {
   }, [items]);
 
   const hasFilter =
-    query.trim() !== "" || status !== "all" || stage !== "all" || holder !== "all";
+    query.trim() !== "" || status !== "all" || stage !== "all" || holder !== "all" || type !== "all";
 
   const reset = () => {
     setQuery("");
     setStatus("all");
     setStage("all");
     setHolder("all");
+    setType("all");
   };
 
   const deliveryOf = (r: EtItemRow) => reminderInfo(r).delivery;
@@ -130,6 +155,7 @@ export default function EtItemsList({ items, initial }: Props) {
       })
       .filter((i) => stage === "all" || i.current.stage === stage)
       .filter((i) => holder === "all" || i.current.holder === holder)
+      .filter((i) => type === "all" || (i.type || "").toLowerCase() === type)
       .filter(
         (i) =>
           q === "" ||
@@ -139,6 +165,12 @@ export default function EtItemsList({ items, initial }: Props) {
       )
       .sort((a, b) => {
         switch (sortBy) {
+          case "type": {
+            const at = typeLabel(a.type);
+            const bt = typeLabel(b.type);
+            if (at !== bt) return at.localeCompare(bt);
+            return a.title.localeCompare(b.title);
+          }
           case "title":
             return a.title.localeCompare(b.title);
           case "words":
@@ -168,7 +200,7 @@ export default function EtItemsList({ items, initial }: Props) {
           }
         }
       });
-  }, [items, category, query, status, stage, holder, sortBy]);
+  }, [items, category, query, status, stage, holder, type, sortBy]);
 
   const selectCls =
     "rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
@@ -209,7 +241,7 @@ export default function EtItemsList({ items, initial }: Props) {
 
       {/* Filters */}
       <div className="mb-4 sm:mb-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
           <div className="relative lg:col-span-2">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,6 +278,13 @@ export default function EtItemsList({ items, initial }: Props) {
               <option key={h} value={h}>{h}</option>
             ))}
           </select>
+
+          <select aria-label="Filter by type" value={type} onChange={(e) => setType(e.target.value)} className={selectCls}>
+            <option value="all">All Types</option>
+            {typeOptions.map((t) => (
+              <option key={t} value={t}>{typeLabel(t)} ({t.toUpperCase()})</option>
+            ))}
+          </select>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -253,6 +292,7 @@ export default function EtItemsList({ items, initial }: Props) {
             <label htmlFor="et_sort" className="text-sm text-gray-500 dark:text-gray-400">Sort by:</label>
             <select id="et_sort" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={`${selectCls} py-1.5`}>
               <option value="smart">Incomplete first · delivery date</option>
+              <option value="type">Type (wsb, wbl, fsp…)</option>
               <option value="oldest">At step since (oldest)</option>
               <option value="stuck">Most stuck</option>
               <option value="title">Title (A–Z)</option>

@@ -12,6 +12,7 @@ interface Props {
     stage?: string;
     status?: string;
     category?: string;
+    type?: string;
     q?: string;
     sort?: string;
   }>;
@@ -73,6 +74,7 @@ export default async function EtItemsPage({ searchParams }: Props) {
             stage: sp.stage,
             status: sp.status,
             category: sp.category,
+            type: sp.type,
             q: sp.q,
             sort: sp.sort,
           }}
