@@ -8,7 +8,9 @@ export type StageCode =
   | "TR" | "IF" | "CM" | "ED" | "NR" | "ST" | "FF" | "FPR"
   // Weekly Speech Brothers (wsb) only — an extra "Islamic Sisters" phase that
   // runs after the first final email, before a second (final) email.
-  | "PIS" | "FFM";
+  | "PIS" | "FFM"
+  // Magazine (mgz) only — a Designing step that sits between FF and FPR.
+  | "DSN";
 
 export type ItemBoard = "main_2026" | "kanzul_madaris" | "magazine";
 export type ItemStatus = "pending_assignment" | "in_progress" | "completed";
@@ -37,10 +39,31 @@ export const WSB_EXTRA_STAGES: { code: StageCode; seq: number; name: string }[] 
   { code: "FFM", seq: 10, name: "Final Formation" },
 ];
 
+/**
+ * Magazine (mgz) pipeline. A magazine article has a "Designing" step that sits
+ * BETWEEN Final Formatting (FF) and Final Proofreading (FPR). To keep that order
+ * with integer sequence numbers, FPR is renumbered to 9 for magazine items:
+ * TR..FF = 1-7, DSN = 8, FPR = 9.
+ */
+export const MGZ_STAGES: { code: StageCode; seq: number; name: string }[] = (() => {
+  const out: { code: StageCode; seq: number; name: string }[] = [];
+  let seq = 1;
+  for (const s of STAGES) {
+    out.push({ code: s.code, seq: seq++, name: s.name });
+    if (s.code === "FF") out.push({ code: "DSN", seq: seq++, name: "Designing" });
+  }
+  return out;
+})();
+
 const ALL_STAGES = [...STAGES, ...WSB_EXTRA_STAGES];
 
+// Every distinct stage code (base + sisters phase + magazine designing) for
+// name/seq lookup. The seq here is a fallback only — actual ordering uses the
+// per-row seq, which is type-aware (see stageSeq / stagesForType).
+const STAGE_DEFS = [...ALL_STAGES, { code: "DSN" as StageCode, seq: 8, name: "Designing" }];
+
 export const STAGE_BY_CODE: Record<StageCode, { seq: number; name: string }> =
-  Object.fromEntries(ALL_STAGES.map((s) => [s.code, { seq: s.seq, name: s.name }])) as Record<
+  Object.fromEntries(STAGE_DEFS.map((s) => [s.code, { seq: s.seq, name: s.name }])) as Record<
     StageCode,
     { seq: number; name: string }
   >;
@@ -54,11 +77,31 @@ export function isWsbType(type: string | null | undefined): boolean {
   return (type || "").toLowerCase() === "wsb";
 }
 
-/** The pipeline stages for a given content type (wsb gets the 2 extra stages). */
+/** True for Magazine items, which have the extra Designing step (DSN). */
+export function isMagazineDesignType(type: string | null | undefined): boolean {
+  return (type || "").toLowerCase() === "mgz";
+}
+
+/**
+ * The pipeline stages for a given content type. wsb gets the 2 extra sisters
+ * stages; magazine (mgz) gets a Designing step inserted between FF and FPR.
+ */
 export function stagesForType(
   type: string | null | undefined
 ): { code: StageCode; seq: number; name: string }[] {
-  return isWsbType(type) ? ALL_STAGES : STAGES;
+  if (isWsbType(type)) return ALL_STAGES;
+  if (isMagazineDesignType(type)) return MGZ_STAGES;
+  return STAGES;
+}
+
+/**
+ * The sequence number for a stage code within a given type's pipeline. This is
+ * type-aware: magazine puts Designing (DSN) at 8 and FPR at 9, while every other
+ * type keeps FPR at 8.
+ */
+export function stageSeq(type: string | null | undefined, code: StageCode): number {
+  const found = stagesForType(type).find((s) => s.code === code);
+  return found?.seq ?? STAGE_BY_CODE[code]?.seq ?? 0;
 }
 
 /** Human-readable label for a content type code (drives the form dropdown order). */
@@ -382,7 +425,9 @@ export function computeAdvance(
 
   const actRow = stages.find((s) => s.stage === actStage) ?? null;
   const inProgress = !!(actRow?.sent_date && !actRow?.received_back_date);
-  const actSeq = STAGE_BY_CODE[actStage].seq;
+  // Use the stored row seq (type-aware: magazine FPR=9, Designing=8) so the
+  // "next stage" lookup matches the real pipeline order for this item.
+  const actSeq = actRow?.seq ?? STAGE_BY_CODE[actStage].seq;
   const next = applicable.find((s) => s.seq > actSeq && !s.received_back_date) ?? null;
 
   return {
@@ -518,6 +563,7 @@ export function stageBadgeClasses(stage: StageCode | null, completed = false): s
     NR: "bg-orange-50 text-orange-700 ring-orange-600/20 dark:bg-orange-900/20 dark:text-orange-400",
     ST: "bg-purple-50 text-purple-700 ring-purple-600/20 dark:bg-purple-900/20 dark:text-purple-400",
     FF: "bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-600/20 dark:bg-fuchsia-900/20 dark:text-fuchsia-400",
+    DSN: "bg-sky-50 text-sky-700 ring-sky-600/20 dark:bg-sky-900/20 dark:text-sky-400",
     FPR: "bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-900/20 dark:text-rose-400",
     PIS: "bg-pink-50 text-pink-700 ring-pink-600/20 dark:bg-pink-900/20 dark:text-pink-400",
     FFM: "bg-indigo-50 text-indigo-700 ring-indigo-600/20 dark:bg-indigo-900/20 dark:text-indigo-400",

@@ -3,7 +3,7 @@ import { createClient as createServerSupabase } from "./supabase/server";
 import {
   blankStages,
   deriveStatus,
-  STAGE_BY_CODE,
+  stageSeq,
   type EtItem,
   type EtStage,
   type ItemBoard,
@@ -139,10 +139,20 @@ export async function saveEtStages(
 ): Promise<void> {
   const supabase = await getWriteClient();
 
+  // The seq order is type-aware (magazine inserts Designing before FPR), so we
+  // need the item's type to number the stages correctly.
+  const { data: itemRow, error: typeErr } = await supabase
+    .from("et_items")
+    .select("type")
+    .eq("id", itemId)
+    .single();
+  if (typeErr) throw typeErr;
+  const itemType = (itemRow?.type as string | null) ?? null;
+
   const rows = stages.map((s) => ({
     item_id: itemId,
     stage: s.stage,
-    seq: STAGE_BY_CODE[s.stage].seq,
+    seq: stageSeq(itemType, s.stage),
     person: s.person?.trim() || null,
     sent_date: s.sent_date || null,
     received_back_date: s.received_back_date || null,
