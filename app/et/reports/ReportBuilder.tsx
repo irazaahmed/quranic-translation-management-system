@@ -30,15 +30,31 @@ export interface ItemReportRow {
   finalEmail: string | null;
 }
 
+/** One row per stage of a single item — its full step-by-step timeline. */
+export interface ItemStageRow {
+  itemId: string;
+  itemTitle: string;
+  type: string;
+  category: string;
+  seq: number;
+  stage: string;
+  stageName: string;
+  person: string;
+  sent: string | null;
+  received: string | null;
+  status: string;
+}
+
 interface Props {
   activity: ActivityRow[];
   items: ItemReportRow[];
+  itemStages: ItemStageRow[];
   people: string[];
   defaultFrom: string;
   defaultTo: string;
 }
 
-type ReportType = "activity" | "items";
+type ReportType = "activity" | "items" | "single";
 
 function fmt(d: string | null): string {
   if (!d) return "";
@@ -95,17 +111,19 @@ const DEFAULT_SORT = "received-desc";
 /** Pipeline order for sorting the Stage filter (incl. magazine DSN, wsb PIS/FFM). */
 const STAGE_CODE_ORDER = ["TR", "IF", "CM", "ED", "NR", "ST", "FF", "DSN", "FPR", "PIS", "FFM"];
 
-export default function ReportBuilder({ activity, items, people, defaultFrom, defaultTo }: Props) {
+export default function ReportBuilder({ activity, items, itemStages, people, defaultFrom, defaultTo }: Props) {
   const [reportType, setReportType] = useState<ReportType>("activity");
   const [person, setPerson] = useState("all");
   const [category, setCategory] = useState("all");
   const [stage, setStage] = useState("all");
+  const [itemId, setItemId] = useState("");
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [allDates, setAllDates] = useState(false);
   const [sortBy, setSortBy] = useState(DEFAULT_SORT);
   const [busy, setBusy] = useState<"" | "xlsx" | "pdf">("");
 
+  const isSingle = reportType === "single";
   const sortOptions = reportType === "activity" ? ACTIVITY_SORTS : ITEM_SORTS;
 
   // Switching report type: keep the sort if it still exists, else reset.
@@ -114,6 +132,23 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
     const valid = (t === "activity" ? ACTIVITY_SORTS : ITEM_SORTS).some((o) => o.value === sortBy);
     if (!valid) setSortBy(DEFAULT_SORT);
   };
+
+  // Items the picker can choose from (single-item report), A–Z by title.
+  const itemList = useMemo(
+    () => [...items].sort((a, b) => a.title.localeCompare(b.title)),
+    [items]
+  );
+
+  const selectedItem = useMemo(
+    () => items.find((i) => i.itemId === itemId) ?? null,
+    [items, itemId]
+  );
+
+  // The chosen item's full step timeline, in pipeline order.
+  const singleRows = useMemo(
+    () => (itemId ? itemStages.filter((r) => r.itemId === itemId).sort((a, b) => a.seq - b.seq) : []),
+    [itemStages, itemId]
+  );
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -192,14 +227,26 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
   }, [items, person, category, stage, from, to, allDates, sortBy]);
 
   const isActivity = reportType === "activity";
-  const count = isActivity ? activityRows.length : itemRows.length;
+  const count = isSingle ? singleRows.length : isActivity ? activityRows.length : itemRows.length;
 
   // ---- table shapes (shared by preview + export) ----
-  const header = isActivity
+  const header = isSingle
+    ? ["Step", "Stage", "Person", "Sent", "Received", "Days", "Status"]
+    : isActivity
     ? ["Item", "Type", "Category", "Stage", "Person", "Sent", "Received", "Days"]
     : ["Title", "Type", "Category", "Status", "Current step", "Holder", "Progress", "Delivery", "Words", "Received", "Final email"];
 
-  const body: string[][] = isActivity
+  const body: string[][] = isSingle
+    ? singleRows.map((r) => [
+        String(r.seq),
+        `${r.stage} · ${r.stageName}`,
+        r.person || "—",
+        fmt(r.sent),
+        fmt(r.received),
+        daysBetween(r.sent, r.received),
+        r.status,
+      ])
+    : isActivity
     ? activityRows.map((a) => [
         a.itemTitle,
         a.type,
@@ -228,10 +275,24 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
   const ORG_NAME = "Translation Management System";
   const FOOTER = "Managed By Ahmed Raza Madani — Team Lead Translation";
 
-  const reportLabel = isActivity ? "Per-Person Activity Report" : "Full Items Export";
+  const reportLabel = isSingle
+    ? "Single Item — Full Step Timeline"
+    : isActivity
+    ? "Per-Person Activity Report"
+    : "Full Items Export";
 
   const scopeLine = () => {
     const parts: string[] = [];
+    if (isSingle) {
+      parts.push(`Item: ${selectedItem ? selectedItem.title : "—"}`);
+      if (selectedItem) {
+        parts.push(`Type: ${selectedItem.type}`);
+        parts.push(`Category: ${selectedItem.category}`);
+        parts.push(`Status: ${selectedItem.status}`);
+        parts.push(`Progress: ${selectedItem.progress}`);
+      }
+      return parts.join("   ·   ");
+    }
     parts.push(`Person: ${person === "all" ? "All" : person}`);
     parts.push(`Category: ${category === "all" ? "All" : category}`);
     parts.push(`Stage: ${stage === "all" ? "All" : `${stage} · ${stageLabelFor(stage)}`}`);
@@ -245,6 +306,10 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
     `Generated: ${new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}   ·   ${count} row${count === 1 ? "" : "s"}`;
 
   const baseName = () => {
+    if (isSingle) {
+      const slug = (selectedItem?.title || "item").replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+      return `tms-item-${slug}`;
+    }
     const who = person === "all" ? "all" : person.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
     const range = allDates ? "all-dates" : `${from}_${to}`;
     return `tms-${reportType}-${who}-${range}`;
@@ -385,8 +450,8 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
   return (
     <>
       {/* Report type toggle */}
-      <div className="mb-4 inline-flex rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
-        {(["activity", "items"] as ReportType[]).map((t) => (
+      <div className="mb-4 inline-flex flex-wrap rounded-xl bg-gray-100 dark:bg-gray-800 p-1">
+        {(["activity", "items", "single"] as ReportType[]).map((t) => (
           <button
             key={t}
             type="button"
@@ -397,91 +462,131 @@ export default function ReportBuilder({ activity, items, people, defaultFrom, de
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             }`}
           >
-            {t === "activity" ? "Per-person activity" : "Full items export"}
+            {t === "activity" ? "Per-person activity" : t === "items" ? "Full items export" : "Single item"}
           </button>
         ))}
       </div>
 
       {/* Filters */}
       <div className="mb-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 sm:p-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <div>
-            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">{isActivity ? "Person" : "Current holder"}</label>
-            <select aria-label="Person" value={person} onChange={(e) => setPerson(e.target.value)} className={`${selectCls} mt-1 w-full`}>
-              <option value="all">All people</option>
-              {personOptions.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Stage</label>
-            <select aria-label="Stage" value={stage} onChange={(e) => setStage(e.target.value)} className={`${selectCls} mt-1 w-full`}>
-              <option value="all">All stages</option>
-              {stageOptions.map((s) => (
-                <option key={s.code} value={s.code}>{s.code} · {s.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Category</label>
-            <select aria-label="Category" value={category} onChange={(e) => setCategory(e.target.value)} className={`${selectCls} mt-1 w-full`}>
-              <option value="all">All categories</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">From</label>
-            <input type="date" value={from} disabled={allDates} onChange={(e) => setFrom(e.target.value)} className={`${selectCls} mt-1 w-full disabled:opacity-50`} />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-gray-500 dark:text-gray-400">To</label>
-            <input type="date" value={to} disabled={allDates} onChange={(e) => setTo(e.target.value)} className={`${selectCls} mt-1 w-full disabled:opacity-50`} />
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <div className="flex items-center gap-2">
-              <label htmlFor="rpt_sort" className="text-sm text-gray-500 dark:text-gray-400">Sort by:</label>
-              <select id="rpt_sort" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={`${selectCls} py-1.5`}>
-                {sortOptions.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+        {isSingle ? (
+          /* Single item: just pick the item — its full step timeline follows. */
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="min-w-0 flex-1 sm:max-w-md">
+              <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Item</label>
+              <select aria-label="Item" value={itemId} onChange={(e) => setItemId(e.target.value)} className={`${selectCls} mt-1 w-full`}>
+                <option value="">Select an item…</option>
+                {itemList.map((i) => (
+                  <option key={i.itemId} value={i.itemId}>{i.title}{i.type ? ` · ${i.type}` : ""}</option>
                 ))}
               </select>
             </div>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              <input type="checkbox" checked={allDates} onChange={(e) => setAllDates(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
-              All dates (ignore range)
-            </label>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-500 dark:text-gray-400">{count} step{count === 1 ? "" : "s"}</span>
+              <button
+                type="button"
+                onClick={downloadExcel}
+                disabled={busy !== "" || count === 0}
+                className="btn-press inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                {busy === "xlsx" ? "Generating…" : "⬇ Excel"}
+              </button>
+              <button
+                type="button"
+                onClick={downloadPdf}
+                disabled={busy !== "" || count === 0}
+                className="btn-press inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+              >
+                {busy === "pdf" ? "Generating…" : "⬇ PDF"}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500 dark:text-gray-400">{count} row{count === 1 ? "" : "s"}</span>
-            <button
-              type="button"
-              onClick={downloadExcel}
-              disabled={busy !== "" || count === 0}
-              className="btn-press inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-            >
-              {busy === "xlsx" ? "Generating…" : "⬇ Excel"}
-            </button>
-            <button
-              type="button"
-              onClick={downloadPdf}
-              disabled={busy !== "" || count === 0}
-              className="btn-press inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
-            >
-              {busy === "pdf" ? "Generating…" : "⬇ PDF"}
-            </button>
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">{isActivity ? "Person" : "Current holder"}</label>
+                <select aria-label="Person" value={person} onChange={(e) => setPerson(e.target.value)} className={`${selectCls} mt-1 w-full`}>
+                  <option value="all">All people</option>
+                  {personOptions.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Stage</label>
+                <select aria-label="Stage" value={stage} onChange={(e) => setStage(e.target.value)} className={`${selectCls} mt-1 w-full`}>
+                  <option value="all">All stages</option>
+                  {stageOptions.map((s) => (
+                    <option key={s.code} value={s.code}>{s.code} · {s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Category</label>
+                <select aria-label="Category" value={category} onChange={(e) => setCategory(e.target.value)} className={`${selectCls} mt-1 w-full`}>
+                  <option value="all">All categories</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">From</label>
+                <input type="date" value={from} disabled={allDates} onChange={(e) => setFrom(e.target.value)} className={`${selectCls} mt-1 w-full disabled:opacity-50`} />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400">To</label>
+                <input type="date" value={to} disabled={allDates} onChange={(e) => setTo(e.target.value)} className={`${selectCls} mt-1 w-full disabled:opacity-50`} />
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <label htmlFor="rpt_sort" className="text-sm text-gray-500 dark:text-gray-400">Sort by:</label>
+                  <select id="rpt_sort" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={`${selectCls} py-1.5`}>
+                    {sortOptions.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <label className="inline-flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                  <input type="checkbox" checked={allDates} onChange={(e) => setAllDates(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                  All dates (ignore range)
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-500 dark:text-gray-400">{count} row{count === 1 ? "" : "s"}</span>
+                <button
+                  type="button"
+                  onClick={downloadExcel}
+                  disabled={busy !== "" || count === 0}
+                  className="btn-press inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  {busy === "xlsx" ? "Generating…" : "⬇ Excel"}
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadPdf}
+                  disabled={busy !== "" || count === 0}
+                  className="btn-press inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-50"
+                >
+                  {busy === "pdf" ? "Generating…" : "⬇ PDF"}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Preview */}
       {count === 0 ? (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-10 text-center text-gray-500 dark:text-gray-400">
-          No rows for these filters. Try “All dates”, or change the person/category.
+          {isSingle
+            ? itemId
+              ? "This item has no stage rows yet."
+              : "Select an item above to see its full step-by-step timeline."
+            : "No rows for these filters. Try “All dates”, or change the person/category."}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">

@@ -10,7 +10,7 @@ import {
   typeLabel,
   CATEGORY_LABELS,
 } from "@/lib/et";
-import ReportBuilder, { type ActivityRow, type ItemReportRow } from "./ReportBuilder";
+import ReportBuilder, { type ActivityRow, type ItemReportRow, type ItemStageRow } from "./ReportBuilder";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +21,7 @@ function iso(d: Date): string {
 export default async function EtReportsPage() {
   let activity: ActivityRow[] = [];
   let items: ItemReportRow[] = [];
+  let itemStages: ItemStageRow[] = [];
   let people: string[] = [];
   let error: string | null = null;
 
@@ -51,6 +52,35 @@ export default async function EtReportsPage() {
           person: s.person ?? "",
           sent: s.sent_date,
           received: s.received_back_date,
+        });
+      }
+
+      // Full per-item step timeline — EVERY stage in pipeline order (incl. the
+      // untouched/skipped ones) so a single-item report shows the complete
+      // journey: who did each step, when, and where it currently stands.
+      for (const s of [...item.stages].sort((a, b) => a.seq - b.seq)) {
+        itemStages.push({
+          itemId: item.id,
+          itemTitle: item.title,
+          type: typeName,
+          category: CATEGORY_LABELS[cat],
+          seq: s.seq,
+          stage: s.stage,
+          stageName: stageName(s.stage),
+          person: s.person ?? "",
+          sent: s.sent_date,
+          received: s.received_back_date,
+          status: s.not_applicable
+            ? "N/A"
+            : s.merged
+            ? "Merged"
+            : s.received_back_date
+            ? "Done"
+            : s.sent_date
+            ? "In progress"
+            : s.person
+            ? "Assigned"
+            : "Pending",
         });
       }
 
@@ -100,6 +130,7 @@ export default async function EtReportsPage() {
         <ReportBuilder
           activity={activity}
           items={items}
+          itemStages={itemStages}
           people={people}
           defaultFrom={defaultFrom}
           defaultTo={defaultTo}
