@@ -117,6 +117,8 @@ export default function ReportBuilder({ activity, items, itemStages, people, def
   const [category, setCategory] = useState("all");
   const [stage, setStage] = useState("all");
   const [itemId, setItemId] = useState("");
+  const [itemQuery, setItemQuery] = useState("");
+  const [itemOpen, setItemOpen] = useState(false);
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [allDates, setAllDates] = useState(false);
@@ -143,6 +145,30 @@ export default function ReportBuilder({ activity, items, itemStages, people, def
     () => items.find((i) => i.itemId === itemId) ?? null,
     [items, itemId]
   );
+
+  // Items matching the search box (by title or type), capped for a snappy list.
+  const ITEM_RESULT_CAP = 60;
+  const itemMatches = useMemo(() => {
+    const q = itemQuery.trim().toLowerCase();
+    const base = q
+      ? itemList.filter(
+          (i) => i.title.toLowerCase().includes(q) || (i.type || "").toLowerCase().includes(q)
+        )
+      : itemList;
+    return { rows: base.slice(0, ITEM_RESULT_CAP), total: base.length };
+  }, [itemList, itemQuery]);
+
+  const pickItem = (i: ItemReportRow) => {
+    setItemId(i.itemId);
+    setItemQuery(`${i.title}${i.type ? ` · ${i.type}` : ""}`);
+    setItemOpen(false);
+  };
+
+  const clearItem = () => {
+    setItemId("");
+    setItemQuery("");
+    setItemOpen(true);
+  };
 
   // The chosen item's full step timeline, in pipeline order.
   const singleRows = useMemo(
@@ -472,14 +498,63 @@ export default function ReportBuilder({ activity, items, itemStages, people, def
         {isSingle ? (
           /* Single item: just pick the item — its full step timeline follows. */
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <div className="min-w-0 flex-1 sm:max-w-md">
+            <div className="relative min-w-0 flex-1 sm:max-w-md">
               <label className="text-xs font-medium text-gray-500 dark:text-gray-400">Item</label>
-              <select aria-label="Item" value={itemId} onChange={(e) => setItemId(e.target.value)} className={`${selectCls} mt-1 w-full`}>
-                <option value="">Select an item…</option>
-                {itemList.map((i) => (
-                  <option key={i.itemId} value={i.itemId}>{i.title}{i.type ? ` · ${i.type}` : ""}</option>
-                ))}
-              </select>
+              <input
+                type="text"
+                aria-label="Search item"
+                value={itemQuery}
+                placeholder="Search by title or type…"
+                onChange={(e) => {
+                  setItemQuery(e.target.value);
+                  setItemOpen(true);
+                  if (itemId) setItemId("");
+                }}
+                onFocus={() => setItemOpen(true)}
+                onBlur={() => setTimeout(() => setItemOpen(false), 150)}
+                className={`${selectCls} mt-1 w-full pr-8`}
+              />
+              {(itemQuery || itemId) && (
+                <button
+                  type="button"
+                  aria-label="Clear"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={clearItem}
+                  className="absolute right-2 top-[33px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  ✕
+                </button>
+              )}
+              {itemOpen && (
+                <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1 shadow-lg">
+                  {itemMatches.rows.length === 0 ? (
+                    <li className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No items match “{itemQuery}”.</li>
+                  ) : (
+                    <>
+                      {itemMatches.rows.map((i) => (
+                        <li key={i.itemId}>
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => pickItem(i)}
+                            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 ${
+                              i.itemId === itemId ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
+                            }`}
+                          >
+                            <span className="min-w-0 flex-1 truncate text-gray-800 dark:text-gray-100">{i.title}</span>
+                            {i.type && <span className="flex-shrink-0 text-xs text-gray-400">{i.type}</span>}
+                          </button>
+                        </li>
+                      ))}
+                      {itemMatches.total > itemMatches.rows.length && (
+                        <li className="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-500">
+                          Showing {itemMatches.rows.length} of {itemMatches.total} — keep typing to narrow.
+                        </li>
+                      )}
+                    </>
+                  )}
+                </ul>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-500 dark:text-gray-400">{count} step{count === 1 ? "" : "s"}</span>
