@@ -96,7 +96,12 @@ export async function proxy(request: NextRequest) {
   const isAuthExempt =
     pathname === "/login" ||
     pathname === "/view" ||
-    pathname.startsWith("/api");
+    pathname.startsWith("/api") ||
+    // PWA plumbing must be reachable even before login (so the app stays
+    // installable from the login screen and the service worker can register).
+    pathname === "/sw.js" ||
+    pathname === "/offline.html" ||
+    pathname === "/manifest.webmanifest";
 
   if (!user && !isAuthExempt) {
     const optedIntoView = request.cookies.get("qtms_view");
