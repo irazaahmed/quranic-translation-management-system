@@ -249,6 +249,23 @@ export interface EtPerson {
   created_at: string;
 }
 
+/**
+ * A planned work assignment: a workforce member lined up to do a specific item
+ * (book/work), with an optional note, an ordering position and a done flag.
+ * Used by the Workforce managing board. Carries the item's title/type (joined)
+ * for display.
+ */
+export interface EtAssignment {
+  id: string;
+  person_id: string;
+  item_id: string;
+  note: string | null;
+  position: number;
+  done: boolean;
+  item_title: string;
+  item_type: string | null;
+}
+
 // ============================================
 // Pipeline computation
 // ============================================

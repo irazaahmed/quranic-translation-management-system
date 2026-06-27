@@ -17,6 +17,10 @@ import {
   addEtPerson,
   updateEtPerson,
   deleteEtPerson,
+  addEtAssignment,
+  updateEtAssignment,
+  deleteEtAssignment,
+  reorderEtAssignments,
   type StageUpsert,
   type StagePatch,
   type EtPersonInput,
@@ -330,6 +334,88 @@ export async function deleteEtPersonAction(
       return { error: "You don't have permission to manage the workforce." };
     }
     return { error: "Failed to delete. Please try again." };
+  }
+}
+
+// ============================================
+// Planned work assignments (managing board)
+// ============================================
+
+function revalidateAssignments() {
+  revalidatePath("/et/workforce");
+  revalidatePath("/et/workload");
+}
+
+export async function addEtAssignmentAction(input: {
+  person_id: string;
+  item_id: string;
+  note: string | null;
+}): Promise<{ error?: string; success?: boolean }> {
+  if (!input.person_id || !input.item_id) return { error: "Pick an item to assign." };
+  try {
+    await requireStaff();
+    await addEtAssignment(input);
+    revalidateAssignments();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to add assignment:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to plan work." };
+    }
+    return { error: "Failed to save. Has the et_assignments migration been run?" };
+  }
+}
+
+export async function updateEtAssignmentAction(
+  assignmentId: string,
+  patch: { note?: string | null; done?: boolean }
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireStaff();
+    await updateEtAssignment(assignmentId, patch);
+    revalidateAssignments();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update assignment:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to plan work." };
+    }
+    return { error: "Failed to save. Please try again." };
+  }
+}
+
+export async function deleteEtAssignmentAction(
+  assignmentId: string
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireStaff();
+    await deleteEtAssignment(assignmentId);
+    revalidateAssignments();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete assignment:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to plan work." };
+    }
+    return { error: "Failed to delete. Please try again." };
+  }
+}
+
+export async function reorderEtAssignmentsAction(
+  personId: string,
+  orderedIds: string[]
+): Promise<{ error?: string; success?: boolean }> {
+  try {
+    await requireStaff();
+    await reorderEtAssignments(personId, orderedIds);
+    revalidateAssignments();
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to reorder assignments:", error);
+    if (error instanceof Error && error.message === "UNAUTHORIZED") {
+      return { error: "You don't have permission to plan work." };
+    }
+    return { error: "Failed to save order. Please try again." };
   }
 }
 

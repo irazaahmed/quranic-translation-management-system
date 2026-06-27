@@ -6,13 +6,16 @@ import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { usePermissions } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
-import { STAGES, stageBadgeClasses, type EtPerson, type StageCode } from "@/lib/et";
+import { STAGES, stageBadgeClasses, type EtPerson, type EtAssignment, type StageCode } from "@/lib/et";
 import {
   addEtPersonAction,
   updateEtPersonAction,
   deleteEtPersonAction,
 } from "@/app/actions/etActions";
 import type { EtPersonInput } from "@/lib/etMutations";
+import AssignmentPlanner, { type PlannerItem } from "./AssignmentPlanner";
+
+export type { PlannerItem };
 
 const SKILL_CODES = STAGES.map((s) => s.code);
 
@@ -129,9 +132,13 @@ interface Props {
   people: EtPerson[];
   /** Active workload count keyed by person id. */
   workloads: Record<string, number>;
+  /** Items selectable in the planner (id, title, type). */
+  plannerItems: PlannerItem[];
+  /** Planned assignments keyed by person id, position-ordered. */
+  assignmentsByPerson: Record<string, EtAssignment[]>;
 }
 
-export default function WorkforceManager({ people, workloads }: Props) {
+export default function WorkforceManager({ people, workloads, plannerItems, assignmentsByPerson }: Props) {
   const { canWrite } = usePermissions();
   const toast = useToast();
   const router = useRouter();
@@ -220,6 +227,13 @@ export default function WorkforceManager({ people, workloads }: Props) {
               {p.working_hours && (
                 <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">🕒 {p.working_hours}</p>
               )}
+
+              <AssignmentPlanner
+                personId={p.id}
+                assignments={assignmentsByPerson[p.id] ?? []}
+                items={plannerItems}
+                canWrite={canWrite}
+              />
 
               {canWrite && (
                 <div className="mt-3 flex items-center gap-2 border-t border-gray-100 dark:border-gray-800 pt-3">

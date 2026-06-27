@@ -291,6 +291,76 @@ export async function deleteEtPerson(personId: string): Promise<void> {
   if (error) throw error;
 }
 
+// ============================================
+// Planned work assignments (managing board) — et_assignments
+// ============================================
+
+/** Add a planned assignment to the end of a person's queue. */
+export async function addEtAssignment(input: {
+  person_id: string;
+  item_id: string;
+  note: string | null;
+}): Promise<void> {
+  const supabase = await getWriteClient();
+
+  // New entries go to the end of this person's queue.
+  const { data: last } = await supabase
+    .from("et_assignments")
+    .select("position")
+    .eq("person_id", input.person_id)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextPos = (last?.position ?? -1) + 1;
+
+  const { error } = await supabase.from("et_assignments").insert([
+    {
+      person_id: input.person_id,
+      item_id: input.item_id,
+      note: input.note?.trim() || null,
+      position: nextPos,
+      done: false,
+    },
+  ]);
+  if (error) throw error;
+}
+
+/** Patch a planned assignment's note and/or done flag. */
+export async function updateEtAssignment(
+  assignmentId: string,
+  patch: { note?: string | null; done?: boolean }
+): Promise<void> {
+  const supabase = await getWriteClient();
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if ("note" in patch) update.note = patch.note?.trim() || null;
+  if ("done" in patch) update.done = !!patch.done;
+  const { error } = await supabase.from("et_assignments").update(update).eq("id", assignmentId);
+  if (error) throw error;
+}
+
+/** Delete a planned assignment. */
+export async function deleteEtAssignment(assignmentId: string): Promise<void> {
+  const supabase = await getWriteClient();
+  const { error } = await supabase.from("et_assignments").delete().eq("id", assignmentId);
+  if (error) throw error;
+}
+
+/** Re-number a person's queue to the given id order (position = index). */
+export async function reorderEtAssignments(
+  personId: string,
+  orderedIds: string[]
+): Promise<void> {
+  const supabase = await getWriteClient();
+  for (let i = 0; i < orderedIds.length; i++) {
+    const { error } = await supabase
+      .from("et_assignments")
+      .update({ position: i, updated_at: new Date().toISOString() })
+      .eq("id", orderedIds[i])
+      .eq("person_id", personId);
+    if (error) throw error;
+  }
+}
+
 export interface StagePatch {
   stage: StageCode;
   person?: string | null;

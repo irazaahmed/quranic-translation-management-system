@@ -8,6 +8,7 @@ import {
   EtStage,
   EtPerson,
   EtReturn,
+  EtAssignment,
   computeCurrentStep,
   computeAdvance,
   isQuranType,
@@ -119,4 +120,34 @@ export const getCachedEtPeople = cache(async (): Promise<EtPerson[]> => {
 
   if (error) throw error;
   return data || [];
+});
+
+/**
+ * Planned work assignments (managing board), oldest position first. Each row is
+ * joined with its item's title/type for display. Tolerant of the et_assignments
+ * table not existing yet (returns [] so the Workforce page still loads before
+ * the migration is run).
+ */
+export const getCachedEtAssignments = cache(async (): Promise<EtAssignment[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("et_assignments")
+      .select("id, person_id, item_id, note, position, done, et_items(title, type)")
+      .order("position", { ascending: true })
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      person_id: row.person_id,
+      item_id: row.item_id,
+      note: row.note ?? null,
+      position: row.position ?? 0,
+      done: !!row.done,
+      item_title: row.et_items?.title ?? "(deleted item)",
+      item_type: row.et_items?.type ?? null,
+    })) as EtAssignment[];
+  } catch (err) {
+    console.error("Failed to fetch ET assignments (has the migration been run?):", err);
+    return [];
+  }
 });

@@ -1,19 +1,37 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
-import { getCachedEtItemRows, getCachedEtPeople, type EtItemRow } from "@/lib/etData";
-import WorkforceManager from "./WorkforceManager";
+import { getCachedEtItemRows, getCachedEtPeople, getCachedEtAssignments, type EtItemRow } from "@/lib/etData";
+import { typeLabel, type EtAssignment } from "@/lib/et";
+import WorkforceManager, { type PlannerItem } from "./WorkforceManager";
 
 export const dynamic = "force-dynamic";
 
 export default async function EtWorkforcePage() {
   let people: Awaited<ReturnType<typeof getCachedEtPeople>> = [];
   let rows: EtItemRow[] = [];
+  let assignments: EtAssignment[] = [];
   let error: string | null = null;
   try {
-    [people, rows] = await Promise.all([getCachedEtPeople(), getCachedEtItemRows()]);
+    [people, rows, assignments] = await Promise.all([
+      getCachedEtPeople(),
+      getCachedEtItemRows(),
+      getCachedEtAssignments(),
+    ]);
   } catch (err) {
     console.error("Failed to fetch workforce:", err);
     error = "Failed to load. Have you run the migration and import yet?";
+  }
+
+  // Item picker options for the planner — every non-stopped item, A–Z.
+  const plannerItems: PlannerItem[] = rows
+    .filter((r) => !r.stopped)
+    .map((r) => ({ id: r.id, title: r.title, type: typeLabel(r.type) }))
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  // Planned assignments grouped by person id (already position-ordered).
+  const assignmentsByPerson: Record<string, EtAssignment[]> = {};
+  for (const a of assignments) {
+    (assignmentsByPerson[a.person_id] ||= []).push(a);
   }
 
   // Active workload per holder (match on the name as stored in stages).
@@ -58,7 +76,12 @@ export default async function EtWorkforcePage() {
       {error ? (
         <div className="rounded-xl border border-amber-300 bg-amber-50 p-6 text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">{error}</div>
       ) : (
-        <WorkforceManager people={people} workloads={workloads} />
+        <WorkforceManager
+          people={people}
+          workloads={workloads}
+          plannerItems={plannerItems}
+          assignmentsByPerson={assignmentsByPerson}
+        />
       )}
     </DashboardLayout>
   );
