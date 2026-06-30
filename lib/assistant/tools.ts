@@ -19,7 +19,7 @@ import {
   getCachedEtItemRows,
   getCachedEtItemsWithStages,
 } from "@/lib/etData";
-import { computeCurrentStep, daysSince, reminderInfo, typeLabel } from "@/lib/et";
+import { computeCurrentStep, daysSince, effectiveWordCount, reminderInfo, typeLabel, wsbDeduction } from "@/lib/et";
 
 /**
  * Tool layer for the AI assistant. The model decides which of these to call;
@@ -528,7 +528,12 @@ async function getEtItem(args: ToolArgs) {
   return {
     title: item.title,
     type: typeLabel(item.type),
-    word_count: item.word_count,
+    // Net countable words (wsb has its fixed pre-translated sections removed);
+    // raw_word_count keeps the real entered total when they differ.
+    word_count: effectiveWordCount(item.type, item.word_count),
+    ...(wsbDeduction(item.type, item.word_count) > 0
+      ? { raw_word_count: item.word_count, pretranslated_deducted: wsbDeduction(item.type, item.word_count) }
+      : {}),
     status: current.completed ? "completed" : current.unassigned ? "pending_assignment" : "in_progress",
     current_step: current.label,
     current_holder: current.holder,

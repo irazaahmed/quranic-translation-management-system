@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCachedEtItem, getCachedEtPeople, getCachedEtReturns } from "@/lib/etData";
-import { computeAdvance, computeCurrentStep, daysSince, isStageSkipped, isWsbType, stageName, typeLabel } from "@/lib/et";
+import { computeAdvance, computeCurrentStep, daysSince, effectiveWordCount, isStageSkipped, isWsbType, stageName, typeLabel, wsbDeduction, WSB_PRETRANSLATED } from "@/lib/et";
 import EtPipelineEditor from "./EtPipelineEditor";
 import EtItemActions from "./EtItemActions";
 import EtQuickAdvance from "./EtQuickAdvance";
@@ -98,7 +98,12 @@ export default async function EtItemDetailPage({ params, searchParams }: Props) 
           </span>
           {item.word_count != null && (
             <span className="rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-              {item.word_count.toLocaleString()} words
+              {effectiveWordCount(item.type, item.word_count)!.toLocaleString()} words
+              {wsbDeduction(item.type, item.word_count) > 0 && (
+                <span className="ml-1 font-normal text-gray-400 dark:text-gray-500">
+                  (of {item.word_count.toLocaleString()} total)
+                </span>
+              )}
             </span>
           )}
           {item.delivery_date && (
@@ -113,6 +118,22 @@ export default async function EtItemDetailPage({ params, searchParams }: Props) 
           )}
         </div>
         <h1 className="mt-2 text-lg sm:text-2xl font-bold text-gray-900 dark:text-white break-words">{item.title}</h1>
+
+        {/* wsb: explain the net word count — fixed pre-translated sections are
+            removed so only the new work is counted, but the real total is shown. */}
+        {wsbDeduction(item.type, item.word_count) > 0 && (
+          <div className="mt-3 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50 dark:bg-emerald-900/15 p-3 text-xs text-emerald-800 dark:text-emerald-300">
+            <p className="font-semibold">
+              Net countable words: {effectiveWordCount(item.type, item.word_count)!.toLocaleString()}
+              <span className="font-normal"> — total {item.word_count!.toLocaleString()} minus {wsbDeduction(item.type, item.word_count).toLocaleString()} already-translated:</span>
+            </p>
+            <ul className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
+              {WSB_PRETRANSLATED.map((p) => (
+                <li key={p.name}>• {p.name}: {p.words.toLocaleString()}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Current step banner */}
         <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-3 sm:p-4">

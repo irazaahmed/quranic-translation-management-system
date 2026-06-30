@@ -7,6 +7,7 @@ import {
   CATEGORY_ORDER,
   STAGES,
   daysSince,
+  effectiveWordCount,
   itemCategory,
   reminderInfo,
   stageBadgeClasses,
@@ -174,7 +175,10 @@ export default function EtItemsList({ items, initial }: Props) {
           case "title":
             return a.title.localeCompare(b.title);
           case "words":
-            return (b.word_count || 0) - (a.word_count || 0);
+            return (
+              (effectiveWordCount(b.type, b.word_count) || 0) -
+              (effectiveWordCount(a.type, a.word_count) || 0)
+            );
           case "stuck": {
             const ad = daysSince(a.current.since) ?? -1;
             const bd = daysSince(b.current.since) ?? -1;

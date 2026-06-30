@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCachedEtItemsWithStages, getCachedEtPeople } from "@/lib/etData";
 import {
   computeCurrentStep,
+  effectiveWordCount,
   isStageSkipped,
   itemCategory,
   reminderInfo,
@@ -95,7 +96,7 @@ export default async function EtReportsPage() {
         holder: current.holder ?? "",
         progress: `${current.doneCount}/${current.totalCount}`,
         delivery: reminderInfo(item).delivery,
-        wordCount: item.word_count,
+        wordCount: effectiveWordCount(item.type, item.word_count),
         received: item.received_date,
         finalEmail: item.final_email_date_2 || item.final_email_date,
       });

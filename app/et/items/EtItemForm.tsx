@@ -2,7 +2,14 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { TYPE_LABELS, parseTitleDate, type EtItem } from "@/lib/et";
+import {
+  TYPE_LABELS,
+  WSB_PRETRANSLATED_TOTAL,
+  effectiveWordCount,
+  isWsbType,
+  parseTitleDate,
+  type EtItem,
+} from "@/lib/et";
 import {
   createEtItemAction,
   updateEtItemAction,
@@ -34,6 +41,16 @@ export default function EtItemForm({ item }: Props) {
   const [delivery, setDelivery] = useState(item?.delivery_date ?? "");
   const [deliveryTouched, setDeliveryTouched] = useState(!!item?.delivery_date);
   const detected = parseTitleDate(title);
+
+  // Track type + word count so we can preview the wsb net word count live: wsb
+  // documents reuse a fixed block of already-translated words (deducted), so the
+  // entered total counts as "total − pre-translated" everywhere.
+  const [type, setType] = useState(item?.type ?? "");
+  const [wordCount, setWordCount] = useState(
+    item?.word_count != null ? String(item.word_count) : ""
+  );
+  const rawWords = parseInt(wordCount, 10);
+  const showWsbNet = isWsbType(type) && Number.isFinite(rawWords) && rawWords > 0;
 
   useEffect(() => {
     if (!deliveryTouched) setDelivery(detected ?? "");
@@ -82,7 +99,7 @@ export default function EtItemForm({ item }: Props) {
             {/* Type */}
             <div>
               <label htmlFor="type" className={labelCls}>Type</label>
-              <select id="type" name="type" defaultValue={item?.type ?? ""} className={inputCls}>
+              <select id="type" name="type" value={type} onChange={(e) => setType(e.target.value)} className={inputCls}>
                 <option value="">— Select type —</option>
                 {Object.entries(TYPE_LABELS).map(([code, label]) => (
                   <option key={code} value={code}>{label} ({code})</option>
@@ -99,7 +116,13 @@ export default function EtItemForm({ item }: Props) {
             {/* Word count */}
             <div>
               <label htmlFor="word_count" className={labelCls}>Word count</label>
-              <input type="number" min="0" id="word_count" name="word_count" defaultValue={item?.word_count ?? ""} className={inputCls} placeholder="e.g., 5367" />
+              <input type="number" min="0" id="word_count" name="word_count" value={wordCount} onChange={(e) => setWordCount(e.target.value)} className={inputCls} placeholder="e.g., 5367" />
+              {showWsbNet && (
+                <p className="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                  Counts as <span className="font-semibold">{effectiveWordCount(type, rawWords)!.toLocaleString()}</span> words
+                  {" "}(total {rawWords.toLocaleString()} − {WSB_PRETRANSLATED_TOTAL.toLocaleString()} already-translated). The full total is still saved.
+                </p>
+              )}
             </div>
 
             {/* Delivery date (auto-filled from title; editable) */}

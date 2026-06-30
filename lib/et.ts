@@ -77,6 +77,47 @@ export function isWsbType(type: string | null | undefined): boolean {
   return (type || "").toLowerCase() === "wsb";
 }
 
+/**
+ * Weekly Speech Brothers (wsb) documents always reuse a few sections that are
+ * ALREADY translated every week, so those words must not be counted again as new
+ * work. We keep the raw word_count exactly as entered (the real total is never
+ * lost) and derive a NET, countable figure by subtracting these fixed sections.
+ * Net words are what every count / report / sort / export uses.
+ */
+export const WSB_PRETRANSLATED: { name: string; words: number }[] = [
+  { name: "Niyyat aitikaf", words: 153 },
+  { name: "6 Durood Sherif", words: 472 },
+  { name: "Jaiza Naik amaal", words: 1435 },
+  { name: "Bayan niyyatein", words: 96 },
+];
+
+/** Fixed words removed from every wsb item: 153 + 472 + 1435 + 96 = 2156. */
+export const WSB_PRETRANSLATED_TOTAL = WSB_PRETRANSLATED.reduce((s, p) => s + p.words, 0);
+
+/**
+ * The countable ("net") word figure for an item. For wsb the fixed
+ * pre-translated sections are removed — e.g. a raw 6,816 becomes 4,660. Every
+ * other type counts its words as-is. The DB value is never changed; this is only
+ * the figure to count/show. Never returns a negative number.
+ */
+export function effectiveWordCount(
+  type: string | null | undefined,
+  wordCount: number | null | undefined
+): number | null {
+  if (wordCount == null) return null;
+  if (isWsbType(type)) return Math.max(0, wordCount - WSB_PRETRANSLATED_TOTAL);
+  return wordCount;
+}
+
+/** How many words were deducted as pre-translated for this item (0 for non-wsb). */
+export function wsbDeduction(
+  type: string | null | undefined,
+  wordCount: number | null | undefined
+): number {
+  if (!isWsbType(type) || wordCount == null) return 0;
+  return Math.min(wordCount, WSB_PRETRANSLATED_TOTAL);
+}
+
 /** True for Magazine items, which have the extra Designing step (DSN). */
 export function isMagazineDesignType(type: string | null | undefined): boolean {
   return (type || "").toLowerCase() === "mgz";
