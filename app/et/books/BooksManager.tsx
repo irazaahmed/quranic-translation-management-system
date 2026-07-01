@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePermissions } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { saveEtItemCommentAction } from "@/app/actions/etActions";
-import { stageBadgeClasses, type StageCode } from "@/lib/et";
+import { BKS_STAGES, stageBadgeClasses, type StageCode } from "@/lib/et";
 
 export interface BookRow {
   id: string;
@@ -106,38 +106,128 @@ function BookCard({ book, canWrite }: { book: BookRow; canWrite: boolean }) {
   );
 }
 
+const SELECT_CLS =
+  "rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+
+const SORTS = [
+  { value: "order", label: "Default order" },
+  { value: "delivery-asc", label: "Delivery (soonest)" },
+  { value: "words-desc", label: "Words (high→low)" },
+  { value: "held-desc", label: "Progress (least done)" },
+  { value: "title", label: "Title (A–Z)" },
+];
+
+/** Books pipeline order (TR…RTP) for sorting the stage filter. */
+const BKS_ORDER = BKS_STAGES.map((s) => s.code);
+
 export default function BooksManager({ books }: { books: BookRow[] }) {
   const { canWrite } = usePermissions();
   const [query, setQuery] = useState("");
+  const [stage, setStage] = useState("all");
+  const [holder, setHolder] = useState("all");
+  const [sortBy, setSortBy] = useState("order");
+
+  // Stage filter options — only stages actually present, in pipeline order.
+  const stageOptions = useMemo(() => {
+    const present = new Set<string>();
+    books.forEach((b) => { if (b.stage) present.add(b.stage); });
+    return [...present]
+      .sort((a, b) => BKS_ORDER.indexOf(a as StageCode) - BKS_ORDER.indexOf(b as StageCode))
+      .map((code) => ({ code, label: BKS_STAGES.find((s) => s.code === code)?.name ?? code }));
+  }, [books]);
+
+  // Holder filter options — distinct current holders, A–Z.
+  const holderOptions = useMemo(() => {
+    const set = new Set<string>();
+    books.forEach((b) => { if (b.holder) set.add(b.holder); });
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [books]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return books;
-    return books.filter(
-      (b) => b.title.toLowerCase().includes(q) || (b.holder || "").toLowerCase().includes(q) || b.comment.toLowerCase().includes(q)
-    );
-  }, [books, query]);
+    const rows = books.filter((b) => {
+      if (q && !(b.title.toLowerCase().includes(q) || (b.holder || "").toLowerCase().includes(q) || b.comment.toLowerCase().includes(q))) return false;
+      if (stage !== "all" && b.stage !== stage) return false;
+      if (holder !== "all" && (b.holder || "") !== holder) return false;
+      return true;
+    });
+    if (sortBy === "order") return rows; // already in the team's manual order
+    const sorted = [...rows];
+    switch (sortBy) {
+      case "delivery-asc":
+        sorted.sort((a, b) => (a.delivery || "9999").localeCompare(b.delivery || "9999"));
+        break;
+      case "words-desc":
+        sorted.sort((a, b) => (b.word_count || 0) - (a.word_count || 0));
+        break;
+      case "held-desc":
+        // Least progress first (fewest steps done relative to total).
+        sorted.sort((a, b) => a.doneCount / (a.totalCount || 1) - b.doneCount / (b.totalCount || 1));
+        break;
+      case "title":
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+    }
+    return sorted;
+  }, [books, query, stage, holder, sortBy]);
+
+  const activeFilters = stage !== "all" || holder !== "all" || query.trim() !== "";
+  const reset = () => { setQuery(""); setStage("all"); setHolder("all"); };
 
   return (
     <>
-      <div className="mb-4 relative max-w-md">
-        <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </span>
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search books, holder, comment…"
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-9 pr-3 py-2 text-sm text-gray-900 dark:text-white focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-        />
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[16rem] flex-1 sm:max-w-xs">
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search books, holder, comment…"
+            className={`${SELECT_CLS} w-full pl-9`}
+          />
+        </div>
+
+        <select aria-label="Stage" value={stage} onChange={(e) => setStage(e.target.value)} className={SELECT_CLS}>
+          <option value="all">All stages</option>
+          {stageOptions.map((s) => (
+            <option key={s.code} value={s.code}>{s.code} · {s.label}</option>
+          ))}
+        </select>
+
+        <select aria-label="Holder" value={holder} onChange={(e) => setHolder(e.target.value)} className={SELECT_CLS}>
+          <option value="all">All holders</option>
+          {holderOptions.map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
+
+        <select aria-label="Sort by" value={sortBy} onChange={(e) => setSortBy(e.target.value)} className={SELECT_CLS}>
+          {SORTS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+
+        {activeFilters && (
+          <button
+            type="button"
+            onClick={reset}
+            className="btn-press rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            Clear
+          </button>
+        )}
+
+        <span className="ml-auto text-sm text-gray-500 dark:text-gray-400">{filtered.length} book{filtered.length === 1 ? "" : "s"}</span>
       </div>
 
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-10 text-center text-gray-500 dark:text-gray-400">
-          {books.length === 0 ? "No books yet. Add an item with type “Books”." : "No books match your search."}
+          {books.length === 0 ? "No books yet. Add an item with type “Books”." : "No books match these filters."}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
