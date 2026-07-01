@@ -6,6 +6,8 @@ import Avatar from "@/components/Avatar";
 import { stageBadgeClasses, urgencyClasses, STEP_ALERT_DAYS, type StageCode, type ReminderUrgency } from "@/lib/et";
 
 export interface WorkloadItem {
+  /** Unique per row (stage id, or item id for unheld items) — for React keys. */
+  rowId: string;
   id: string;
   title: string;
   type: string;
@@ -165,7 +167,7 @@ export default function WorkloadBoard({ groups, unassigned, totalItems }: Props)
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-sm font-semibold text-gray-900 dark:text-white">{g.holder}</h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {g.items.length} item{g.items.length === 1 ? "" : "s"}
+                      {g.items.length} task{g.items.length === 1 ? "" : "s"}
                       {groupHeld > 0 && <span className="text-red-600 dark:text-red-400"> · {groupHeld} stuck</span>}
                     </p>
                   </div>
@@ -177,7 +179,7 @@ export default function WorkloadBoard({ groups, unassigned, totalItems }: Props)
                 {!isCollapsed && (
                   <ul className="mt-2 divide-y divide-gray-100 dark:divide-gray-800 border-t border-gray-100 dark:border-gray-800">
                     {g.items.map((item) => (
-                      <ItemRow key={item.id} item={item} />
+                      <ItemRow key={item.rowId} item={item} />
                     ))}
                   </ul>
                 )}
@@ -196,7 +198,7 @@ export default function WorkloadBoard({ groups, unassigned, totalItems }: Props)
           <p className="text-xs text-amber-700/80 dark:text-amber-400/80">In-progress items with no one currently assigned — these need a holder.</p>
           <ul className="mt-2 divide-y divide-amber-200/60 dark:divide-amber-800/40 border-t border-amber-200/60 dark:border-amber-800/40">
             {filteredUnassigned.map((item) => (
-              <ItemRow key={item.id} item={item} />
+              <ItemRow key={item.rowId} item={item} />
             ))}
           </ul>
         </div>

@@ -252,6 +252,18 @@ export function isStageSkipped(s: Pick<EtStage, "not_applicable" | "merged">): b
   return s.not_applicable || s.merged;
 }
 
+/**
+ * Every stage a person is *actively* holding right now — sent out but not yet
+ * received back (and not skipped). Unlike computeCurrentStep, which collapses to
+ * a single "current" step, this returns ALL concurrent tasks, so a person given
+ * two stages of one item (e.g. TR and CM) shows up for both. Pipeline order.
+ */
+export function activeStages(stages: EtStage[]): EtStage[] {
+  return [...stages]
+    .filter((s) => !isStageSkipped(s) && !!s.sent_date && !s.received_back_date)
+    .sort((a, b) => a.seq - b.seq);
+}
+
 export interface EtItem {
   id: string;
   title: string;

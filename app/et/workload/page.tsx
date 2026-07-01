@@ -1,7 +1,8 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import Link from "next/link";
-import { getCachedEtItemRows, type EtItemRow } from "@/lib/etData";
-import { reminderInfo, stageName, typeLabel } from "@/lib/et";
+import { getCachedEtItemsWithStages } from "@/lib/etData";
+import { activeStages, computeCurrentStep, reminderInfo, stageName, typeLabel } from "@/lib/et";
+import type { EtItemWithStages } from "@/lib/et";
 import WorkloadBoard, { type WorkloadGroup, type WorkloadItem } from "./WorkloadBoard";
 
 export const dynamic = "force-dynamic";
@@ -18,41 +19,73 @@ function daysSince(iso: string | null): number | null {
 }
 
 export default async function EtWorkloadPage() {
-  let rows: EtItemRow[] = [];
+  let items: EtItemWithStages[] = [];
   let error: string | null = null;
   try {
-    rows = await getCachedEtItemRows();
+    items = await getCachedEtItemsWithStages();
   } catch (err) {
     console.error("Failed to load workload:", err);
     error = "Failed to load. Have you run the migration and import yet?";
   }
 
-  // Active = still in flight (not completed, not stopped).
-  const active = rows.filter((r) => r.derivedStatus !== "completed" && !r.stopped);
-
   const byHolder = new Map<string, WorkloadItem[]>();
   const unassigned: WorkloadItem[] = [];
+  let activeCount = 0;
 
-  for (const r of active) {
-    const info = reminderInfo(r);
-    const item: WorkloadItem = {
-      id: r.id,
-      title: r.title,
-      type: typeLabel(r.type),
-      stageCode: r.current.stage,
-      stageName: r.current.stage ? stageName(r.current.stage) : r.current.label,
-      daysHeld: daysSince(r.current.since),
-      delivery: info.delivery,
-      daysLeft: info.daysLeft,
-      urgency: info.urgency,
-      progress: `${r.current.doneCount}/${r.current.totalCount}`,
-    };
-    const holder = r.current.holder?.trim();
-    if (holder) {
-      if (!byHolder.has(holder)) byHolder.set(holder, []);
-      byHolder.get(holder)!.push(item);
-    } else {
-      unassigned.push(item);
+  for (const it of items) {
+    if (it.stopped) continue;
+    const current = computeCurrentStep(it.stages, it.final_email_date, it.final_email_date_2);
+    // Active = still in flight (not completed).
+    if (current.completed) continue;
+    activeCount++;
+
+    const info = reminderInfo(it);
+    const type = typeLabel(it.type);
+    const progress = `${current.doneCount}/${current.totalCount}`;
+
+    // One row per stage the person is *actively* holding — so an item given two
+    // stages at once (e.g. TR and CM) shows up as two tasks, not just the last.
+    const holding = activeStages(it.stages);
+
+    if (holding.length === 0) {
+      // Nobody actively holding it (pending assignment / awaiting final email).
+      unassigned.push({
+        rowId: it.id,
+        id: it.id,
+        title: it.title,
+        type,
+        stageCode: current.stage,
+        stageName: current.stage ? stageName(current.stage) : current.label,
+        daysHeld: daysSince(current.since),
+        delivery: info.delivery,
+        daysLeft: info.daysLeft,
+        urgency: info.urgency,
+        progress,
+      });
+      continue;
+    }
+
+    for (const s of holding) {
+      const row: WorkloadItem = {
+        rowId: s.id,
+        id: it.id,
+        title: it.title,
+        type,
+        stageCode: s.stage,
+        stageName: stageName(s.stage),
+        daysHeld: daysSince(s.sent_date),
+        delivery: info.delivery,
+        daysLeft: info.daysLeft,
+        urgency: info.urgency,
+        progress,
+      };
+      const holder = s.person?.trim();
+      if (holder) {
+        if (!byHolder.has(holder)) byHolder.set(holder, []);
+        byHolder.get(holder)!.push(row);
+      } else {
+        unassigned.push(row);
+      }
     }
   }
 
@@ -65,7 +98,7 @@ export default async function EtWorkloadPage() {
 
   unassigned.sort(sortItems);
 
-  const totalItems = active.length;
+  const totalItems = activeCount;
 
   return (
     <DashboardLayout>
