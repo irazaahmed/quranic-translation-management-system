@@ -9,12 +9,14 @@ import {
   EtPerson,
   EtReturn,
   EtAssignment,
+  activeStages,
   computeCurrentStep,
   computeAdvance,
   isQuranType,
   type CurrentStep,
   type ItemAdvance,
   type ItemStatus,
+  type StageCode,
 } from "@/lib/et";
 
 // ============================================
@@ -33,6 +35,12 @@ export interface EtItemRow extends EtItem {
   derivedStatus: ItemStatus;
   /** Quick "advance to next step" data (null when completed). */
   advance: ItemAdvance | null;
+  /**
+   * Codes of every stage the item is *actively* at right now (sent, not yet
+   * returned). Usually one; two+ when a person is running stages in parallel
+   * (e.g. TR + CM). Lets cards show all active stages, not just the last.
+   */
+  activeStageCodes: StageCode[];
 }
 
 function sortStages(stages: EtStage[]): EtStage[] {
@@ -68,7 +76,8 @@ export const getCachedEtItemRows = cache(async (): Promise<EtItemRow[]> => {
         ? "pending_assignment"
         : "in_progress";
     const advance = computeAdvance(stages, item.final_email_date, item.final_email_date_2);
-    return { ...(item as EtItem), current, derivedStatus, advance };
+    const activeStageCodes = activeStages(stages).map((s) => s.stage);
+    return { ...(item as EtItem), current, derivedStatus, advance, activeStageCodes };
   });
 });
 

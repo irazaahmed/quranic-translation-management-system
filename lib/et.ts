@@ -264,6 +264,20 @@ export function activeStages(stages: EtStage[]): EtStage[] {
     .sort((a, b) => a.seq - b.seq);
 }
 
+/**
+ * Short label for a card's stage chip. When an item is at two+ stages at once
+ * it shows just the codes (e.g. "TR, CM"); a single stage shows "TR · Name";
+ * otherwise the current-step label ("Awaiting final email", "Completed", …).
+ */
+export function stageChipLabel(
+  activeCodes: StageCode[],
+  stage: StageCode | null,
+  label: string
+): string {
+  if (activeCodes.length >= 2) return activeCodes.join(", ");
+  return stage ? `${stage} · ${label}` : label;
+}
+
 export interface EtItem {
   id: string;
   title: string;

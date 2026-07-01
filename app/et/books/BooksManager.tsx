@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePermissions } from "@/components/AuthProvider";
 import { useToast } from "@/components/Toast";
 import { saveEtItemCommentAction } from "@/app/actions/etActions";
-import { BKS_STAGES, stageBadgeClasses, type StageCode } from "@/lib/et";
+import { BKS_STAGES, stageBadgeClasses, stageChipLabel, type StageCode } from "@/lib/et";
 
 export interface BookRow {
   id: string;
@@ -14,6 +14,7 @@ export interface BookRow {
   delivery: string | null;
   stage: StageCode | null;
   stageLabel: string;
+  activeStageCodes: StageCode[];
   completed: boolean;
   holder: string | null;
   doneCount: number;
@@ -51,7 +52,7 @@ function BookCard({ book, canWrite }: { book: BookRow; canWrite: boolean }) {
           </h3>
         </Link>
         <span className={`flex-shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${stageBadgeClasses(book.stage, book.completed)}`}>
-          {book.stage ? `${book.stage} · ${book.stageLabel}` : book.stageLabel}
+          {stageChipLabel(book.activeStageCodes, book.stage, book.stageLabel)}
         </span>
       </div>
 
@@ -130,7 +131,10 @@ export default function BooksManager({ books }: { books: BookRow[] }) {
   // Stage filter options — only stages actually present, in pipeline order.
   const stageOptions = useMemo(() => {
     const present = new Set<string>();
-    books.forEach((b) => { if (b.stage) present.add(b.stage); });
+    books.forEach((b) => {
+      if (b.activeStageCodes.length) b.activeStageCodes.forEach((c) => present.add(c));
+      else if (b.stage) present.add(b.stage);
+    });
     return [...present]
       .sort((a, b) => BKS_ORDER.indexOf(a as StageCode) - BKS_ORDER.indexOf(b as StageCode))
       .map((code) => ({ code, label: BKS_STAGES.find((s) => s.code === code)?.name ?? code }));
@@ -147,7 +151,12 @@ export default function BooksManager({ books }: { books: BookRow[] }) {
     const q = query.trim().toLowerCase();
     const rows = books.filter((b) => {
       if (q && !(b.title.toLowerCase().includes(q) || (b.holder || "").toLowerCase().includes(q) || b.comment.toLowerCase().includes(q))) return false;
-      if (stage !== "all" && b.stage !== stage) return false;
+      if (stage !== "all") {
+        // Match any stage the book is actively at (an item can be at two at once),
+        // falling back to its current stage when nothing is actively held.
+        const codes = b.activeStageCodes.length ? b.activeStageCodes : b.stage ? [b.stage] : [];
+        if (!codes.includes(stage as StageCode)) return false;
+      }
       if (holder !== "all" && (b.holder || "") !== holder) return false;
       return true;
     });

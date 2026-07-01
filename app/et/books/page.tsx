@@ -63,6 +63,7 @@ export default async function EtBooksPage() {
       delivery: reminderInfo(r).delivery,
       stage: r.current.stage,
       stageLabel: r.current.label,
+      activeStageCodes: r.activeStageCodes,
       completed: r.current.completed,
       holder: r.current.holder,
       doneCount: r.current.doneCount,
